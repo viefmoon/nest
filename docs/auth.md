@@ -4,7 +4,6 @@
 
 - [General info](#general-info)
   - [Auth via email flow](#auth-via-email-flow)
-  - [Auth via external services or social networks flow](#auth-via-external-services-or-social-networks-flow)
 - [Configure Auth](#configure-auth)
 - [About JWT strategy](#about-jwt-strategy)
 - [Refresh token flow](#refresh-token-flow)
@@ -35,7 +34,6 @@ sequenceDiagram
 
 <https://user-images.githubusercontent.com/6001723/224566194-1c1f4e98-5691-4703-b30e-92f99ec5d929.mp4>
 
-
 1. Make any requests using a JWT token
 
 ---
@@ -54,6 +52,7 @@ sequenceDiagram
    AUTH_JWT_SECRET=HERE_SECRET_KEY_FROM_STEP_1
    AUTH_REFRESH_SECRET=HERE_SECRET_KEY_FROM_STEP_1
    ```
+
 ## About JWT strategy
 
 In the `validate` method of the `src/auth/strategies/jwt.strategy.ts` file, you can see that we do not check if the user exists in the database because it is redundant, it may lose the benefits of the JWT approach and can affect the application performance.
