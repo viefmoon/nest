@@ -1,83 +1,113 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
-import { TableRepository } from '../../../table.repository';
-import { Table } from '../../../../domain/table';
-import { TableEntity } from '../entities/table.entity';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { NullableType } from '../../../../../utils/types/nullable.type';
+import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
+import { Table } from '../../../../domain/table';
+import { FindAllTablesDto } from '../../../../dto/find-all-tables.dto';
+import { TableRepository } from '../../table.repository';
+import { TableEntity } from '../entities/table.entity';
 import { TableMapper } from '../mappers/table.mapper';
 
 @Injectable()
-export class TablesRelationalRepository extends TableRepository {
+export class TablesRelationalRepository implements TableRepository {
   constructor(
     @InjectRepository(TableEntity)
-    private readonly repository: Repository<TableEntity>,
-  ) {
-    super();
+    private readonly tablesRepository: Repository<TableEntity>,
+  ) {}
+
+  async create(data: Table): Promise<Table> {
+    const persistenceModel = TableMapper.toPersistence(data);
+    const newEntity = await this.tablesRepository.save(
+      this.tablesRepository.create(persistenceModel),
+    );
+    return TableMapper.toDomain(newEntity);
   }
 
-  async create(data: Omit<Table, 'id'>): Promise<Table> {
-    const entity = TableMapper.toPersistence(data as Table);
-    const saved = await this.repository.save(this.repository.create(entity));
-    return TableMapper.toDomain(saved);
+  async findManyWithPagination({
+    filterOptions,
+    paginationOptions,
+  }: {
+    filterOptions?: FindAllTablesDto | null;
+    paginationOptions: IPaginationOptions;
+  }): Promise<Table[]> {
+    const where: FindOptionsWhere<TableEntity> = {};
+
+    if (filterOptions?.name) {
+      where.name = filterOptions.name;
+    }
+
+    if (filterOptions?.areaId) {
+      where.areaId = filterOptions.areaId;
+    }
+
+    if (filterOptions?.isActive !== undefined) {
+      where.isActive = filterOptions.isActive;
+    }
+
+    if (filterOptions?.isAvailable !== undefined) {
+      where.isAvailable = filterOptions.isAvailable;
+    }
+
+    if (filterOptions?.isTemporary !== undefined) {
+      where.isTemporary = filterOptions.isTemporary;
+    }
+
+    const entities = await this.tablesRepository.find({
+      skip: (paginationOptions.page - 1) * paginationOptions.limit,
+      take: paginationOptions.limit,
+      where: where,
+    });
+
+    return entities.map((table) => TableMapper.toDomain(table));
   }
 
   async findById(id: Table['id']): Promise<NullableType<Table>> {
-    const found = await this.repository.findOne({ where: { id: Number(id) } });
-    return found ? TableMapper.toDomain(found) : null;
+    const entity = await this.tablesRepository.findOne({
+      where: { id },
+    });
+
+    return entity ? TableMapper.toDomain(entity) : null;
   }
 
-  async findAll(): Promise<Table[]> {
-    const entities = await this.repository.find();
-    return entities.map((e) => TableMapper.toDomain(e));
+  async findByName(name: Table['name']): Promise<NullableType<Table>> {
+    const entity = await this.tablesRepository.findOne({
+      where: { name },
+    });
+
+    return entity ? TableMapper.toDomain(entity) : null;
   }
 
-  async update(id: Table['id'], data: Partial<Table>): Promise<Table> {
-    const existing = await this.repository.findOne({ where: { id: Number(id) } });
-    if (!existing) {
+  async findByAreaId(areaId: Table['areaId']): Promise<Table[]> {
+    const entities = await this.tablesRepository.find({
+      where: { areaId },
+    });
+
+    return entities.map((table) => TableMapper.toDomain(table));
+  }
+
+  async update(id: Table['id'], payload: Partial<Table>): Promise<Table> {
+    const entity = await this.tablesRepository.findOne({
+      where: { id },
+    });
+
+    if (!entity) {
       throw new Error('Table not found');
     }
-    const toUpdate = {
-      ...TableMapper.toDomain(existing),
-      ...data,
-    };
-    const updatedEntity = await this.repository.save(
-      this.repository.create(TableMapper.toPersistence(toUpdate)),
+
+    const updatedEntity = await this.tablesRepository.save(
+      this.tablesRepository.create(
+        TableMapper.toPersistence({
+          ...TableMapper.toDomain(entity),
+          ...payload,
+        }),
+      ),
     );
+
     return TableMapper.toDomain(updatedEntity);
   }
 
   async remove(id: Table['id']): Promise<void> {
-    await this.repository.softDelete(id);
+    await this.tablesRepository.softDelete(id);
   }
-
-  /**
-   * Funde varias mesas en una mesa padre.
-   */
-  async mergeTables(parentTableId: Table['id'], childTableIds: Table['id'][]): Promise<void> {
-    const parent = await this.repository.findOne({ where: { id: Number(parentTableId) } });
-    if (!parent) {
-      throw new Error('Parent table not found');
-    }
-
-    // Podrías usar un approach para setear parentTableId en las child tables,
-    // o cualquier otra regla que aplique a tu dominio.
-    await this.repository.update(
-      { id: In(childTableIds.map(Number)) },
-      { parentTableId: Number(parentTableId) },
-    );
-  }
-
-  /**
-   * Separa mesas que previamente se fusionaron.
-   */
-  async splitTables(tableId: Table['id']): Promise<void> {
-    // Lógica para revertir el parentTableId en las child tables.
-    // Por simplicidad, supongamos que "tableId" es la mesa padre
-    // y todas las que tengan parentTableId = tableId se "liberan".
-    await this.repository.update(
-      { parentTableId: Number(tableId) },
-      { parentTableId: null },
-    );
-  }
-} 
+}

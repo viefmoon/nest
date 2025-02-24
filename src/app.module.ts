@@ -18,7 +18,8 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { AllConfigType } from './config/config.type';
 import { SessionModule } from './session/session.module';
 import { MailerModule } from './mailer/mailer.module';
-import { MenuModule } from './menu/menu.module';
+import { AreasModule } from './areas/areas.module';
+import { TablesModule } from './tables/tables.module';
 
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
   useClass: TypeOrmConfigService,
@@ -65,7 +66,8 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     MailModule,
     MailerModule,
     HomeModule,
-    MenuModule,
+    AreasModule,
+    TablesModule,
   ],
 })
 export class AppModule {}

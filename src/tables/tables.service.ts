@@ -1,74 +1,69 @@
-import { Injectable, UnprocessableEntityException, HttpStatus } from '@nestjs/common';
-import { TableRepository } from './infrastructure/persistence/table.repository';
+import { Injectable } from '@nestjs/common';
 import { Table } from './domain/table';
 import { CreateTableDto } from './dto/create-table.dto';
+import { FindAllTablesDto } from './dto/find-all-tables.dto';
 import { UpdateTableDto } from './dto/update-table.dto';
-import { NullableType } from '../utils/types/nullable.type';
+import { TableRepository } from './infrastructure/persistence/table.repository';
+import { IPaginationOptions } from '../utils/types/pagination-options';
 
-/**
- * Servicio principal para Mesas.
- */
 @Injectable()
 export class TablesService {
   constructor(private readonly tableRepository: TableRepository) {}
 
-  async createTable(dto: CreateTableDto): Promise<Table> {
-    // Validar lógica: p.ej. que el areaId exista, etc. 
-    // (esa parte normalmente se haría con un repositorio de áreas o hooking a un service)
+  async create(createTableDto: CreateTableDto): Promise<Table> {
+    const table = new Table();
+    table.name = createTableDto.name;
+    table.areaId = createTableDto.areaId;
+    table.isActive =
+      createTableDto.isActive !== undefined ? createTableDto.isActive : true;
+    table.isAvailable =
+      createTableDto.isAvailable !== undefined
+        ? createTableDto.isAvailable
+        : true;
+    table.isTemporary =
+      createTableDto.isTemporary !== undefined
+        ? createTableDto.isTemporary
+        : false;
+    table.temporaryIdentifier = createTableDto.temporaryIdentifier || null;
 
-    const tableToCreate: Omit<Table, 'id'> = {
-      name: dto.name,
-      isTemporary: dto.isTemporary ?? false,
-      parentTableId: dto.parentTableId ?? null,
-      // "area" se setea con un domain minimal, 
-      // asumiendo que la verificación del areaId se hace en AreasService, 
-      // o en otra capa de validación
-      area: { id: dto.areaId, name: '', description: '' },
-    };
-
-    return this.tableRepository.create(tableToCreate);
+    return this.tableRepository.create(table);
   }
 
-  async findAll(): Promise<Table[]> {
-    return this.tableRepository.findAll();
+  async findAll(
+    filterOptions: FindAllTablesDto,
+    paginationOptions: IPaginationOptions,
+  ): Promise<Table[]> {
+    return this.tableRepository.findManyWithPagination({
+      filterOptions,
+      paginationOptions,
+    });
   }
 
-  async findById(id: number): Promise<NullableType<Table>> {
-    return this.tableRepository.findById(id);
-  }
+  async findOne(id: string): Promise<Table> {
+    const table = await this.tableRepository.findById(id);
 
-  async updateTable(id: number, dto: UpdateTableDto): Promise<Table> {
-    // Si cambia el areaId, habría que validarlo, etc.
-    const partialUpdate: Partial<Table> = {
-      name: dto.name,
-      isTemporary: dto.isTemporary,
-      parentTableId: dto.parentTableId,
-    };
-
-    if (dto.areaId !== undefined) {
-      partialUpdate.area = { id: dto.areaId, name: '' };
+    if (!table) {
+      throw new Error('Table not found');
     }
 
-    return this.tableRepository.update(id, partialUpdate);
+    return table;
   }
 
-  async removeTable(id: number): Promise<void> {
-    // Verificar si la mesa tiene órdenes activas, etc. 
-    // De no haber problemas, la "borramos" lógicamente:
-    await this.tableRepository.remove(id);
+  async findByAreaId(areaId: string): Promise<Table[]> {
+    return this.tableRepository.findByAreaId(areaId);
   }
 
-  async mergeTables(parentId: number, childrenIds: number[]): Promise<void> {
-    if (!childrenIds.length) {
-      throw new UnprocessableEntityException({
-        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        message: 'No child table IDs provided',
-      });
+  async update(id: string, updateTableDto: UpdateTableDto): Promise<Table> {
+    const updatedTable = await this.tableRepository.update(id, updateTableDto);
+
+    if (!updatedTable) {
+      throw new Error('Table not found');
     }
-    await this.tableRepository.mergeTables(parentId, childrenIds);
+
+    return updatedTable;
   }
 
-  async splitTables(tableId: number): Promise<void> {
-    await this.tableRepository.splitTables(tableId);
+  async remove(id: string): Promise<void> {
+    return this.tableRepository.remove(id);
   }
-} 
+}

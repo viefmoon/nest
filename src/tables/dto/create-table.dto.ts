@@ -1,25 +1,66 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, IsBoolean, IsNumber } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
-/**
- * DTO para crear una Mesa.
- */
 export class CreateTableDto {
-  @ApiProperty({ example: 'Mesa 5' })
-  @IsString()
+  @ApiProperty({
+    type: String,
+    example: 'Mesa 1',
+  })
   @IsNotEmpty()
+  @IsString()
   name: string;
 
-  @ApiPropertyOptional({ example: false })
+  @ApiProperty({
+    type: String,
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'ID del área a la que pertenece la mesa (obligatorio)',
+  })
+  @IsNotEmpty()
+  @IsUUID()
+  areaId: string;
+
+  @ApiProperty({
+    type: Boolean,
+    example: true,
+    required: false,
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+
+  @ApiProperty({
+    type: Boolean,
+    example: true,
+    required: false,
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isAvailable?: boolean;
+
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    required: false,
+    default: false,
+  })
   @IsOptional()
   @IsBoolean()
   isTemporary?: boolean;
 
-  @ApiPropertyOptional({ example: null, description: 'ID de la mesa padre en caso de fusión, si aplica' })
+  @ApiProperty({
+    type: String,
+    example: 'T-123',
+    required: false,
+  })
   @IsOptional()
-  parentTableId?: number;
-
-  @ApiProperty({ example: 1, description: 'ID del Área donde se creará la mesa' })
-  @IsNumber()
-  areaId: number;
+  @IsString()
+  temporaryIdentifier?: string;
 }

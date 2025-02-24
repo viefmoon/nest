@@ -1,33 +1,41 @@
+import { AreaMapper } from '../../../../../areas/infrastructure/persistence/relational/mappers/area.mapper';
 import { Table } from '../../../../domain/table';
 import { TableEntity } from '../entities/table.entity';
-import { AreaMapper } from './area.mapper';
 
 export class TableMapper {
-  static toDomain(entity: TableEntity): Table {
-    const domain = new Table();
-    domain.id = entity.id;
-    domain.name = entity.name;
-    domain.isTemporary = entity.isTemporary;
-    domain.parentTableId = entity.parentTableId ?? null;
-
-    if (entity.area) {
-      domain.area = AreaMapper.toDomain(entity.area);
+  static toDomain(raw: TableEntity): Table {
+    const domainEntity = new Table();
+    domainEntity.id = raw.id;
+    domainEntity.name = raw.name;
+    domainEntity.areaId = raw.areaId;
+    domainEntity.isActive = raw.isActive;
+    domainEntity.isAvailable = raw.isAvailable;
+    domainEntity.isTemporary = raw.isTemporary;
+    domainEntity.temporaryIdentifier = raw.temporaryIdentifier;
+    if (!raw.area) {
+      throw new Error(`La tabla ${raw.id} no tiene un área asociada`);
     }
-    return domain;
+    domainEntity.area = AreaMapper.toDomain(raw.area);
+    domainEntity.createdAt = raw.createdAt;
+    domainEntity.updatedAt = raw.updatedAt;
+    domainEntity.deletedAt = raw.deletedAt;
+    return domainEntity;
   }
 
-  static toPersistence(domain: Table): TableEntity {
-    const entity = new TableEntity();
-    if (typeof domain.id === 'number') {
-      entity.id = domain.id;
+  static toPersistence(domainEntity: Table): TableEntity {
+    const persistenceEntity = new TableEntity();
+    if (domainEntity.id) {
+      persistenceEntity.id = domainEntity.id;
     }
-    entity.name = domain.name;
-    entity.isTemporary = domain.isTemporary;
-    entity.parentTableId = domain.parentTableId ?? null;
-
-    if (domain.area) {
-      entity.area = AreaMapper.toPersistence(domain.area);
-    }
-    return entity;
+    persistenceEntity.name = domainEntity.name;
+    persistenceEntity.areaId = domainEntity.areaId;
+    persistenceEntity.isActive = domainEntity.isActive;
+    persistenceEntity.isAvailable = domainEntity.isAvailable;
+    persistenceEntity.isTemporary = domainEntity.isTemporary;
+    persistenceEntity.temporaryIdentifier = domainEntity.temporaryIdentifier;
+    persistenceEntity.createdAt = domainEntity.createdAt;
+    persistenceEntity.updatedAt = domainEntity.updatedAt;
+    persistenceEntity.deletedAt = domainEntity.deletedAt;
+    return persistenceEntity;
   }
-} 
+}

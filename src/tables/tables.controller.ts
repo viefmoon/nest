@@ -1,82 +1,167 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Patch,
   Body,
-  Param,
+  Controller,
   Delete,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
+  Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { TablesService } from './tables.service';
-import { CreateTableDto } from './dto/create-table.dto';
-import { UpdateTableDto } from './dto/update-table.dto';
 import { Table } from './domain/table';
-import { NullableType } from '../utils/types/nullable.type';
+import { CreateTableDto } from './dto/create-table.dto';
+import { FindAllTablesDto } from './dto/find-all-tables.dto';
+import { UpdateTableDto } from './dto/update-table.dto';
+import { IPaginationOptions } from '../utils/types/pagination-options';
 import { AuthGuard } from '@nestjs/passport';
+import { Roles } from '../roles/roles.decorator';
+import { RoleEnum } from '../roles/roles.enum';
+import { RolesGuard } from '../roles/roles.guard';
 
 @ApiTags('Tables')
 @Controller({
   path: 'tables',
   version: '1',
 })
-@ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
 export class TablesController {
   constructor(private readonly tablesService: TablesService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @ApiCreatedResponse({ type: Table })
-  createTable(@Body() dto: CreateTableDto): Promise<Table> {
-    return this.tablesService.createTable(dto);
+  @ApiOperation({ summary: 'Create a new table' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'The table has been successfully created.',
+    type: Table,
+  })
+  @ApiBearerAuth()
+  @Roles(RoleEnum.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  create(@Body() createTableDto: CreateTableDto): Promise<Table> {
+    return this.tablesService.create(createTableDto);
   }
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: [Table] })
-  findAll(): Promise<Table[]> {
-    return this.tablesService.findAll();
+  @ApiOperation({ summary: 'Get all tables' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'List of tables',
+    type: [Table],
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  findAll(
+    @Query() filterOptions: FindAllTablesDto,
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
+  ): Promise<Table[]> {
+    return this.tablesService.findAll(filterOptions, {
+      page,
+      limit,
+    } as IPaginationOptions);
+  }
+
+  @Get('area/:areaId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get tables by area id' })
+  @ApiParam({
+    name: 'areaId',
+    description: 'The id of the area',
+    type: String,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'List of tables by area id',
+    type: [Table],
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  findByAreaId(@Param('areaId') areaId: string): Promise<Table[]> {
+    return this.tablesService.findByAreaId(areaId);
   }
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: Table })
-  findOne(@Param('id') id: number): Promise<NullableType<Table>> {
-    return this.tablesService.findById(id);
+  @ApiOperation({ summary: 'Get table by id' })
+  @ApiParam({
+    name: 'id',
+    description: 'The id of the table',
+    type: String,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'The table has been successfully retrieved.',
+    type: Table,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Table not found',
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  findOne(@Param('id') id: string): Promise<Table> {
+    return this.tablesService.findOne(id);
   }
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: Table })
-  update(@Param('id') id: number, @Body() dto: UpdateTableDto): Promise<Table> {
-    return this.tablesService.updateTable(id, dto);
+  @ApiOperation({ summary: 'Update table by id' })
+  @ApiParam({
+    name: 'id',
+    description: 'The id of the table',
+    type: String,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'The table has been successfully updated.',
+    type: Table,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Table not found',
+  })
+  @ApiBearerAuth()
+  @Roles(RoleEnum.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  update(
+    @Param('id') id: string,
+    @Body() updateTableDto: UpdateTableDto,
+  ): Promise<Table> {
+    return this.tablesService.update(id, updateTableDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: number): Promise<void> {
-    return this.tablesService.removeTable(id);
+  @ApiOperation({ summary: 'Delete table by id' })
+  @ApiParam({
+    name: 'id',
+    description: 'The id of the table',
+    type: String,
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'The table has been successfully deleted.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Table not found',
+  })
+  @ApiBearerAuth()
+  @Roles(RoleEnum.admin)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  remove(@Param('id') id: string): Promise<void> {
+    return this.tablesService.remove(id);
   }
-
-  // Ejemplo para fusión de mesas
-  @Post(':id/merge')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async mergeTables(
-    @Param('id') parentId: number,
-    @Body() body: { childTableIds: number[] },
-  ): Promise<void> {
-    return this.tablesService.mergeTables(parentId, body.childTableIds);
-  }
-
-  // Ejemplo para separar mesas
-  @Post(':id/split')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async splitTables(@Param('id') tableId: number): Promise<void> {
-    return this.tablesService.splitTables(tableId);
-  }
-} 
+}

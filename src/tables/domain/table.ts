@@ -1,29 +1,64 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Allow } from 'class-validator';
-import { Area } from './area';
+import { Area } from '../../areas/domain/area';
 
-/**
- * Entidad de dominio para las Mesas.
- * No depende de infraestructura ni de TypeORM.
- */
 export class Table {
-  @ApiProperty({ example: 1 })
-  @Allow()
-  id: number | string;
+  @ApiProperty({
+    type: String,
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  id: string;
 
-  @ApiProperty({ example: 'Mesa 5' })
-  @Allow()
+  @ApiProperty({
+    type: String,
+    example: 'Mesa 1',
+  })
   name: string;
 
-  @ApiProperty({ example: false })
-  @Allow()
+  @ApiProperty({
+    type: String,
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  areaId: string;
+
+  @ApiProperty({
+    type: Boolean,
+    example: true,
+  })
+  isActive: boolean;
+
+  @ApiProperty({
+    type: Boolean,
+    example: true,
+  })
+  isAvailable: boolean;
+
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+  })
   isTemporary: boolean;
 
-  @ApiProperty({ example: null, description: 'Campo opcional para el ID de mesa padre en caso de fusión.' })
-  @Allow()
-  parentTableId?: number | string | null;
+  @ApiProperty({
+    type: String,
+    example: 'T-123',
+    nullable: true,
+  })
+  temporaryIdentifier: string | null;
 
-  @ApiProperty({ type: () => Area, nullable: true })
-  @Allow()
-  area?: Area | null;
-} 
+  @ApiProperty({
+    type: () => Area,
+    description: 'Área a la que pertenece la mesa (obligatorio)',
+  })
+  area: Area;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
+
+  @ApiProperty({
+    nullable: true,
+  })
+  deletedAt: Date | null;
+}

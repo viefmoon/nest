@@ -1,17 +1,16 @@
 import { Module } from '@nestjs/common';
-import { RelationalTablesPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
-import { TablesService } from './tables.service';
 import { TablesController } from './tables.controller';
-import { AreasController } from './areas.controller';
-import { AreasService } from './areas.service';
+import { TablesService } from './tables.service';
+import { RelationalTablePersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
+import { AreasModule } from '../areas/areas.module';
+import { AuthModule } from '../auth/auth.module';
 
-/**
- * Módulo principal de Tables, que incluye lógica de Mesas y Áreas.
- */
+const infrastructurePersistenceModule = RelationalTablePersistenceModule;
+
 @Module({
-  imports: [RelationalTablesPersistenceModule],
-  controllers: [TablesController, AreasController],
-  providers: [TablesService, AreasService],
-  exports: [TablesService, AreasService, RelationalTablesPersistenceModule],
+  imports: [infrastructurePersistenceModule, AreasModule, AuthModule],
+  controllers: [TablesController],
+  providers: [TablesService],
+  exports: [TablesService, infrastructurePersistenceModule],
 })
-export class TablesModule {} 
+export class TablesModule {}
