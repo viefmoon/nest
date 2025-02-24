@@ -20,6 +20,10 @@ import { SessionModule } from './session/session.module';
 import { MailerModule } from './mailer/mailer.module';
 import { AreasModule } from './areas/areas.module';
 import { TablesModule } from './tables/tables.module';
+import { CategoriesModule } from './categories/categories.module';
+import { SubCategoriesModule } from './subcategories/subcategories.module';
+import { ProductsModule } from './products/products.module';
+import { ProductVariantsModule } from './product-variants/product-variants.module';
 
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
   useClass: TypeOrmConfigService,
@@ -68,6 +72,10 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     HomeModule,
     AreasModule,
     TablesModule,
+    CategoriesModule,
+    SubCategoriesModule,
+    ProductsModule,
+    ProductVariantsModule,
   ],
 })
 export class AppModule {}

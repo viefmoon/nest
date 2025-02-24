@@ -124,3 +124,5 @@ If you want quick run your app, you can use following commands:
 Previous: [Introduction](introduction.md)
 
 Next: [Architecture](architecture.md)
+
+npx eslint --fix src/categories/**/\*.ts src/subcategories/**/\*.ts
