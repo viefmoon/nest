@@ -41,6 +41,10 @@ export class TablesRelationalRepository implements TableRepository {
       where.areaId = filterOptions.areaId;
     }
 
+    if (filterOptions?.capacity !== undefined) {
+      where.capacity = filterOptions.capacity;
+    }
+
     if (filterOptions?.isActive !== undefined) {
       where.isActive = filterOptions.isActive;
     }

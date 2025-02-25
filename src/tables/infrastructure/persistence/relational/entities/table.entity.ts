@@ -24,6 +24,9 @@ export class TableEntity extends EntityRelationalHelper {
   @Column({ nullable: false })
   areaId: string;
 
+  @Column({ type: 'int', nullable: true })
+  capacity: number | null;
+
   @Column({ default: true })
   isActive: boolean;
 

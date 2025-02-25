@@ -21,6 +21,14 @@ export class Table {
   areaId: string;
 
   @ApiProperty({
+    type: Number,
+    example: 4,
+    nullable: true,
+    description: 'Capacidad de la mesa (opcional)',
+  })
+  capacity: number | null;
+
+  @ApiProperty({
     type: Boolean,
     example: true,
   })

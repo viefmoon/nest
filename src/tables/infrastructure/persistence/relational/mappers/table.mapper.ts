@@ -8,6 +8,7 @@ export class TableMapper {
     domainEntity.id = raw.id;
     domainEntity.name = raw.name;
     domainEntity.areaId = raw.areaId;
+    domainEntity.capacity = raw.capacity;
     domainEntity.isActive = raw.isActive;
     domainEntity.isAvailable = raw.isAvailable;
     domainEntity.isTemporary = raw.isTemporary;
@@ -29,6 +30,7 @@ export class TableMapper {
     }
     persistenceEntity.name = domainEntity.name;
     persistenceEntity.areaId = domainEntity.areaId;
+    persistenceEntity.capacity = domainEntity.capacity;
     persistenceEntity.isActive = domainEntity.isActive;
     persistenceEntity.isAvailable = domainEntity.isAvailable;
     persistenceEntity.isTemporary = domainEntity.isTemporary;

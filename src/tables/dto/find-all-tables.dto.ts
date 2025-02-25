@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsBoolean,
+  IsOptional,
+  IsString,
+  IsUUID,
+  IsNumber,
+  IsInt,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class FindAllTablesDto {
@@ -18,6 +25,20 @@ export class FindAllTablesDto {
   @IsOptional()
   @IsUUID()
   areaId?: string;
+
+  @ApiProperty({
+    type: Number,
+    required: false,
+    description: 'Capacidad de la mesa (opcional)',
+  })
+  @IsOptional()
+  @IsNumber()
+  @IsInt()
+  @Transform(({ value }) => {
+    if (value === undefined || value === null) return undefined;
+    return Number(value);
+  })
+  capacity?: number;
 
   @ApiProperty({
     type: Boolean,

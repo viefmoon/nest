@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsBoolean,
+  IsOptional,
+  IsString,
+  IsUUID,
+  IsNumber,
+  IsInt,
+} from 'class-validator';
 
 export class UpdateTableDto {
   @ApiProperty({
@@ -19,6 +26,17 @@ export class UpdateTableDto {
   @IsOptional()
   @IsUUID()
   areaId?: string;
+
+  @ApiProperty({
+    type: Number,
+    example: 4,
+    required: false,
+    description: 'Capacidad de la mesa (opcional)',
+  })
+  @IsOptional()
+  @IsNumber()
+  @IsInt()
+  capacity?: number;
 
   @ApiProperty({
     type: Boolean,

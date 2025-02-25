@@ -14,6 +14,8 @@ export class TablesService {
     const table = new Table();
     table.name = createTableDto.name;
     table.areaId = createTableDto.areaId;
+    table.capacity =
+      createTableDto.capacity !== undefined ? createTableDto.capacity : null;
     table.isActive =
       createTableDto.isActive !== undefined ? createTableDto.isActive : true;
     table.isAvailable =

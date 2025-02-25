@@ -5,6 +5,8 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  IsNumber,
+  IsInt,
 } from 'class-validator';
 
 export class CreateTableDto {
@@ -24,6 +26,17 @@ export class CreateTableDto {
   @IsNotEmpty()
   @IsUUID()
   areaId: string;
+
+  @ApiProperty({
+    type: Number,
+    example: 4,
+    required: false,
+    description: 'Capacidad de la mesa (opcional)',
+  })
+  @IsOptional()
+  @IsNumber()
+  @IsInt()
+  capacity?: number;
 
   @ApiProperty({
     type: Boolean,
