@@ -21,7 +21,20 @@ export class TablesRelationalRepository implements TableRepository {
     const newEntity = await this.tablesRepository.save(
       this.tablesRepository.create(persistenceModel),
     );
-    return TableMapper.toDomain(newEntity);
+
+    // Cargar la entidad completa con el área
+    const completeEntity = await this.tablesRepository.findOne({
+      where: { id: newEntity.id },
+      relations: ['area'],
+    });
+
+    if (!completeEntity) {
+      throw new Error(
+        `No se pudo cargar la tabla creada con ID ${newEntity.id}`,
+      );
+    }
+
+    return TableMapper.toDomain(completeEntity);
   }
 
   async findManyWithPagination({
@@ -61,6 +74,7 @@ export class TablesRelationalRepository implements TableRepository {
       skip: (paginationOptions.page - 1) * paginationOptions.limit,
       take: paginationOptions.limit,
       where: where,
+      relations: ['area'],
     });
 
     return entities.map((table) => TableMapper.toDomain(table));
@@ -69,6 +83,7 @@ export class TablesRelationalRepository implements TableRepository {
   async findById(id: Table['id']): Promise<NullableType<Table>> {
     const entity = await this.tablesRepository.findOne({
       where: { id },
+      relations: ['area'],
     });
 
     return entity ? TableMapper.toDomain(entity) : null;
@@ -77,6 +92,7 @@ export class TablesRelationalRepository implements TableRepository {
   async findByName(name: Table['name']): Promise<NullableType<Table>> {
     const entity = await this.tablesRepository.findOne({
       where: { name },
+      relations: ['area'],
     });
 
     return entity ? TableMapper.toDomain(entity) : null;
@@ -85,6 +101,7 @@ export class TablesRelationalRepository implements TableRepository {
   async findByAreaId(areaId: Table['areaId']): Promise<Table[]> {
     const entities = await this.tablesRepository.find({
       where: { areaId },
+      relations: ['area'],
     });
 
     return entities.map((table) => TableMapper.toDomain(table));
@@ -93,6 +110,7 @@ export class TablesRelationalRepository implements TableRepository {
   async update(id: Table['id'], payload: Partial<Table>): Promise<Table> {
     const entity = await this.tablesRepository.findOne({
       where: { id },
+      relations: ['area'],
     });
 
     if (!entity) {
@@ -108,7 +126,19 @@ export class TablesRelationalRepository implements TableRepository {
       ),
     );
 
-    return TableMapper.toDomain(updatedEntity);
+    // Cargar la entidad actualizada con el área
+    const completeEntity = await this.tablesRepository.findOne({
+      where: { id: updatedEntity.id },
+      relations: ['area'],
+    });
+
+    if (!completeEntity) {
+      throw new Error(
+        `No se pudo cargar la tabla actualizada con ID ${updatedEntity.id}`,
+      );
+    }
+
+    return TableMapper.toDomain(completeEntity);
   }
 
   async remove(id: Table['id']): Promise<void> {

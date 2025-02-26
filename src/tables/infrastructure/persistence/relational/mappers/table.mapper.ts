@@ -13,10 +13,17 @@ export class TableMapper {
     domainEntity.isAvailable = raw.isAvailable;
     domainEntity.isTemporary = raw.isTemporary;
     domainEntity.temporaryIdentifier = raw.temporaryIdentifier;
-    if (!raw.area) {
+
+    // Si no es una operación de creación (ya tiene ID) y no tiene área, es un error
+    if (raw.id && !raw.area) {
       throw new Error(`La tabla ${raw.id} no tiene un área asociada`);
     }
-    domainEntity.area = AreaMapper.toDomain(raw.area);
+
+    // Asignar el área si está presente
+    if (raw.area) {
+      domainEntity.area = AreaMapper.toDomain(raw.area);
+    }
+
     domainEntity.createdAt = raw.createdAt;
     domainEntity.updatedAt = raw.updatedAt;
     domainEntity.deletedAt = raw.deletedAt;
