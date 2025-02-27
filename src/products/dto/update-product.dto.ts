@@ -7,7 +7,54 @@ import {
   IsString,
   IsUUID,
   Min,
+  ValidateIf,
+  ValidateNested,
+  IsArray,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class UpdateProductVariantDto {
+  @ApiProperty({
+    type: String,
+    example: 'Grande',
+    description: 'Nombre de la variante',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @ApiProperty({
+    type: Number,
+    example: 12.99,
+    description: 'Precio de la variante',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  price?: number;
+
+  @ApiProperty({
+    type: Boolean,
+    example: true,
+    description: 'Indica si la variante está activa',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+
+  @ApiProperty({
+    type: String,
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'ID de la variante (solo para actualizar variantes existentes)',
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  id?: string;
+}
 
 export class UpdateProductDto {
   @ApiProperty({
@@ -28,6 +75,7 @@ export class UpdateProductDto {
     required: false,
   })
   @IsOptional()
+  @ValidateIf((o) => o.hasVariants === false)
   @IsNumber()
   @IsPositive()
   price?: number | null;
@@ -94,4 +142,26 @@ export class UpdateProductDto {
   @IsOptional()
   @IsUUID()
   preparationScreenId?: string | null;
+
+  @ApiProperty({
+    type: [UpdateProductVariantDto],
+    description: 'Variantes del producto a actualizar o crear',
+    required: false,
+  })
+  @IsOptional()
+  @ValidateIf((o) => o.hasVariants === true)
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateProductVariantDto)
+  variants?: UpdateProductVariantDto[];
+
+  @ApiProperty({
+    type: [String],
+    description: 'IDs de variantes a eliminar',
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsUUID(undefined, { each: true })
+  variantsToDelete?: string[];
 }

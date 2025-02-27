@@ -4,12 +4,15 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './domain/product';
 import { FindAllProductsDto } from './dto/find-all-products.dto';
+import { ProductVariantsService } from '../product-variants/product-variants.service';
+import { ProductVariant } from '../product-variants/domain/product-variant';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @Inject('ProductRepository')
     private readonly productRepository: ProductRepository,
+    private readonly productVariantsService: ProductVariantsService,
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
@@ -29,7 +32,31 @@ export class ProductsService {
       };
     }
 
-    return this.productRepository.create(product);
+    // Crear el producto primero
+    const createdProduct = await this.productRepository.create(product);
+
+    // Si tiene variantes, crearlas
+    if (
+      createProductDto.hasVariants &&
+      createProductDto.variants &&
+      createProductDto.variants.length > 0
+    ) {
+      const variants: ProductVariant[] = [];
+      
+      for (const variantDto of createProductDto.variants) {
+        const variant = await this.productVariantsService.create({
+          productId: createdProduct.id,
+          name: variantDto.name,
+          price: variantDto.price,
+          isActive: variantDto.isActive,
+        });
+        variants.push(variant);
+      }
+      
+      createdProduct.variants = variants;
+    }
+
+    return createdProduct;
   }
 
   async findAll(
@@ -84,7 +111,44 @@ export class ProductsService {
       };
     }
 
-    return this.productRepository.update(id, product);
+    // Actualizar el producto
+    await this.productRepository.update(id, product);
+
+    // Manejar las variantes si se proporcionaron
+    if (updateProductDto.variants && updateProductDto.variants.length > 0) {
+      // Procesar las variantes a actualizar o crear
+      for (const variantDto of updateProductDto.variants) {
+        if (variantDto.id) {
+          // Actualizar variante existente
+          await this.productVariantsService.update(variantDto.id, {
+            name: variantDto.name,
+            price: variantDto.price,
+            isActive: variantDto.isActive,
+          });
+        } else {
+          // Crear nueva variante
+          await this.productVariantsService.create({
+            productId: id,
+            name: variantDto.name || '',
+            price: variantDto.price || 0,
+            isActive: variantDto.isActive,
+          });
+        }
+      }
+    }
+
+    // Eliminar variantes si se especificaron
+    if (
+      updateProductDto.variantsToDelete &&
+      updateProductDto.variantsToDelete.length > 0
+    ) {
+      for (const variantId of updateProductDto.variantsToDelete) {
+        await this.productVariantsService.remove(variantId);
+      }
+    }
+
+    // Obtener el producto actualizado con sus variantes
+    return this.productRepository.findOne(id);
   }
 
   async remove(id: string): Promise<void> {
