@@ -16,6 +16,7 @@ export class ProductsService {
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
+    console.log('createProductDto', createProductDto);
     const product = new Product();
     product.name = createProductDto.name;
     product.price = createProductDto.price || null;
@@ -24,6 +25,7 @@ export class ProductsService {
     product.subCategoryId = createProductDto.subCategoryId;
     product.estimatedPrepTime = createProductDto.estimatedPrepTime;
     product.preparationScreenId = createProductDto.preparationScreenId || null;
+    product.photoId = createProductDto.photoId || null;
 
     if (createProductDto.photoId) {
       product.photo = {
@@ -42,7 +44,6 @@ export class ProductsService {
       createProductDto.variants.length > 0
     ) {
       const variants: ProductVariant[] = [];
-      
       for (const variantDto of createProductDto.variants) {
         const variant = await this.productVariantsService.create({
           productId: createdProduct.id,
@@ -52,7 +53,6 @@ export class ProductsService {
         });
         variants.push(variant);
       }
-      
       createdProduct.variants = variants;
     }
 
