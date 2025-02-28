@@ -13,4 +13,15 @@ export interface ProductRepository {
   findOne(id: string): Promise<Product>;
   update(id: string, product: Product): Promise<Product>;
   softDelete(id: string): Promise<void>;
+
+  // Métodos para manejar las relaciones con grupos de modificadores
+  assignModifierGroups(
+    productId: string,
+    modifierGroupIds: string[],
+  ): Promise<Product>;
+  getModifierGroups(productId: string): Promise<Product>;
+  removeModifierGroups(
+    productId: string,
+    modifierGroupIds: string[],
+  ): Promise<Product>;
 }

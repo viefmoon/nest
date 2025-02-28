@@ -48,7 +48,8 @@ export class UpdateProductVariantDto {
   @ApiProperty({
     type: String,
     example: '123e4567-e89b-12d3-a456-426614174000',
-    description: 'ID de la variante (solo para actualizar variantes existentes)',
+    description:
+      'ID de la variante (solo para actualizar variantes existentes)',
     required: false,
   })
   @IsOptional()

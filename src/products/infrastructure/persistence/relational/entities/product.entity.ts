@@ -4,6 +4,8 @@ import {
   DeleteDateColumn,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -13,6 +15,7 @@ import { EntityRelationalHelper } from '../../../../../utils/relational-entity-h
 import { SubCategoryEntity } from '../../../../../subcategories/infrastructure/persistence/relational/entities/subcategory.entity';
 import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
 import { ProductVariantEntity } from '../../../../../product-variants/infrastructure/persistence/relational/entities/product-variant.entity';
+import { ModifierGroupEntity } from '../../../../../modifier-groups/infrastructure/persistence/relational/entities/modifier-group.entity';
 
 @Entity({
   name: 'product',
@@ -57,6 +60,20 @@ export class ProductEntity extends EntityRelationalHelper {
 
   @OneToMany(() => ProductVariantEntity, (variant) => variant.product)
   variants: ProductVariantEntity[];
+
+  @ManyToMany(() => ModifierGroupEntity)
+  @JoinTable({
+    name: 'product_modifier_group',
+    joinColumn: {
+      name: 'product_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'modifier_group_id',
+      referencedColumnName: 'id',
+    },
+  })
+  modifierGroups: ModifierGroupEntity[];
 
   @CreateDateColumn()
   createdAt: Date;

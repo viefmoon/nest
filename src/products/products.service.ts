@@ -6,6 +6,7 @@ import { Product } from './domain/product';
 import { FindAllProductsDto } from './dto/find-all-products.dto';
 import { ProductVariantsService } from '../product-variants/product-variants.service';
 import { ProductVariant } from '../product-variants/domain/product-variant';
+import { AssignModifierGroupsDto } from './dto/assign-modifier-groups.dto';
 
 @Injectable()
 export class ProductsService {
@@ -153,5 +154,30 @@ export class ProductsService {
 
   async remove(id: string): Promise<void> {
     return this.productRepository.softDelete(id);
+  }
+
+  // Métodos para manejar las relaciones con grupos de modificadores
+  async assignModifierGroups(
+    productId: string,
+    assignModifierGroupsDto: AssignModifierGroupsDto,
+  ): Promise<Product> {
+    return this.productRepository.assignModifierGroups(
+      productId,
+      assignModifierGroupsDto.modifierGroupIds,
+    );
+  }
+
+  async getModifierGroups(productId: string): Promise<Product> {
+    return this.productRepository.getModifierGroups(productId);
+  }
+
+  async removeModifierGroups(
+    productId: string,
+    assignModifierGroupsDto: AssignModifierGroupsDto,
+  ): Promise<Product> {
+    return this.productRepository.removeModifierGroups(
+      productId,
+      assignModifierGroupsDto.modifierGroupIds,
+    );
   }
 }

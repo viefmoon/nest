@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { SubCategory } from '../../subcategories/domain/subcategory';
 import { FileType } from '../../files/domain/file';
 import { ProductVariant } from '../../product-variants/domain/product-variant';
+import { ModifierGroup } from '../../modifier-groups/domain/modifier-group';
 
 export class Product {
   @ApiProperty({
@@ -82,6 +83,12 @@ export class Product {
     isArray: true,
   })
   variants: ProductVariant[];
+
+  @ApiProperty({
+    type: () => [ModifierGroup],
+    isArray: true,
+  })
+  modifierGroups: ModifierGroup[];
 
   @ApiProperty()
   createdAt: Date;
