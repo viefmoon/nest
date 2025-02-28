@@ -38,6 +38,9 @@ NestJS Boilerplate uses [TypeORM](https://www.npmjs.com/package/typeorm) with [P
    docker compose up -d postgres adminer maildev
    ```
 
+   //borrar todo
+   docker-compose down --volumes --rmi all
+
 1. Install dependency
 
    ```bash

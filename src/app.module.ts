@@ -24,6 +24,8 @@ import { CategoriesModule } from './categories/categories.module';
 import { SubCategoriesModule } from './subcategories/subcategories.module';
 import { ProductsModule } from './products/products.module';
 import { ProductVariantsModule } from './product-variants/product-variants.module';
+import { ModifierGroupsModule } from './modifier-groups/modifier-groups.module';
+import { ProductModifiersModule } from './product-modifiers/product-modifiers.module';
 
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
   useClass: TypeOrmConfigService,
@@ -76,6 +78,8 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     SubCategoriesModule,
     ProductsModule,
     ProductVariantsModule,
+    ModifierGroupsModule,
+    ProductModifiersModule,
   ],
 })
 export class AppModule {}
