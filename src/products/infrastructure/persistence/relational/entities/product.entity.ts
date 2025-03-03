@@ -16,6 +16,7 @@ import { SubCategoryEntity } from '../../../../../subcategories/infrastructure/p
 import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
 import { ProductVariantEntity } from '../../../../../product-variants/infrastructure/persistence/relational/entities/product-variant.entity';
 import { ModifierGroupEntity } from '../../../../../modifier-groups/infrastructure/persistence/relational/entities/modifier-group.entity';
+import { OrderItemEntity } from '../../../../../orders/infrastructure/persistence/relational/entities/order-item.entity';
 
 @Entity({
   name: 'product',
@@ -60,6 +61,9 @@ export class ProductEntity extends EntityRelationalHelper {
 
   @OneToMany(() => ProductVariantEntity, (variant) => variant.product)
   variants: ProductVariantEntity[];
+
+  @OneToMany(() => OrderItemEntity, (orderItem) => orderItem.product)
+  orderItems: OrderItemEntity[];
 
   @ManyToMany(() => ModifierGroupEntity)
   @JoinTable({

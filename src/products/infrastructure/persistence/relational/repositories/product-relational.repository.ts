@@ -125,7 +125,7 @@ export class ProductRelationalRepository implements ProductRepository {
     product.modifierGroups = [...product.modifierGroups, ...modifierGroups];
 
     // Guardar los cambios
-    const updatedProduct = await this.productRepository.save(product);
+    await this.productRepository.save(product);
 
     // Retornar el producto actualizado con sus relaciones
     return this.findOne(productId);

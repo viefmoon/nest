@@ -5,11 +5,13 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity';
+import { OrderItemEntity } from '../../../../../orders/infrastructure/persistence/relational/entities/order-item.entity';
 
 @Entity({
   name: 'product_variant',
@@ -35,6 +37,9 @@ export class ProductVariantEntity extends EntityRelationalHelper {
   })
   @JoinColumn({ name: 'productId' })
   product: ProductEntity;
+
+  @OneToMany(() => OrderItemEntity, (orderItem) => orderItem.productVariant)
+  orderItems: OrderItemEntity[];
 
   @CreateDateColumn()
   createdAt: Date;
