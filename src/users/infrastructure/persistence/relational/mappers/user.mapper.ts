@@ -10,9 +10,8 @@ export class UserMapper {
     const domainEntity = new User();
     domainEntity.id = raw.id;
     domainEntity.email = raw.email;
+    domainEntity.username = raw.username;
     domainEntity.password = raw.password;
-    domainEntity.provider = raw.provider;
-    domainEntity.socialId = raw.socialId;
     domainEntity.firstName = raw.firstName;
     domainEntity.lastName = raw.lastName;
     if (raw.photo) {
@@ -56,9 +55,8 @@ export class UserMapper {
       persistenceEntity.id = domainEntity.id;
     }
     persistenceEntity.email = domainEntity.email;
+    persistenceEntity.username = domainEntity.username;
     persistenceEntity.password = domainEntity.password;
-    persistenceEntity.provider = domainEntity.provider;
-    persistenceEntity.socialId = domainEntity.socialId;
     persistenceEntity.firstName = domainEntity.firstName;
     persistenceEntity.lastName = domainEntity.lastName;
     persistenceEntity.photo = photo;

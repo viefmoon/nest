@@ -2,11 +2,20 @@ import { PartialType, ApiPropertyOptional } from '@nestjs/swagger';
 import { CreateUserDto } from './create-user.dto';
 
 import { Transform, Type } from 'class-transformer';
-import { IsEmail, IsOptional, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsOptional,
+  MinLength,
+  IsEnum,
+  IsISO8601,
+  IsString,
+  IsObject,
+} from 'class-validator';
 import { FileDto } from '../../files/dto/file.dto';
 import { RoleDto } from '../../roles/dto/role.dto';
 import { StatusDto } from '../../statuses/dto/status.dto';
 import { lowerCaseTransformer } from '../../utils/transformers/lower-case.transformer';
+import { GenderEnum } from '../enums/gender.enum';
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
   @ApiPropertyOptional({ example: 'test1@example.com', type: String })
@@ -15,14 +24,14 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsEmail()
   email?: string | null;
 
+  @ApiPropertyOptional({ example: 'johndoe', type: String })
+  @IsOptional()
+  username?: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   @MinLength(6)
   password?: string;
-
-  provider?: string;
-
-  socialId?: string | null;
 
   @ApiPropertyOptional({ example: 'John', type: String })
   @IsOptional()
@@ -31,6 +40,57 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @ApiPropertyOptional({ example: 'Doe', type: String })
   @IsOptional()
   lastName?: string | null;
+
+  @ApiPropertyOptional({ example: '1990-01-01' })
+  @IsOptional()
+  @IsISO8601()
+  birthDate?: string;
+
+  @ApiPropertyOptional({ enum: GenderEnum, enumName: 'GenderEnum' })
+  @IsOptional()
+  @IsEnum(GenderEnum)
+  gender?: GenderEnum;
+
+  @ApiPropertyOptional({ example: '+1234567890' })
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
+
+  @ApiPropertyOptional({ example: '123 Main St' })
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @ApiPropertyOptional({ example: 'New York' })
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @ApiPropertyOptional({ example: 'NY' })
+  @IsOptional()
+  @IsString()
+  state?: string;
+
+  @ApiPropertyOptional({ example: 'USA' })
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @ApiPropertyOptional({ example: '10001' })
+  @IsOptional()
+  @IsString()
+  zipCode?: string;
+
+  @ApiPropertyOptional({
+    example: {
+      name: 'Jane Doe',
+      relationship: 'Spouse',
+      phoneNumber: '+1987654321',
+    },
+  })
+  @IsOptional()
+  @IsObject()
+  emergencyContact?: Record<string, any>;
 
   @ApiPropertyOptional({ type: () => FileDto })
   @IsOptional()

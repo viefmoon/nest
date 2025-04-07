@@ -12,8 +12,6 @@ import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcryptjs';
 import { AuthEmailLoginDto } from './dto/auth-email-login.dto';
 import { AuthUpdateDto } from './dto/auth-update.dto';
-import { AuthProvidersEnum } from './auth-providers.enum';
-import { SocialInterface } from '../social/interfaces/social.interface';
 import { AuthRegisterLoginDto } from './dto/auth-register-login.dto';
 import { NullableType } from '../utils/types/nullable.type';
 import { LoginResponseDto } from './dto/login-response.dto';
@@ -40,22 +38,13 @@ export class AuthService {
   ) {}
 
   async validateLogin(loginDto: AuthEmailLoginDto): Promise<LoginResponseDto> {
-    const user = await this.usersService.findByEmail(loginDto.email);
+    const user = await this.usersService.findByUsername(loginDto.username);
 
     if (!user) {
       throw new UnprocessableEntityException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
         errors: {
-          email: 'notFound',
-        },
-      });
-    }
-
-    if (user.provider !== AuthProvidersEnum.email) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: {
-          email: `needLoginViaProvider:${user.provider}`,
+          username: 'userNotFound',
         },
       });
     }
@@ -108,91 +97,6 @@ export class AuthService {
     };
   }
 
-  async validateSocialLogin(
-    authProvider: string,
-    socialData: SocialInterface,
-  ): Promise<LoginResponseDto> {
-    let user: NullableType<User> = null;
-    const socialEmail = socialData.email?.toLowerCase();
-    let userByEmail: NullableType<User> = null;
-
-    if (socialEmail) {
-      userByEmail = await this.usersService.findByEmail(socialEmail);
-    }
-
-    if (socialData.id) {
-      user = await this.usersService.findBySocialIdAndProvider({
-        socialId: socialData.id,
-        provider: authProvider,
-      });
-    }
-
-    if (user) {
-      if (socialEmail && !userByEmail) {
-        user.email = socialEmail;
-      }
-      await this.usersService.update(user.id, user);
-    } else if (userByEmail) {
-      user = userByEmail;
-    } else if (socialData.id) {
-      const role = {
-        id: RoleEnum.user,
-      };
-      const status = {
-        id: StatusEnum.active,
-      };
-
-      user = await this.usersService.create({
-        email: socialEmail ?? null,
-        firstName: socialData.firstName ?? null,
-        lastName: socialData.lastName ?? null,
-        socialId: socialData.id,
-        provider: authProvider,
-        role,
-        status,
-      });
-
-      user = await this.usersService.findById(user.id);
-    }
-
-    if (!user) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: {
-          user: 'userNotFound',
-        },
-      });
-    }
-
-    const hash = crypto
-      .createHash('sha256')
-      .update(randomStringGenerator())
-      .digest('hex');
-
-    const session = await this.sessionService.create({
-      user,
-      hash,
-    });
-
-    const {
-      token: jwtToken,
-      refreshToken,
-      tokenExpires,
-    } = await this.getTokensData({
-      id: user.id,
-      role: user.role,
-      sessionId: session.id,
-      hash,
-    });
-
-    return {
-      refreshToken,
-      token: jwtToken,
-      tokenExpires,
-      user,
-    };
-  }
-
   async register(dto: AuthRegisterLoginDto): Promise<void> {
     const user = await this.usersService.create({
       ...dto,
@@ -210,21 +114,29 @@ export class AuthService {
         confirmEmailUserId: user.id,
       },
       {
-        secret: this.configService.getOrThrow('auth.confirmEmailSecret', {
+        secret: this.configService.get('auth.confirmEmailSecret', {
           infer: true,
         }),
-        expiresIn: this.configService.getOrThrow('auth.confirmEmailExpires', {
+        expiresIn: this.configService.get('auth.confirmEmailExpires', {
           infer: true,
         }),
       },
     );
 
-    await this.mailService.userSignUp({
-      to: dto.email,
-      data: {
-        hash,
-      },
-    });
+    if (dto.email) {
+      await this.mailService.userSignUp({
+        to: dto.email,
+        data: {
+          hash,
+        },
+      });
+    } else {
+      await this.usersService.update(user.id, {
+        status: {
+          id: StatusEnum.active,
+        },
+      });
+    }
   }
 
   async confirmEmail(hash: string): Promise<void> {

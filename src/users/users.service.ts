@@ -9,7 +9,6 @@ import { FilterUserDto, SortUserDto } from './dto/query-user.dto';
 import { UserRepository } from './infrastructure/persistence/user.repository';
 import { User } from './domain/user';
 import bcrypt from 'bcryptjs';
-import { AuthProvidersEnum } from '../auth/auth-providers.enum';
 import { FilesService } from '../files/files.service';
 import { RoleEnum } from '../roles/roles.enum';
 import { StatusEnum } from '../statuses/statuses.enum';
@@ -52,6 +51,19 @@ export class UsersService {
         });
       }
       email = createUserDto.email;
+    }
+
+    // Validar que el username sea único
+    const userByUsername = await this.usersRepository.findByUsername(
+      createUserDto.username,
+    );
+    if (userByUsername) {
+      throw new UnprocessableEntityException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        errors: {
+          username: 'usernameAlreadyExists',
+        },
+      });
     }
 
     let photo: FileType | null | undefined = undefined;
@@ -113,18 +125,32 @@ export class UsersService {
       };
     }
 
+    // Convertir birthDate de string a Date si existe
+    let birthDate: Date | null = null;
+    if (createUserDto.birthDate) {
+      birthDate = new Date(createUserDto.birthDate);
+    }
+
     return this.usersRepository.create({
       // Do not remove comment below.
       // <creating-property-payload />
       firstName: createUserDto.firstName,
       lastName: createUserDto.lastName,
       email: email,
+      username: createUserDto.username,
       password: password,
       photo: photo,
       role: role,
       status: status,
-      provider: createUserDto.provider ?? AuthProvidersEnum.email,
-      socialId: createUserDto.socialId,
+      birthDate: birthDate,
+      gender: createUserDto.gender || null,
+      phoneNumber: createUserDto.phoneNumber || null,
+      address: createUserDto.address || null,
+      city: createUserDto.city || null,
+      state: createUserDto.state || null,
+      country: createUserDto.country || null,
+      zipCode: createUserDto.zipCode || null,
+      emergencyContact: createUserDto.emergencyContact || null,
     });
   }
 
@@ -156,17 +182,8 @@ export class UsersService {
     return this.usersRepository.findByEmail(email);
   }
 
-  findBySocialIdAndProvider({
-    socialId,
-    provider,
-  }: {
-    socialId: User['socialId'];
-    provider: User['provider'];
-  }): Promise<NullableType<User>> {
-    return this.usersRepository.findBySocialIdAndProvider({
-      socialId,
-      provider,
-    });
+  findByUsername(username: User['username']): Promise<NullableType<User>> {
+    return this.usersRepository.findByUsername(username);
   }
 
   async update(
@@ -208,6 +225,25 @@ export class UsersService {
       email = null;
     }
 
+    let username: string | undefined = undefined;
+
+    if (updateUserDto.username) {
+      const userObject = await this.usersRepository.findByUsername(
+        updateUserDto.username,
+      );
+
+      if (userObject && userObject.id !== id) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: {
+            username: 'usernameAlreadyExists',
+          },
+        });
+      }
+
+      username = updateUserDto.username;
+    }
+
     let photo: FileType | null | undefined = undefined;
 
     if (updateUserDto.photo?.id) {
@@ -227,7 +263,7 @@ export class UsersService {
       photo = null;
     }
 
-    let role: Role | undefined = undefined;
+    let role: Role | null | undefined = undefined;
 
     if (updateUserDto.role?.id) {
       const roleObject = Object.values(RoleEnum)
@@ -245,6 +281,8 @@ export class UsersService {
       role = {
         id: updateUserDto.role.id,
       };
+    } else if (updateUserDto.role === null) {
+      role = null;
     }
 
     let status: Status | undefined = undefined;
@@ -267,19 +305,37 @@ export class UsersService {
       };
     }
 
-    return this.usersRepository.update(id, {
+    // Convertir birthDate de string a Date si existe
+    let birthDate: Date | null | undefined = undefined;
+    if (updateUserDto.birthDate) {
+      birthDate = new Date(updateUserDto.birthDate);
+    } else if (updateUserDto.birthDate === null) {
+      birthDate = null;
+    }
+
+    const updatedUser = await this.usersRepository.update(id, {
       // Do not remove comment below.
       // <updating-property-payload />
       firstName: updateUserDto.firstName,
       lastName: updateUserDto.lastName,
-      email,
-      password,
-      photo,
-      role,
-      status,
-      provider: updateUserDto.provider,
-      socialId: updateUserDto.socialId,
+      email: email,
+      username: username,
+      password: password,
+      photo: photo,
+      role: role,
+      status: status,
+      birthDate: birthDate,
+      gender: updateUserDto.gender,
+      phoneNumber: updateUserDto.phoneNumber,
+      address: updateUserDto.address,
+      city: updateUserDto.city,
+      state: updateUserDto.state,
+      country: updateUserDto.country,
+      zipCode: updateUserDto.zipCode,
+      emergencyContact: updateUserDto.emergencyContact,
     });
+
+    return updatedUser;
   }
 
   async remove(id: User['id']): Promise<void> {
