@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, FindOptionsWhere, Repository } from 'typeorm';
 import { NullableType } from '../../../../../utils/types/nullable.type';
@@ -15,6 +15,7 @@ export class OrdersRelationalRepository implements OrderRepository {
   constructor(
     @InjectRepository(OrderEntity)
     private readonly ordersRepository: Repository<OrderEntity>,
+    @Inject('DailyOrderCounterRepository')
     private readonly dailyOrderCounterRepository: DailyOrderCounterRepository,
   ) {}
 

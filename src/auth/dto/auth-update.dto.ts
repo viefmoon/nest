@@ -50,42 +50,43 @@ export class AuthUpdateDto {
   @ApiPropertyOptional({ example: '1990-01-01' })
   @IsOptional()
   @IsISO8601()
-  birthDate?: string;
+  @Transform(({ value }) => (value ? new Date(value) : null))
+  birthDate?: Date | null;
 
   @ApiPropertyOptional({ enum: GenderEnum, enumName: 'GenderEnum' })
   @IsOptional()
   @IsEnum(GenderEnum)
-  gender?: GenderEnum;
+  gender?: GenderEnum | null;
 
   @ApiPropertyOptional({ example: '+1234567890' })
   @IsOptional()
   @IsString()
-  phoneNumber?: string;
+  phoneNumber?: string | null;
 
   @ApiPropertyOptional({ example: '123 Main St' })
   @IsOptional()
   @IsString()
-  address?: string;
+  address?: string | null;
 
   @ApiPropertyOptional({ example: 'New York' })
   @IsOptional()
   @IsString()
-  city?: string;
+  city?: string | null;
 
   @ApiPropertyOptional({ example: 'NY' })
   @IsOptional()
   @IsString()
-  state?: string;
+  state?: string | null;
 
   @ApiPropertyOptional({ example: 'USA' })
   @IsOptional()
   @IsString()
-  country?: string;
+  country?: string | null;
 
   @ApiPropertyOptional({ example: '10001' })
   @IsOptional()
   @IsString()
-  zipCode?: string;
+  zipCode?: string | null;
 
   @ApiPropertyOptional({
     example: {

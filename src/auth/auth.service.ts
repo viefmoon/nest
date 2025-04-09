@@ -38,13 +38,23 @@ export class AuthService {
   ) {}
 
   async validateLogin(loginDto: AuthEmailLoginDto): Promise<LoginResponseDto> {
-    const user = await this.usersService.findByUsername(loginDto.username);
+    let user: NullableType<User> = null;
+
+    // Si se proporciona username, buscamos por username
+    if (loginDto.username) {
+      user = await this.usersService.findByUsername(loginDto.username);
+    }
+
+    // Si no se encontró por username y se proporcionó email, buscamos por email
+    if (!user && loginDto.email) {
+      user = await this.usersService.findByEmail(loginDto.email);
+    }
 
     if (!user) {
       throw new UnprocessableEntityException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
         errors: {
-          username: 'userNotFound',
+          auth: 'credentialsIncorrect',
         },
       });
     }
@@ -322,6 +332,31 @@ export class AuthService {
       });
     }
 
+    const userToUpdate = { ...currentUser };
+
+    if (userDto.firstName !== undefined)
+      userToUpdate.firstName = userDto.firstName;
+    if (userDto.lastName !== undefined)
+      userToUpdate.lastName = userDto.lastName;
+    if (userDto.email !== undefined) userToUpdate.email = userDto.email;
+    if (userDto.password !== undefined)
+      userToUpdate.password = userDto.password;
+    if (userDto.photo !== undefined) userToUpdate.photo = userDto.photo;
+    if (userDto.birthDate !== undefined)
+      userToUpdate.birthDate = userDto.birthDate
+        ? new Date(userDto.birthDate)
+        : null;
+    if (userDto.gender !== undefined) userToUpdate.gender = userDto.gender;
+    if (userDto.phoneNumber !== undefined)
+      userToUpdate.phoneNumber = userDto.phoneNumber;
+    if (userDto.address !== undefined) userToUpdate.address = userDto.address;
+    if (userDto.city !== undefined) userToUpdate.city = userDto.city;
+    if (userDto.state !== undefined) userToUpdate.state = userDto.state;
+    if (userDto.country !== undefined) userToUpdate.country = userDto.country;
+    if (userDto.zipCode !== undefined) userToUpdate.zipCode = userDto.zipCode;
+    if (userDto.emergencyContact !== undefined)
+      userToUpdate.emergencyContact = userDto.emergencyContact;
+
     if (userDto.password) {
       if (!userDto.oldPassword) {
         throw new UnprocessableEntityException({
@@ -368,7 +403,7 @@ export class AuthService {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
           errors: {
-            email: 'emailExists',
+            email: 'emailAlreadyExists',
           },
         });
       }
@@ -394,14 +429,30 @@ export class AuthService {
           hash,
         },
       });
+
+      // No actualizamos el email aquí, se actualizará cuando el usuario confirme el email
+      userToUpdate.email = currentUser.email;
     }
 
-    delete userDto.email;
-    delete userDto.oldPassword;
+    // Creamos un objeto con solo las propiedades que queremos actualizar
+    const updateData: Partial<User> = {
+      firstName: userToUpdate.firstName,
+      lastName: userToUpdate.lastName,
+      password: userToUpdate.password,
+      photo: userToUpdate.photo,
+      birthDate: userToUpdate.birthDate,
+      gender: userToUpdate.gender,
+      phoneNumber: userToUpdate.phoneNumber,
+      address: userToUpdate.address,
+      city: userToUpdate.city,
+      state: userToUpdate.state,
+      country: userToUpdate.country,
+      zipCode: userToUpdate.zipCode,
+      email: userToUpdate.email,
+      emergencyContact: userToUpdate.emergencyContact,
+    };
 
-    await this.usersService.update(userJwtPayload.id, userDto);
-
-    return this.usersService.findById(userJwtPayload.id);
+    return this.usersService.update(userJwtPayload.id, updateData);
   }
 
   async refreshToken(

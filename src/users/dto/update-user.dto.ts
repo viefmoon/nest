@@ -17,7 +17,7 @@ import { StatusDto } from '../../statuses/dto/status.dto';
 import { lowerCaseTransformer } from '../../utils/transformers/lower-case.transformer';
 import { GenderEnum } from '../enums/gender.enum';
 
-export class UpdateUserDto extends PartialType(CreateUserDto) {
+export class UpdateUserDto {
   @ApiPropertyOptional({ example: 'test1@example.com', type: String })
   @Transform(lowerCaseTransformer)
   @IsOptional()
@@ -26,6 +26,7 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
 
   @ApiPropertyOptional({ example: 'johndoe', type: String })
   @IsOptional()
+  @IsEmail()
   username?: string;
 
   @ApiPropertyOptional()
@@ -44,42 +45,43 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @ApiPropertyOptional({ example: '1990-01-01' })
   @IsOptional()
   @IsISO8601()
-  birthDate?: string;
+  @Transform(({ value }) => (value ? new Date(value) : null))
+  birthDate?: Date | null;
 
   @ApiPropertyOptional({ enum: GenderEnum, enumName: 'GenderEnum' })
   @IsOptional()
   @IsEnum(GenderEnum)
-  gender?: GenderEnum;
+  gender?: GenderEnum | null;
 
   @ApiPropertyOptional({ example: '+1234567890' })
   @IsOptional()
   @IsString()
-  phoneNumber?: string;
+  phoneNumber?: string | null;
 
   @ApiPropertyOptional({ example: '123 Main St' })
   @IsOptional()
   @IsString()
-  address?: string;
+  address?: string | null;
 
   @ApiPropertyOptional({ example: 'New York' })
   @IsOptional()
   @IsString()
-  city?: string;
+  city?: string | null;
 
   @ApiPropertyOptional({ example: 'NY' })
   @IsOptional()
   @IsString()
-  state?: string;
+  state?: string | null;
 
   @ApiPropertyOptional({ example: 'USA' })
   @IsOptional()
   @IsString()
-  country?: string;
+  country?: string | null;
 
   @ApiPropertyOptional({ example: '10001' })
   @IsOptional()
   @IsString()
-  zipCode?: string;
+  zipCode?: string | null;
 
   @ApiPropertyOptional({
     example: {
@@ -90,7 +92,7 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   })
   @IsOptional()
   @IsObject()
-  emergencyContact?: Record<string, any>;
+  emergencyContact?: Record<string, any> | null;
 
   @ApiPropertyOptional({ type: () => FileDto })
   @IsOptional()
