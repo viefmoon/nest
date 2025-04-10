@@ -1,5 +1,4 @@
 import {
-  HttpStatus,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -26,6 +25,7 @@ import { Session } from '../session/domain/session';
 import { SessionService } from '../session/session.service';
 import { StatusEnum } from '../statuses/statuses.enum';
 import { User } from '../users/domain/user';
+import { ERROR_CODES } from '../common/constants/error-codes.constants'; // Importar códigos
 
 @Injectable()
 export class AuthService {
@@ -52,19 +52,17 @@ export class AuthService {
 
     if (!user) {
       throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: {
-          auth: 'credentialsIncorrect',
-        },
+        code: ERROR_CODES.AUTH_INVALID_CREDENTIALS,
+        message: 'Usuario o contraseña incorrectos.',
       });
     }
 
     if (!user.password) {
+      // Podría ser un error interno si se espera que siempre haya contraseña
+      // O un error específico si es un estado válido pero no permite login
       throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: {
-          password: 'incorrectPassword',
-        },
+        code: ERROR_CODES.AUTH_ACCOUNT_INACTIVE, // O un código más apropiado
+        message: 'La cuenta no tiene una contraseña configurada.',
       });
     }
 
@@ -75,10 +73,8 @@ export class AuthService {
 
     if (!isValidPassword) {
       throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: {
-          password: 'incorrectPassword',
-        },
+        code: ERROR_CODES.AUTH_INCORRECT_PASSWORD,
+        message: 'La contraseña es incorrecta.',
       });
     }
 
@@ -164,22 +160,21 @@ export class AuthService {
       userId = jwtData.confirmEmailUserId;
     } catch {
       throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: {
-          hash: `invalidHash`,
-        },
+        code: ERROR_CODES.AUTH_INVALID_HASH,
+        message: 'El enlace de confirmación es inválido o ha expirado.',
       });
     }
 
     const user = await this.usersService.findById(userId);
 
+    // Considerar si el estado diferente a inactivo debe ser otro error (ej. AUTH_EMAIL_ALREADY_CONFIRMED)
     if (
       !user ||
       user?.status?.id?.toString() !== StatusEnum.inactive.toString()
     ) {
       throw new NotFoundException({
-        status: HttpStatus.NOT_FOUND,
-        error: `notFound`,
+        code: ERROR_CODES.USER_NOT_FOUND, // O un código más específico como AUTH_CONFIRMATION_LINK_INVALID
+        message: 'Usuario no encontrado o el enlace ya no es válido.',
       });
     }
 
@@ -208,10 +203,9 @@ export class AuthService {
       newEmail = jwtData.newEmail;
     } catch {
       throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: {
-          hash: `invalidHash`,
-        },
+        code: ERROR_CODES.AUTH_INVALID_HASH,
+        message:
+          'El enlace de confirmación de nuevo correo es inválido o ha expirado.',
       });
     }
 
@@ -219,8 +213,8 @@ export class AuthService {
 
     if (!user) {
       throw new NotFoundException({
-        status: HttpStatus.NOT_FOUND,
-        error: `notFound`,
+        code: ERROR_CODES.USER_NOT_FOUND,
+        message: 'Usuario asociado al enlace no encontrado.',
       });
     }
 
@@ -236,11 +230,12 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
 
     if (!user) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: {
-          email: 'emailNotExists',
-        },
+      // Aunque el usuario no exista, por seguridad, podríamos no revelarlo explícitamente.
+      // Pero para seguir el patrón, lanzamos el error.
+      throw new NotFoundException({
+        // Cambiado a NotFoundException para ser más semántico
+        code: ERROR_CODES.USER_NOT_FOUND,
+        message: 'No se encontró un usuario con ese correo electrónico.',
       });
     }
 
@@ -286,21 +281,19 @@ export class AuthService {
       userId = jwtData.forgotUserId;
     } catch {
       throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: {
-          hash: `invalidHash`,
-        },
+        code: ERROR_CODES.AUTH_INVALID_HASH,
+        message:
+          'El enlace para restablecer la contraseña es inválido o ha expirado.',
       });
     }
 
     const user = await this.usersService.findById(userId);
 
     if (!user) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: {
-          hash: `notFound`,
-        },
+      throw new NotFoundException({
+        // Cambiado a NotFoundException
+        code: ERROR_CODES.USER_NOT_FOUND,
+        message: 'Usuario asociado al enlace no encontrado.',
       });
     }
 
@@ -324,11 +317,10 @@ export class AuthService {
     const currentUser = await this.usersService.findById(userJwtPayload.id);
 
     if (!currentUser) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: {
-          user: 'userNotFound',
-        },
+      // Esto no debería ocurrir si el token es válido, pero por si acaso.
+      throw new NotFoundException({
+        code: ERROR_CODES.USER_NOT_FOUND,
+        message: 'Usuario actual no encontrado.',
       });
     }
 
@@ -360,19 +352,19 @@ export class AuthService {
     if (userDto.password) {
       if (!userDto.oldPassword) {
         throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            oldPassword: 'missingOldPassword',
-          },
+          code: ERROR_CODES.AUTH_MISSING_OLD_PASSWORD,
+          message:
+            'Se requiere la contraseña anterior para establecer una nueva.',
+          details: { field: 'oldPassword' },
         });
       }
 
       if (!currentUser.password) {
+        // Caso raro: el usuario no tiene contraseña pero intenta cambiarla.
         throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            oldPassword: 'incorrectOldPassword',
-          },
+          code: ERROR_CODES.AUTH_INCORRECT_OLD_PASSWORD, // O un código más específico
+          message: 'La cuenta actual no tiene una contraseña configurada.',
+          details: { field: 'oldPassword' },
         });
       }
 
@@ -383,10 +375,9 @@ export class AuthService {
 
       if (!isValidOldPassword) {
         throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            oldPassword: 'incorrectOldPassword',
-          },
+          code: ERROR_CODES.AUTH_INCORRECT_OLD_PASSWORD,
+          message: 'La contraseña anterior es incorrecta.',
+          details: { field: 'oldPassword' },
         });
       } else {
         await this.sessionService.deleteByUserIdWithExclude({
@@ -401,10 +392,10 @@ export class AuthService {
 
       if (userByEmail && userByEmail.id !== currentUser.id) {
         throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            email: 'emailAlreadyExists',
-          },
+          // Podría ser ConflictException(409) también
+          code: ERROR_CODES.AUTH_DUPLICATE_EMAIL,
+          message: 'El correo electrónico ya está registrado por otro usuario.',
+          details: { field: 'email' },
         });
       }
 
@@ -461,11 +452,19 @@ export class AuthService {
     const session = await this.sessionService.findById(data.sessionId);
 
     if (!session) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException({
+        code: ERROR_CODES.AUTH_SESSION_EXPIRED_OR_INVALID,
+        message: 'La sesión ha expirado o es inválida.',
+      });
     }
 
     if (session.hash !== data.hash) {
-      throw new UnauthorizedException();
+      // Podría indicar un intento de reutilización de refresh token o manipulación
+      await this.sessionService.deleteById(session.id); // Invalidar la sesión comprometida
+      throw new UnauthorizedException({
+        code: ERROR_CODES.AUTH_SESSION_EXPIRED_OR_INVALID,
+        message: 'Token de refresco inválido.',
+      });
     }
 
     const hash = crypto
@@ -476,7 +475,12 @@ export class AuthService {
     const user = await this.usersService.findById(session.user.id);
 
     if (!user?.role) {
-      throw new UnauthorizedException();
+      // El usuario asociado a la sesión ya no existe o no tiene rol
+      await this.sessionService.deleteById(session.id); // Limpiar sesión huérfana
+      throw new UnauthorizedException({
+        code: ERROR_CODES.AUTH_UNAUTHORIZED, // O USER_NOT_FOUND si se prefiere
+        message: 'Usuario asociado a la sesión no válido.',
+      });
     }
 
     await this.sessionService.update(session.id, {

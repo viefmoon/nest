@@ -17,6 +17,7 @@ import { FileType } from '../files/domain/file';
 import { Role } from '../roles/domain/role';
 import { Status } from '../statuses/domain/status';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ERROR_CODES } from '../common/constants/error-codes.constants'; // Importar códigos
 
 @Injectable()
 export class UsersService {
@@ -44,10 +45,9 @@ export class UsersService {
       );
       if (userObject) {
         throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            email: 'emailAlreadyExists',
-          },
+          code: ERROR_CODES.AUTH_DUPLICATE_EMAIL,
+          message: 'El correo electrónico ya está registrado.',
+          details: { field: 'email' },
         });
       }
       email = createUserDto.email;
@@ -59,10 +59,9 @@ export class UsersService {
     );
     if (userByUsername) {
       throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: {
-          username: 'usernameAlreadyExists',
-        },
+        code: ERROR_CODES.AUTH_DUPLICATE_USERNAME,
+        message: 'El nombre de usuario ya está en uso.',
+        details: { field: 'username' },
       });
     }
 
@@ -213,10 +212,9 @@ export class UsersService {
 
       if (userObject && userObject.id !== id) {
         throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            email: 'emailAlreadyExists',
-          },
+          code: ERROR_CODES.AUTH_DUPLICATE_EMAIL,
+          message: 'El correo electrónico ya está registrado por otro usuario.',
+          details: { field: 'email' },
         });
       }
 
@@ -234,10 +232,9 @@ export class UsersService {
 
       if (userObject && userObject.id !== id) {
         throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            username: 'usernameAlreadyExists',
-          },
+          code: ERROR_CODES.AUTH_DUPLICATE_USERNAME,
+          message: 'El nombre de usuario ya está en uso por otro usuario.',
+          details: { field: 'username' },
         });
       }
 

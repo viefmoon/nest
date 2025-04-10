@@ -12,6 +12,7 @@ import { AppModule } from './app.module';
 import validationOptions from './utils/validation-options';
 import { AllConfigType } from './config/config.type';
 import { ResolvePromisesInterceptor } from './utils/serializer.interceptor';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter'; // Importar el filtro
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
@@ -35,6 +36,7 @@ async function bootstrap() {
     new ResolvePromisesInterceptor(),
     new ClassSerializerInterceptor(app.get(Reflector)),
   );
+  app.useGlobalFilters(new AllExceptionsFilter()); // Registrar el filtro
 
   const options = new DocumentBuilder()
     .setTitle('API')
