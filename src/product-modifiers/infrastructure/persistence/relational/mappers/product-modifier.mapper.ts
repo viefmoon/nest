@@ -1,10 +1,8 @@
-import { Injectable } from '@nestjs/common';
 import { ProductModifier } from '../../../../domain/product-modifier';
 import { ProductModifierEntity } from '../entities/product-modifier.entity';
 
-@Injectable()
 export class ProductModifierMapper {
-  toDomain(entity: ProductModifierEntity): ProductModifier {
+  static toDomain(entity: ProductModifierEntity): ProductModifier {
     const domain = new ProductModifier();
     domain.id = entity.id;
     domain.groupId = entity.groupId;
@@ -20,7 +18,7 @@ export class ProductModifierMapper {
     return domain;
   }
 
-  toPersistence(domain: ProductModifier): ProductModifierEntity {
+  static toPersistence(domain: ProductModifier): ProductModifierEntity {
     const entity = new ProductModifierEntity();
     entity.id = domain.id;
     entity.groupId = domain.groupId;

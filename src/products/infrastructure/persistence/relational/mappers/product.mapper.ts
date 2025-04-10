@@ -3,7 +3,7 @@ import { ProductEntity } from '../entities/product.entity';
 import { SubCategoryMapper } from '../../../../../subcategories/infrastructure/persistence/relational/mappers/subcategory.mapper';
 import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
 import { ProductVariantMapper } from '../../../../../product-variants/infrastructure/persistence/relational/mappers/product-variant.mapper';
-
+import { ModifierGroupMapper } from '../../../../../modifier-groups/infrastructure/persistence/relational/mappers/modifier-group.mapper';
 export class ProductMapper {
   static toDomain(entity: ProductEntity): Product {
     const product = new Product();
@@ -31,6 +31,12 @@ export class ProductMapper {
     if (entity.variants) {
       product.variants = entity.variants.map((variant) =>
         ProductVariantMapper.toDomain(variant),
+      );
+    }
+
+    if (entity.modifierGroups) {
+      product.modifierGroups = entity.modifierGroups.map((group) =>
+        ModifierGroupMapper.toDomain(group),
       );
     }
 

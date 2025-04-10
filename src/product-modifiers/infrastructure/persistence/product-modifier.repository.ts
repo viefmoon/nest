@@ -12,21 +12,20 @@ export class ProductModifierRepository {
   constructor(
     @InjectRepository(ProductModifierEntity)
     private readonly productModifierEntityRepository: Repository<ProductModifierEntity>,
-    private readonly productModifierMapper: ProductModifierMapper,
   ) {}
 
   async create(data: ProductModifier): Promise<ProductModifier> {
-    const persistenceModel = this.productModifierMapper.toPersistence(data);
+    const persistenceModel = ProductModifierMapper.toPersistence(data);
     const newEntity =
       await this.productModifierEntityRepository.save(persistenceModel);
-    return this.productModifierMapper.toDomain(newEntity);
+    return ProductModifierMapper.toDomain(newEntity);
   }
 
   async findById(id: string): Promise<ProductModifier | null> {
     const entity = await this.productModifierEntityRepository.findOne({
       where: { id },
     });
-    return entity ? this.productModifierMapper.toDomain(entity) : null;
+    return entity ? ProductModifierMapper.toDomain(entity) : null;
   }
 
   async findByGroupId(groupId: string): Promise<ProductModifier[]> {
@@ -34,9 +33,7 @@ export class ProductModifierRepository {
       where: { groupId },
       order: { sortOrder: 'ASC' },
     });
-    return entities.map((entity) =>
-      this.productModifierMapper.toDomain(entity),
-    );
+    return entities.map((entity) => ProductModifierMapper.toDomain(entity));
   }
 
   async findManyWithPagination({
@@ -85,9 +82,7 @@ export class ProductModifierRepository {
       .take(take);
 
     const entities = await queryBuilder.getMany();
-    return entities.map((entity) =>
-      this.productModifierMapper.toDomain(entity),
-    );
+    return entities.map((entity) => ProductModifierMapper.toDomain(entity));
   }
 
   async update(
@@ -107,7 +102,7 @@ export class ProductModifierRepository {
       ...data,
     });
 
-    return this.productModifierMapper.toDomain(updatedEntity);
+    return ProductModifierMapper.toDomain(updatedEntity);
   }
 
   async remove(id: string): Promise<void> {
