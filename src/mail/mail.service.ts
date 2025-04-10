@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { I18nContext } from 'nestjs-i18n';
 import { MailData } from './interfaces/mail-data.interface';
 
 import { MaybeType } from '../utils/types/maybe.type';
@@ -16,20 +15,12 @@ export class MailService {
   ) {}
 
   async userSignUp(mailData: MailData<{ hash: string }>): Promise<void> {
-    const i18n = I18nContext.current();
-    let emailConfirmTitle: MaybeType<string>;
-    let text1: MaybeType<string>;
-    let text2: MaybeType<string>;
-    let text3: MaybeType<string>;
+    const emailConfirmTitle: MaybeType<string> = 'Confirm Email'; // Default value
+    const text1: MaybeType<string> = ''; // Default value or empty string
+    const text2: MaybeType<string> = ''; // Default value or empty string
+    const text3: MaybeType<string> = ''; // Default value or empty string
 
-    if (i18n) {
-      [emailConfirmTitle, text1, text2, text3] = await Promise.all([
-        i18n.t('common.confirmEmail'),
-        i18n.t('confirm-email.text1'),
-        i18n.t('confirm-email.text2'),
-        i18n.t('confirm-email.text3'),
-      ]);
-    }
+    // Removed i18n logic
 
     const url = new URL(
       this.configService.getOrThrow('app.frontendDomain', {
@@ -66,22 +57,13 @@ export class MailService {
   async forgotPassword(
     mailData: MailData<{ hash: string; tokenExpires: number }>,
   ): Promise<void> {
-    const i18n = I18nContext.current();
-    let resetPasswordTitle: MaybeType<string>;
-    let text1: MaybeType<string>;
-    let text2: MaybeType<string>;
-    let text3: MaybeType<string>;
-    let text4: MaybeType<string>;
+    const resetPasswordTitle: MaybeType<string> = 'Reset Password'; // Default value
+    const text1: MaybeType<string> = ''; // Default value or empty string
+    const text2: MaybeType<string> = ''; // Default value or empty string
+    const text3: MaybeType<string> = ''; // Default value or empty string
+    const text4: MaybeType<string> = ''; // Default value or empty string
 
-    if (i18n) {
-      [resetPasswordTitle, text1, text2, text3, text4] = await Promise.all([
-        i18n.t('common.resetPassword'),
-        i18n.t('reset-password.text1'),
-        i18n.t('reset-password.text2'),
-        i18n.t('reset-password.text3'),
-        i18n.t('reset-password.text4'),
-      ]);
-    }
+    // Removed i18n logic
 
     const url = new URL(
       this.configService.getOrThrow('app.frontendDomain', {
@@ -120,20 +102,12 @@ export class MailService {
   }
 
   async confirmNewEmail(mailData: MailData<{ hash: string }>): Promise<void> {
-    const i18n = I18nContext.current();
-    let emailConfirmTitle: MaybeType<string>;
-    let text1: MaybeType<string>;
-    let text2: MaybeType<string>;
-    let text3: MaybeType<string>;
+    const emailConfirmTitle: MaybeType<string> = 'Confirm New Email'; // Default value
+    const text1: MaybeType<string> = ''; // Default value or empty string
+    const text2: MaybeType<string> = ''; // Default value or empty string
+    const text3: MaybeType<string> = ''; // Default value or empty string
 
-    if (i18n) {
-      [emailConfirmTitle, text1, text2, text3] = await Promise.all([
-        i18n.t('common.confirmEmail'),
-        i18n.t('confirm-new-email.text1'),
-        i18n.t('confirm-new-email.text2'),
-        i18n.t('confirm-new-email.text3'),
-      ]);
-    }
+    // Removed i18n logic
 
     const url = new URL(
       this.configService.getOrThrow('app.frontendDomain', {
