@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, In, Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm'; // Eliminar 'In'
 import { ProductEntity } from '../entities/product.entity';
 import { ProductRepository } from '../../product.repository';
 import { Product } from '../../../../domain/product';
@@ -88,6 +88,26 @@ export class ProductRelationalRepository implements ProductRepository {
     return ProductMapper.toDomain(updatedEntity);
   }
 
+  async save(product: Product): Promise<Product> {
+    const entity = ProductMapper.toEntity(product);
+    // Asegurarse de que las relaciones (como modifierGroups) estén mapeadas correctamente si es necesario
+    // En este caso, el mapeador podría necesitar lógica adicional si el dominio no tiene las entidades TypeORM
+    // Pero como el servicio ya está manejando las entidades ModifierGroup, debería funcionar.
+    const savedEntity = await this.productRepository.save(entity);
+    // Recargar para asegurar que todas las relaciones estén presentes después de guardar
+    const reloadedEntity = await this.productRepository.findOne({
+      where: { id: savedEntity.id },
+      relations: ['photo', 'subCategory', 'variants', 'modifierGroups'],
+    });
+    if (!reloadedEntity) {
+      // Esto no debería suceder si el save fue exitoso, pero es una verificación de seguridad
+      throw new NotFoundException(
+        `Producto con ID ${savedEntity.id} no encontrado después de guardar`,
+      );
+    }
+    return ProductMapper.toDomain(reloadedEntity);
+  }
+
   async softDelete(id: string): Promise<void> {
     const result = await this.productRepository.softDelete(id);
 
@@ -96,68 +116,6 @@ export class ProductRelationalRepository implements ProductRepository {
     }
   }
 
-  async assignModifierGroups(
-    productId: string,
-    modifierGroupIds: string[],
-  ): Promise<Product> {
-    // Verificar que el producto existe
-    const product = await this.productRepository.findOne({
-      where: { id: productId },
-      relations: ['modifierGroups'],
-    });
-
-    if (!product) {
-      throw new NotFoundException(`Producto con ID ${productId} no encontrado`);
-    }
-
-    // Verificar que los grupos de modificadores existen
-    const modifierGroups = await this.modifierGroupRepository.find({
-      where: { id: In(modifierGroupIds) },
-    });
-
-    if (modifierGroups.length !== modifierGroupIds.length) {
-      throw new NotFoundException(
-        'Uno o más grupos de modificadores no existen',
-      );
-    }
-
-    // Asignar los grupos de modificadores al producto
-    product.modifierGroups = [...product.modifierGroups, ...modifierGroups];
-
-    // Guardar los cambios
-    await this.productRepository.save(product);
-
-    // Retornar el producto actualizado con sus relaciones
-    return this.findOne(productId);
-  }
-
-  async getModifierGroups(productId: string): Promise<Product> {
-    return this.findOne(productId);
-  }
-
-  async removeModifierGroups(
-    productId: string,
-    modifierGroupIds: string[],
-  ): Promise<Product> {
-    // Verificar que el producto existe
-    const product = await this.productRepository.findOne({
-      where: { id: productId },
-      relations: ['modifierGroups'],
-    });
-
-    if (!product) {
-      throw new NotFoundException(`Producto con ID ${productId} no encontrado`);
-    }
-
-    // Filtrar los grupos de modificadores a eliminar
-    product.modifierGroups = product.modifierGroups.filter(
-      (group) => !modifierGroupIds.includes(group.id),
-    );
-
-    // Guardar los cambios
-    await this.productRepository.save(product);
-
-    // Retornar el producto actualizado con sus relaciones
-    return this.findOne(productId);
-  }
+  // Los métodos assign/get/removeModifierGroups se eliminan de la implementación
+  // ya que la lógica principal está en el servicio usando 'save'.
 }

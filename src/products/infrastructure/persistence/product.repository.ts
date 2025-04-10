@@ -11,17 +11,10 @@ export interface ProductRepository {
     search?: string;
   }): Promise<[Product[], number]>;
   findOne(id: string): Promise<Product>;
-  update(id: string, product: Product): Promise<Product>;
+  update(id: string, product: Partial<Product>): Promise<Product>; // Permitir actualizaciones parciales si es necesario
+  save(product: Product): Promise<Product>; // Añadir método save para actualizaciones completas con relaciones
   softDelete(id: string): Promise<void>;
 
-  // Métodos para manejar las relaciones con grupos de modificadores
-  assignModifierGroups(
-    productId: string,
-    modifierGroupIds: string[],
-  ): Promise<Product>;
-  getModifierGroups(productId: string): Promise<Product>;
-  removeModifierGroups(
-    productId: string,
-    modifierGroupIds: string[],
-  ): Promise<Product>;
+  // Los métodos específicos para grupos de modificadores se eliminan de la interfaz
+  // ya que la lógica principal está en el servicio usando 'save'.
 }

@@ -39,6 +39,10 @@ export class ProductVariantsService {
     return this.productVariantRepository.findOne(id);
   }
 
+  async findAllByProductId(productId: string): Promise<ProductVariant[]> {
+    return this.productVariantRepository.findAllByProductId(productId);
+  }
+
   async update(
     id: string,
     updateProductVariantDto: UpdateProductVariantDto,

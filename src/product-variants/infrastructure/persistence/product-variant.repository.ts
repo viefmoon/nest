@@ -9,6 +9,11 @@ export interface ProductVariantRepository {
     isActive?: boolean;
   }): Promise<[ProductVariant[], number]>;
   findOne(id: string): Promise<ProductVariant>;
-  update(id: string, productVariant: ProductVariant): Promise<ProductVariant>;
+  update(
+    id: string,
+    productVariant: Partial<ProductVariant>,
+  ): Promise<ProductVariant>;
+  save(productVariant: ProductVariant): Promise<ProductVariant>;
+  findAllByProductId(productId: string): Promise<ProductVariant[]>;
   softDelete(id: string): Promise<void>;
 }

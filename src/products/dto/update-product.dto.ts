@@ -146,11 +146,13 @@ export class UpdateProductDto {
 
   @ApiProperty({
     type: [UpdateProductVariantDto],
-    description: 'Variantes del producto a actualizar o crear',
+    description:
+      'Lista completa de variantes deseadas para el producto. Las variantes existentes no incluidas aquí serán eliminadas. Incluir "id" para actualizar una existente, omitirlo para crear una nueva.',
     required: false,
   })
   @IsOptional()
-  @ValidateIf((o) => o.hasVariants === true)
+  // Permitir el array incluso si hasVariants es false temporalmente, la lógica del servicio lo manejará.
+  // @ValidateIf((o) => o.hasVariants === true)
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => UpdateProductVariantDto)
@@ -158,11 +160,16 @@ export class UpdateProductDto {
 
   @ApiProperty({
     type: [String],
-    description: 'IDs de variantes a eliminar',
+    example: [
+      '123e4567-e89b-12d3-a456-426614174001',
+      '123e4567-e89b-12d3-a456-426614174002',
+    ],
+    description:
+      'Lista completa de IDs de los grupos de modificadores a asociar. Las asociaciones existentes no incluidas aquí serán eliminadas.',
     required: false,
   })
   @IsOptional()
   @IsArray()
-  @IsUUID(undefined, { each: true })
-  variantsToDelete?: string[];
+  @IsUUID('all', { each: true })
+  modifierGroupIds?: string[];
 }

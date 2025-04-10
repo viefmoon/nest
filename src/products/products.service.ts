@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ProductRepository } from './infrastructure/persistence/product.repository';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -6,7 +6,9 @@ import { Product } from './domain/product';
 import { FindAllProductsDto } from './dto/find-all-products.dto';
 import { ProductVariantsService } from '../product-variants/product-variants.service';
 import { ProductVariant } from '../product-variants/domain/product-variant';
-import { AssignModifierGroupsDto } from './dto/assign-modifier-groups.dto';
+// import { AssignModifierGroupsDto } from './dto/assign-modifier-groups.dto'; // Ya no se usa
+import { ModifierGroupsService } from '../modifier-groups/modifier-groups.service';
+import { ModifierGroup } from '../modifier-groups/domain/modifier-group';
 
 @Injectable()
 export class ProductsService {
@@ -14,28 +16,52 @@ export class ProductsService {
     @Inject('ProductRepository')
     private readonly productRepository: ProductRepository,
     private readonly productVariantsService: ProductVariantsService,
+    private readonly modifierGroupsService: ModifierGroupsService,
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
-    console.log('createProductDto', createProductDto);
     const product = new Product();
     product.name = createProductDto.name;
-    product.price = createProductDto.price || null;
-    product.hasVariants = createProductDto.hasVariants || false;
+    product.price = createProductDto.price ?? null;
+    product.hasVariants = createProductDto.hasVariants ?? false;
     product.isActive = createProductDto.isActive ?? true;
     product.subCategoryId = createProductDto.subCategoryId;
     product.estimatedPrepTime = createProductDto.estimatedPrepTime;
-    product.preparationScreenId = createProductDto.preparationScreenId || null;
-    product.photoId = createProductDto.photoId || null;
+    product.preparationScreenId = createProductDto.preparationScreenId ?? null;
+    product.photoId = createProductDto.photoId ?? null;
 
     if (createProductDto.photoId) {
       product.photo = {
         id: createProductDto.photoId,
-        path: '',
+        path: '', // Path se resuelve al cargar la entidad completa
       };
     }
 
-    // Crear el producto primero
+    // Asignar grupos de modificadores si se proporcionan IDs
+    if (
+      createProductDto.modifierGroupIds &&
+      createProductDto.modifierGroupIds.length > 0
+    ) {
+      const modifierGroups: ModifierGroup[] = [];
+      for (const groupId of createProductDto.modifierGroupIds) {
+        try {
+          const group = await this.modifierGroupsService.findOne(groupId);
+          modifierGroups.push(group);
+        } catch (error) {
+          if (error instanceof NotFoundException) {
+            throw new NotFoundException(
+              `ModifierGroup with ID ${groupId} not found during creation`,
+            );
+          }
+          throw error;
+        }
+      }
+      product.modifierGroups = modifierGroups;
+    } else {
+      product.modifierGroups = [];
+    }
+
+    // Crear el producto
     const createdProduct = await this.productRepository.create(product);
 
     // Si tiene variantes, crearlas
@@ -79,25 +105,29 @@ export class ProductsService {
 
   async update(
     id: string,
-    updateProductDto: UpdateProductDto,
+    updateProductDto: UpdateProductDto, // Añadir coma
   ): Promise<Product> {
-    const existingProduct = await this.productRepository.findOne(id);
+    // Obtener el producto existente con sus relaciones
+    const product = await this.productRepository.findOne(id);
 
-    const product = new Product();
-    product.id = id;
-    product.name = updateProductDto.name ?? existingProduct.name;
-    product.price = updateProductDto.price ?? existingProduct.price;
-    product.hasVariants =
-      updateProductDto.hasVariants ?? existingProduct.hasVariants;
-    product.isActive = updateProductDto.isActive ?? existingProduct.isActive;
+    // Actualizar campos escalares
+    product.name = updateProductDto.name ?? product.name;
+    product.price =
+      updateProductDto.price === null
+        ? null
+        : (updateProductDto.price ?? product.price);
+    product.hasVariants = updateProductDto.hasVariants ?? product.hasVariants;
+    product.isActive = updateProductDto.isActive ?? product.isActive;
     product.subCategoryId =
-      updateProductDto.subCategoryId ?? existingProduct.subCategoryId;
+      updateProductDto.subCategoryId ?? product.subCategoryId;
     product.estimatedPrepTime =
-      updateProductDto.estimatedPrepTime ?? existingProduct.estimatedPrepTime;
+      updateProductDto.estimatedPrepTime ?? product.estimatedPrepTime;
     product.preparationScreenId =
-      updateProductDto.preparationScreenId ??
-      existingProduct.preparationScreenId;
+      updateProductDto.preparationScreenId === null
+        ? null
+        : (updateProductDto.preparationScreenId ?? product.preparationScreenId);
 
+    // Actualizar foto
     if (updateProductDto.photoId !== undefined) {
       product.photo = updateProductDto.photoId
         ? {
@@ -105,79 +135,98 @@ export class ProductsService {
             path: '',
           }
         : null;
-    } else if (existingProduct.photo) {
-      product.photo = {
-        id: existingProduct.photo.id,
-        path: '',
-      };
+      product.photoId = updateProductDto.photoId;
     }
 
-    // Actualizar el producto
-    await this.productRepository.update(id, product);
+    // Sincronizar grupos de modificadores
+    if (updateProductDto.modifierGroupIds !== undefined) {
+      if (updateProductDto.modifierGroupIds.length > 0) {
+        const modifierGroups: ModifierGroup[] = [];
+        for (const groupId of updateProductDto.modifierGroupIds) {
+          try {
+            const group = await this.modifierGroupsService.findOne(groupId);
+            modifierGroups.push(group);
+          } catch (error) {
+            if (error instanceof NotFoundException) {
+              throw new NotFoundException(
+                `ModifierGroup with ID ${groupId} not found during update`,
+              );
+            }
+            throw error;
+          }
+        }
+        product.modifierGroups = modifierGroups;
+      } else {
+        // Array vacío: eliminar todas las asociaciones
+        product.modifierGroups = [];
+      }
+    }
+    // Si modifierGroupIds es undefined, no se modifican las relaciones existentes.
 
-    // Manejar las variantes si se proporcionaron
-    if (updateProductDto.variants && updateProductDto.variants.length > 0) {
-      // Procesar las variantes a actualizar o crear
-      for (const variantDto of updateProductDto.variants) {
+    // Guardar producto y relaciones (modifierGroups)
+    const savedProduct = await this.productRepository.save(product);
+
+    // --- Sincronización de Variantes ---
+    if (updateProductDto.variants !== undefined) {
+      // Obtener las variantes actuales del producto
+      const currentVariants =
+        await this.productVariantsService.findAllByProductId(id);
+      const currentVariantIds = currentVariants.map((v) => v.id); // Wrap v in parentheses
+
+      const incomingVariantsData = updateProductDto.variants || [];
+      const incomingVariantIds = new Set(
+        incomingVariantsData.filter((v) => v.id).map((v) => v.id), // Wrap v and format
+      );
+
+      // 1. Actualizar o Crear variantes entrantes
+      const processedVariantIds: string[] = [];
+      for (const variantDto of incomingVariantsData) {
         if (variantDto.id) {
           // Actualizar variante existente
-          await this.productVariantsService.update(variantDto.id, {
-            name: variantDto.name,
-            price: variantDto.price,
-            isActive: variantDto.isActive,
-          });
+          if (currentVariantIds.includes(variantDto.id)) {
+            await this.productVariantsService.update(variantDto.id, {
+              name: variantDto.name,
+              price: variantDto.price,
+              isActive: variantDto.isActive,
+            });
+            processedVariantIds.push(variantDto.id);
+          } else {
+            // ID de variante inválido o no pertenece a este producto, ignorar.
+            console.warn(
+              `Variant with ID ${variantDto.id} provided for update but does not belong to product ${id}. Skipping.`, // Añadir coma si es necesario por el formatter
+            );
+          }
         } else {
           // Crear nueva variante
-          await this.productVariantsService.create({
+          const newVariant = await this.productVariantsService.create({
             productId: id,
             name: variantDto.name || '',
             price: variantDto.price || 0,
-            isActive: variantDto.isActive,
+            isActive: variantDto.isActive ?? true,
           });
+          processedVariantIds.push(newVariant.id);
         }
       }
-    }
 
-    // Eliminar variantes si se especificaron
-    if (
-      updateProductDto.variantsToDelete &&
-      updateProductDto.variantsToDelete.length > 0
-    ) {
-      for (const variantId of updateProductDto.variantsToDelete) {
-        await this.productVariantsService.remove(variantId);
+      // 2. Eliminar variantes antiguas no incluidas en la petición
+      const variantsToDelete = currentVariants.filter(
+        (v) => !incomingVariantIds.has(v.id), // Añadir coma si es necesario por el formatter
+      );
+      for (const variantToDelete of variantsToDelete) {
+        await this.productVariantsService.remove(variantToDelete.id);
       }
     }
+    // Si updateProductDto.variants es undefined, no se modifican las variantes existentes.
+    // --- Fin Sincronización de Variantes ---
 
-    // Obtener el producto actualizado con sus variantes
-    return this.productRepository.findOne(id);
+    // Devolver el producto actualizado desde la operación de guardado
+    return savedProduct;
   }
 
   async remove(id: string): Promise<void> {
-    return this.productRepository.softDelete(id);
+    await this.productRepository.softDelete(id);
   }
 
-  // Métodos para manejar las relaciones con grupos de modificadores
-  async assignModifierGroups(
-    productId: string,
-    assignModifierGroupsDto: AssignModifierGroupsDto,
-  ): Promise<Product> {
-    return this.productRepository.assignModifierGroups(
-      productId,
-      assignModifierGroupsDto.modifierGroupIds,
-    );
-  }
-
-  async getModifierGroups(productId: string): Promise<Product> {
-    return this.productRepository.getModifierGroups(productId);
-  }
-
-  async removeModifierGroups(
-    productId: string,
-    assignModifierGroupsDto: AssignModifierGroupsDto,
-  ): Promise<Product> {
-    return this.productRepository.removeModifierGroups(
-      productId,
-      assignModifierGroupsDto.modifierGroupIds,
-    );
-  }
+  // Los métodos assign/get/removeModifierGroups se eliminan
+  // ya que la sincronización completa se maneja en el método update.
 }

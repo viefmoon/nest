@@ -86,9 +86,32 @@ export class ProductVariantRelationalRepository
     return ProductVariantMapper.toDomain(updatedEntity);
   }
 
+  async save(productVariant: ProductVariant): Promise<ProductVariant> {
+    const entity = ProductVariantMapper.toEntity(productVariant);
+    const savedEntity = await this.productVariantRepository.save(entity);
+    // Recargar para asegurar que las relaciones estén actualizadas
+    const reloadedEntity = await this.productVariantRepository.findOne({
+      where: { id: savedEntity.id },
+      relations: ['product'],
+    });
+    if (!reloadedEntity) {
+      throw new NotFoundException(
+        `Variante con ID ${savedEntity.id} no encontrada después de guardar`,
+      );
+    }
+    return ProductVariantMapper.toDomain(reloadedEntity);
+  }
+
+  async findAllByProductId(productId: string): Promise<ProductVariant[]> {
+    const entities = await this.productVariantRepository.find({
+      where: { productId },
+      relations: ['product'],
+    });
+    return entities.map((entity) => ProductVariantMapper.toDomain(entity));
+  }
+
   async softDelete(id: string): Promise<void> {
     const result = await this.productVariantRepository.softDelete(id);
-
     if (result.affected === 0) {
       throw new NotFoundException(
         `Variante de producto con ID ${id} no encontrada`,

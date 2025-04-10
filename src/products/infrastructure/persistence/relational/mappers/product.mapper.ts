@@ -55,6 +55,18 @@ export class ProductMapper {
     entity.estimatedPrepTime = domain.estimatedPrepTime;
     entity.preparationScreenId = domain.preparationScreenId;
 
+    if (domain.modifierGroups !== undefined) {
+      entity.modifierGroups = domain.modifierGroups.map((group) =>
+        ModifierGroupMapper.toEntity(group),
+      );
+    }
+
+    if (domain.variants !== undefined) {
+      entity.variants = domain.variants.map((variant) =>
+        ProductVariantMapper.toEntity(variant),
+      );
+    }
+
     return entity;
   }
 }
