@@ -15,12 +15,10 @@ export class MailService {
   ) {}
 
   async userSignUp(mailData: MailData<{ hash: string }>): Promise<void> {
-    const emailConfirmTitle: MaybeType<string> = 'Confirm Email'; // Default value
-    const text1: MaybeType<string> = ''; // Default value or empty string
-    const text2: MaybeType<string> = ''; // Default value or empty string
-    const text3: MaybeType<string> = ''; // Default value or empty string
-
-    // Removed i18n logic
+    const emailConfirmTitle: MaybeType<string> = 'Confirm Email';
+    const text1: MaybeType<string> = '';
+    const text2: MaybeType<string> = '';
+    const text3: MaybeType<string> = '';
 
     const url = new URL(
       this.configService.getOrThrow('app.frontendDomain', {
@@ -57,13 +55,11 @@ export class MailService {
   async forgotPassword(
     mailData: MailData<{ hash: string; tokenExpires: number }>,
   ): Promise<void> {
-    const resetPasswordTitle: MaybeType<string> = 'Reset Password'; // Default value
-    const text1: MaybeType<string> = ''; // Default value or empty string
-    const text2: MaybeType<string> = ''; // Default value or empty string
-    const text3: MaybeType<string> = ''; // Default value or empty string
-    const text4: MaybeType<string> = ''; // Default value or empty string
-
-    // Removed i18n logic
+    const resetPasswordTitle: MaybeType<string> = 'Reset Password';
+    const text1: MaybeType<string> = '';
+    const text2: MaybeType<string> = '';
+    const text3: MaybeType<string> = '';
+    const text4: MaybeType<string> = '';
 
     const url = new URL(
       this.configService.getOrThrow('app.frontendDomain', {
@@ -102,12 +98,10 @@ export class MailService {
   }
 
   async confirmNewEmail(mailData: MailData<{ hash: string }>): Promise<void> {
-    const emailConfirmTitle: MaybeType<string> = 'Confirm New Email'; // Default value
-    const text1: MaybeType<string> = ''; // Default value or empty string
-    const text2: MaybeType<string> = ''; // Default value or empty string
-    const text3: MaybeType<string> = ''; // Default value or empty string
-
-    // Removed i18n logic
+    const emailConfirmTitle: MaybeType<string> = 'Confirm New Email';
+    const text1: MaybeType<string> = '';
+    const text2: MaybeType<string> = '';
+    const text3: MaybeType<string> = '';
 
     const url = new URL(
       this.configService.getOrThrow('app.frontendDomain', {

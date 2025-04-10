@@ -17,7 +17,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Payment } from './domain/payment';
 
 @ApiTags('payments')
-@Controller('payments')
+@Controller({ path: 'payments', version: '1' })
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 

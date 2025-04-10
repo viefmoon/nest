@@ -19,7 +19,7 @@ import { FindAllProductModifiersDto } from './dto/find-all-product-modifiers.dto
 import { ProductModifier } from './domain/product-modifier';
 
 @ApiTags('Product Modifiers')
-@Controller('product-modifiers')
+@Controller({ path: 'product-modifiers', version: '1' })
 export class ProductModifiersController {
   constructor(
     private readonly productModifiersService: ProductModifiersService,

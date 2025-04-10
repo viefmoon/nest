@@ -24,7 +24,7 @@ import { UpdateOrderItemModifierDto } from './dto/update-order-item-modifier.dto
 import { OrderItemModifierDto } from './dto/order-item-modifier.dto';
 
 @ApiTags('orders')
-@Controller('orders')
+@Controller({ path: 'orders', version: '1' })
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
