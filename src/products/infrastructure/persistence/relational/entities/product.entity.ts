@@ -17,7 +17,7 @@ import { FileEntity } from '../../../../../files/infrastructure/persistence/rela
 import { ProductVariantEntity } from '../../../../../product-variants/infrastructure/persistence/relational/entities/product-variant.entity';
 import { ModifierGroupEntity } from '../../../../../modifier-groups/infrastructure/persistence/relational/entities/modifier-group.entity';
 import { OrderItemEntity } from '../../../../../orders/infrastructure/persistence/relational/entities/order-item.entity';
-
+import { PreparationScreenEntity } from '../../../../../preparation-screens/infrastructure/persistence/relational/entities/preparation-screen.entity';
 @Entity({
   name: 'product',
 })
@@ -45,9 +45,6 @@ export class ProductEntity extends EntityRelationalHelper {
 
   @Column()
   estimatedPrepTime: number;
-
-  @Column({ type: 'varchar', nullable: true })
-  preparationScreenId: string | null;
 
   @ManyToOne(() => FileEntity, { nullable: true })
   @JoinColumn({ name: 'photoId' })
@@ -78,6 +75,9 @@ export class ProductEntity extends EntityRelationalHelper {
     },
   })
   modifierGroups: ModifierGroupEntity[];
+
+  @ManyToMany(() => PreparationScreenEntity, (screen) => screen.products)
+  preparationScreens: PreparationScreenEntity[];
 
   @CreateDateColumn()
   createdAt: Date;

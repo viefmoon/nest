@@ -3,7 +3,7 @@ import { SubCategory } from '../../subcategories/domain/subcategory';
 import { FileType } from '../../files/domain/file';
 import { ProductVariant } from '../../product-variants/domain/product-variant';
 import { ModifierGroup } from '../../modifier-groups/domain/modifier-group';
-
+import { PreparationScreen } from '../../preparation-screens/domain/preparation-screen';
 export class Product {
   @ApiProperty({
     type: String,
@@ -60,13 +60,6 @@ export class Product {
   estimatedPrepTime: number;
 
   @ApiProperty({
-    type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    nullable: true,
-  })
-  preparationScreenId: string | null;
-
-  @ApiProperty({
     type: () => FileType,
     nullable: true,
   })
@@ -90,6 +83,12 @@ export class Product {
   })
   modifierGroups: ModifierGroup[];
 
+  @ApiProperty({
+    type: () => [PreparationScreen],
+    isArray: true,
+    required: false,
+  })
+  preparationScreens?: PreparationScreen[];
   @ApiProperty()
   createdAt: Date;
 

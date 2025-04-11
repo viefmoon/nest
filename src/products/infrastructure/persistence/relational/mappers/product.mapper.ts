@@ -4,6 +4,8 @@ import { SubCategoryMapper } from '../../../../../subcategories/infrastructure/p
 import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
 import { ProductVariantMapper } from '../../../../../product-variants/infrastructure/persistence/relational/mappers/product-variant.mapper';
 import { ModifierGroupMapper } from '../../../../../modifier-groups/infrastructure/persistence/relational/mappers/modifier-group.mapper';
+import { PreparationScreenMapper } from '../../../../../preparation-screens/infrastructure/persistence/relational/mappers/preparation-screen.mapper';
+
 export class ProductMapper {
   static toDomain(entity: ProductEntity): Product {
     const product = new Product();
@@ -15,7 +17,6 @@ export class ProductMapper {
     product.subCategoryId = entity.subCategoryId;
     product.photoId = entity.photoId;
     product.estimatedPrepTime = entity.estimatedPrepTime;
-    product.preparationScreenId = entity.preparationScreenId;
     product.createdAt = entity.createdAt;
     product.updatedAt = entity.updatedAt;
     product.deletedAt = entity.deletedAt;
@@ -40,6 +41,12 @@ export class ProductMapper {
       );
     }
 
+    if (entity.preparationScreens) {
+      product.preparationScreens = entity.preparationScreens.map((screen) =>
+        PreparationScreenMapper.toDomain(screen),
+      );
+    }
+
     return product;
   }
 
@@ -53,7 +60,6 @@ export class ProductMapper {
     entity.subCategoryId = domain.subCategoryId;
     entity.photoId = domain.photoId;
     entity.estimatedPrepTime = domain.estimatedPrepTime;
-    entity.preparationScreenId = domain.preparationScreenId;
 
     if (domain.modifierGroups !== undefined) {
       entity.modifierGroups = domain.modifierGroups.map((group) =>
@@ -66,6 +72,10 @@ export class ProductMapper {
         ProductVariantMapper.toEntity(variant),
       );
     }
+
+    // Mapear preparationScreens si existen en el dominio
+    // Similar al otro mapper, TypeORM maneja la tabla intermedia.
+    // La asignación se hará en el servicio.
 
     return entity;
   }

@@ -1,12 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsArray,
   IsBoolean,
-  IsHexColor,
-  IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
-  Min,
 } from 'class-validator';
 
 export class UpdatePreparationScreenDto {
@@ -44,24 +43,17 @@ export class UpdatePreparationScreenDto {
   isActive?: boolean;
 
   @ApiProperty({
-    type: Number,
-    example: 1,
-    description: 'Orden de prioridad para mostrar en la interfaz',
+    type: [String],
+    example: [
+      '123e4567-e89b-12d3-a456-426614174001',
+      '123e4567-e89b-12d3-a456-426614174002',
+    ],
+    description:
+      'IDs de los productos asociados a esta pantalla. Reemplaza la lista existente.',
     required: false,
   })
   @IsOptional()
-  @IsNumber()
-  @Min(1)
-  displayOrder?: number;
-
-  @ApiProperty({
-    type: String,
-    example: '#FF5733',
-    description: 'Color para identificar la pantalla en la interfaz (opcional)',
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsHexColor()
-  color?: string | null;
+  @IsArray()
+  @IsUUID('4', { each: true })
+  productIds?: string[];
 }

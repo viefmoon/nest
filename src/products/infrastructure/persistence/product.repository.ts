@@ -10,8 +10,9 @@ export interface ProductRepository {
     isActive?: boolean;
     search?: string;
   }): Promise<[Product[], number]>;
-  findOne(id: string): Promise<Product>;
-  update(id: string, product: Partial<Product>): Promise<Product>; // Permitir actualizaciones parciales si es necesario
+  findOne(id: string): Promise<Product | null>; // findOne puede retornar null
+  findByIds(ids: string[]): Promise<Product[]>; // Añadir findByIds
+  update(id: string, product: Partial<Product>): Promise<Product | null>; // update puede retornar null si no se encuentra
   save(product: Product): Promise<Product>; // Añadir método save para actualizaciones completas con relaciones
   softDelete(id: string): Promise<void>;
 

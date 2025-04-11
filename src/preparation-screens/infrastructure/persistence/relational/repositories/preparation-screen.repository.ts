@@ -8,7 +8,9 @@ import { PreparationScreen } from '../../../../domain/preparation-screen';
 import { FindAllPreparationScreensDto } from '../../../../dto/find-all-preparation-screens.dto';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
 import { NullableType } from '../../../../../utils/types/nullable.type';
-import { DeepPartial } from '../../../../../utils/types/deep-partial.type';
+// Use TypeORM's DeepPartial
+import { DeepPartial } from 'typeorm';
+import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity';
 
 @Injectable()
 export class PreparationScreensRelationalRepository
@@ -25,12 +27,37 @@ export class PreparationScreensRelationalRepository
       'id' | 'createdAt' | 'deletedAt' | 'updatedAt'
     >,
   ): Promise<PreparationScreen> {
-    const persistenceModel = this.preparationScreenRepository.create(
-      data as DeepPartial<PreparationScreenEntity>,
-    );
-    const newEntity =
-      await this.preparationScreenRepository.save(persistenceModel);
-    return PreparationScreenMapper.toDomain(newEntity);
+    // Create entity with scalar data first
+    const screenEntity = this.preparationScreenRepository.create({
+      name: data.name,
+      description: data.description,
+      isActive: data.isActive,
+    });
+
+    // Assign product entities with only IDs if they exist in the domain data
+    if (data.products && data.products.length > 0) {
+      screenEntity.products = data.products.map(
+        (p) => ({ id: p.id }) as ProductEntity,
+      );
+    } else {
+      screenEntity.products = []; // Ensure it's an empty array if no products
+    }
+
+    // Save the entity with the relations assigned
+    const newEntity = await this.preparationScreenRepository.save(screenEntity);
+
+    // Reload to get the full entity with relations populated
+    const reloadedEntity = await this.preparationScreenRepository.findOne({
+      where: { id: newEntity.id },
+      relations: ['products'], // Ensure products are loaded
+    });
+
+    if (!reloadedEntity) {
+      // Should not happen, but good practice to check
+      throw new Error(`Failed to reload entity ${newEntity.id} after create.`);
+    }
+
+    return PreparationScreenMapper.toDomain(reloadedEntity);
   }
 
   async findManyWithPagination({
@@ -55,7 +82,6 @@ export class PreparationScreensRelationalRepository
       skip: (paginationOptions.page - 1) * paginationOptions.limit,
       take: paginationOptions.limit,
       order: {
-        displayOrder: 'ASC',
         name: 'ASC',
       },
     });
@@ -81,7 +107,7 @@ export class PreparationScreensRelationalRepository
 
   async update(
     id: string,
-    payload: DeepPartial<PreparationScreen>,
+    payload: DeepPartial<PreparationScreen>, // Use TypeORM's DeepPartial
   ): Promise<PreparationScreen | null> {
     const entity = await this.preparationScreenRepository.findOne({
       where: { id },
@@ -91,12 +117,44 @@ export class PreparationScreensRelationalRepository
       return null;
     }
 
-    const updatedEntity = await this.preparationScreenRepository.save({
-      ...entity,
-      ...payload,
+    // Apply scalar updates directly to the fetched entity
+    // Use Object.assign or loop through payload keys
+    Object.assign(entity, {
+      ...(payload.name !== undefined && { name: payload.name }),
+      ...(payload.description !== undefined && {
+        description: payload.description,
+      }),
+      ...(payload.isActive !== undefined && { isActive: payload.isActive }),
     });
 
-    return PreparationScreenMapper.toDomain(updatedEntity);
+    // If payload.products is defined, update the relation
+    // Assigning a new array of entities (even just with IDs) tells TypeORM to manage the relation
+    if (payload.products !== undefined) {
+      if (payload.products.length > 0) {
+        entity.products = payload.products
+          .filter((p) => !!p?.id) // Filter out undefined products or those without an id
+          .map((p) => ({ id: p.id }) as ProductEntity);
+      } else {
+        entity.products = []; // Assign empty array to remove all relations
+      }
+    }
+    // Note: If payload.products is undefined, we don't touch entity.products, leaving it as is.
+
+    // Save the modified entity. TypeORM will handle the ManyToMany update.
+    const updatedEntity = await this.preparationScreenRepository.save(entity);
+
+    // Reload to ensure relations are correctly fetched after save
+    const reloadedEntity = await this.preparationScreenRepository.findOne({
+      where: { id: updatedEntity.id },
+      relations: ['products'], // Ensure products are loaded
+    });
+
+    if (!reloadedEntity) {
+      // Should not happen if save was successful
+      throw new Error(`Failed to reload entity ${id} after update.`);
+    }
+
+    return PreparationScreenMapper.toDomain(reloadedEntity);
   }
 
   async remove(id: string): Promise<void> {

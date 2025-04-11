@@ -83,7 +83,7 @@ export class ProductsController {
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
   }
-// Los endpoints específicos para modifier-groups se eliminan.
-// La asignación/actualización se maneja en POST /products y PATCH /products/:id.
-// La obtención se maneja en GET /products/:id (cargando la relación).
+  // Los endpoints específicos para modifier-groups se eliminan.
+  // La asignación/actualización se maneja en POST /products y PATCH /products/:id.
+  // La obtención se maneja en GET /products/:id (cargando la relación).
 }

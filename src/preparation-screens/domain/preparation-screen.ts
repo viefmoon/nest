@@ -1,10 +1,11 @@
+import { Product } from '../../products/domain/product';
+
 export class PreparationScreen {
   id: string;
   name: string;
   description: string | null;
   isActive: boolean;
-  displayOrder: number;
-  color: string | null;
+  products?: Product[]; // Añadir la relación con productos
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -14,8 +15,7 @@ export class PreparationScreen {
     name: string,
     description: string | null,
     isActive: boolean,
-    displayOrder: number,
-    color: string | null,
+    // products?: Product[], // Opcional, puede cargarse después
     createdAt: Date,
     updatedAt: Date,
     deletedAt: Date | null,
@@ -25,8 +25,7 @@ export class PreparationScreen {
     preparationScreen.name = name;
     preparationScreen.description = description;
     preparationScreen.isActive = isActive;
-    preparationScreen.displayOrder = displayOrder;
-    preparationScreen.color = color;
+    // preparationScreen.products = products; // Asignar si se pasa
     preparationScreen.createdAt = createdAt;
     preparationScreen.updatedAt = updatedAt;
     preparationScreen.deletedAt = deletedAt;

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Repository } from 'typeorm'; // Eliminar 'In'
+import { ILike, In, Repository } from 'typeorm'; // Añadir 'In'
 import { ProductEntity } from '../entities/product.entity';
 import { ProductRepository } from '../../product.repository';
 import { Product } from '../../../../domain/product';
@@ -72,9 +72,33 @@ export class ProductRelationalRepository implements ProductRepository {
     return ProductMapper.toDomain(entity);
   }
 
-  async update(id: string, product: Product): Promise<Product> {
-    const entity = ProductMapper.toEntity(product);
-    await this.productRepository.update(id, entity);
+  async findByIds(ids: string[]): Promise<Product[]> {
+    if (!ids || ids.length === 0) {
+      return [];
+    }
+    const entities = await this.productRepository.find({
+      where: { id: In(ids) },
+      // Cargar relaciones si es necesario al buscar por IDs
+      // relations: ['photo', 'subCategory', 'variants', 'modifierGroups'],
+    });
+    return entities.map(ProductMapper.toDomain);
+  }
+
+  // Ajustar el tipo de retorno para que coincida con la interfaz (puede ser null)
+  async update(
+    id: string,
+    productUpdatePayload: Partial<Product>,
+  ): Promise<Product | null> {
+    // No mapear a entidad completa, TypeORM update acepta un objeto parcial
+    const updateResult = await this.productRepository.update(
+      id,
+      productUpdatePayload as any,
+    ); // Usar 'as any' o un tipo más específico si es necesario
+
+    // Verificar si la actualización afectó alguna fila
+    if (updateResult.affected === 0) {
+      return null; // No se encontró o no se actualizó
+    }
 
     const updatedEntity = await this.productRepository.findOne({
       where: { id },

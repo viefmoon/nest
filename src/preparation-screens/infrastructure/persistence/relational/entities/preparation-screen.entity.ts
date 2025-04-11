@@ -3,9 +3,12 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinTable,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity';
 
 @Entity({ name: 'preparation_screens' })
 export class PreparationScreenEntity {
@@ -21,12 +24,6 @@ export class PreparationScreenEntity {
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
-  @Column({ type: 'int', default: 1 })
-  displayOrder: number;
-
-  @Column({ type: 'varchar', length: 7, nullable: true })
-  color: string | null;
-
   @CreateDateColumn()
   createdAt: Date;
 
@@ -35,8 +32,17 @@ export class PreparationScreenEntity {
 
   @DeleteDateColumn()
   deletedAt: Date | null;
-
-  // La relación con productos se implementará cuando se actualice la entidad de productos
-  // @OneToMany(() => ProductEntity, (product) => product.preparationScreen)
-  // products: ProductEntity[];
+  @ManyToMany(() => ProductEntity, (product) => product.preparationScreens)
+  @JoinTable({
+    name: 'preparation_screen_product', // Nombre de la tabla intermedia
+    joinColumn: {
+      name: 'preparation_screen_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'product_id',
+      referencedColumnName: 'id',
+    },
+  })
+  products: ProductEntity[];
 }
