@@ -61,20 +61,37 @@ export class PreparationScreensController {
   @ApiOperation({ summary: 'Get all preparation screens' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'List of preparation screens',
-    type: [PreparationScreen],
+    description: 'Paginated list of preparation screens',
+    // Type should ideally represent the [PreparationScreen[], number] structure.
+    // For Swagger, you might need a dedicated pagination response DTO or describe it here.
+    // Example description: Returns an array where the first element is the list of screens and the second is the total count.
+    schema: {
+      type: 'array',
+      items: {
+        oneOf: [
+          { type: 'array', items: { $ref: '#/components/schemas/PreparationScreen' } },
+          { type: 'number' },
+        ],
+      },
+      // Provide a more complete and valid example object
+      example: [[{ id: 'a1b2c3d4-e5f6-7890-1234-567890abcdef', name: 'Main Kitchen Screen', description: 'Primary screen for kitchen orders', isActive: true, createdAt: '2023-10-27T10:00:00Z', updatedAt: '2023-10-27T10:00:00Z', products: [{id: 'prod-uuid-1', name: 'Burger'}, {id: 'prod-uuid-2', name: 'Fries'}] }], 5],
+    },
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   findAll(
-    @Query() filterOptions: FindAllPreparationScreensDto,
-    @Query('page') page = 1,
-    @Query('limit') limit = 10,
-  ): Promise<PreparationScreen[]> {
-    return this.preparationScreensService.findAll(filterOptions, {
-      page,
-      limit,
-    } as IPaginationOptions);
+    // Use the consolidated DTO for all query parameters
+    @Query() queryOptions: FindAllPreparationScreensDto,
+  ): Promise<[PreparationScreen[], number]> { // Update return type to tuple
+    // Extract pagination options from the DTO, providing defaults if not present
+    const paginationOptions: IPaginationOptions = {
+      page: queryOptions.page ?? 1,
+      limit: queryOptions.limit ?? 10,
+    };
+    // Pass filter options (excluding page/limit) and pagination options separately
+    // The service expects filterOptions and paginationOptions as separate arguments
+    const { page, limit, ...filterOptions } = queryOptions;
+    return this.preparationScreensService.findAll(filterOptions, paginationOptions);
   }
 
   @Get(':id')

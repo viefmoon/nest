@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common'; // Import forwardRef
 import { ProductRepository } from './infrastructure/persistence/product.repository';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -9,6 +9,8 @@ import { ProductVariant } from '../product-variants/domain/product-variant';
 // import { AssignModifierGroupsDto } from './dto/assign-modifier-groups.dto'; // Ya no se usa
 import { ModifierGroupsService } from '../modifier-groups/modifier-groups.service';
 import { ModifierGroup } from '../modifier-groups/domain/modifier-group';
+import { PreparationScreensService } from '../preparation-screens/preparation-screens.service'; // Añadido
+import { PreparationScreen } from '../preparation-screens/domain/preparation-screen'; // Añadido
 
 @Injectable()
 export class ProductsService {
@@ -17,6 +19,8 @@ export class ProductsService {
     private readonly productRepository: ProductRepository,
     private readonly productVariantsService: ProductVariantsService,
     private readonly modifierGroupsService: ModifierGroupsService,
+    @Inject(forwardRef(() => PreparationScreensService)) // Use forwardRef for service injection
+    private readonly preparationScreensService: PreparationScreensService,
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
@@ -27,7 +31,7 @@ export class ProductsService {
     product.isActive = createProductDto.isActive ?? true;
     product.subCategoryId = createProductDto.subCategoryId;
     product.estimatedPrepTime = createProductDto.estimatedPrepTime;
-    product.preparationScreenId = createProductDto.preparationScreenId ?? null;
+    // product.preparationScreenId = createProductDto.preparationScreenId ?? null; // Eliminado - Se maneja abajo
     product.photoId = createProductDto.photoId ?? null;
 
     if (createProductDto.photoId) {
@@ -59,6 +63,25 @@ export class ProductsService {
       product.modifierGroups = modifierGroups;
     } else {
       product.modifierGroups = [];
+    }
+
+    // Asignar pantalla de preparación si se proporciona ID
+    if (createProductDto.preparationScreenId) {
+      try {
+        const screen = await this.preparationScreensService.findOne(
+          createProductDto.preparationScreenId,
+        );
+        product.preparationScreens = [screen];
+      } catch (error) {
+        if (error instanceof NotFoundException) {
+          throw new NotFoundException(
+            `PreparationScreen with ID ${createProductDto.preparationScreenId} not found during product creation`,
+          );
+        }
+        throw error;
+      }
+    } else {
+      product.preparationScreens = []; // O null, según la lógica de negocio
     }
 
     // Crear el producto
@@ -100,7 +123,11 @@ export class ProductsService {
   }
 
   async findOne(id: string): Promise<Product> {
-    return this.productRepository.findOne(id);
+    const product = await this.productRepository.findOne(id);
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+    return product;
   }
 
   async update(
@@ -109,6 +136,11 @@ export class ProductsService {
   ): Promise<Product> {
     // Obtener el producto existente con sus relaciones
     const product = await this.productRepository.findOne(id);
+
+    // Verificar si el producto existe
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
 
     // Actualizar campos escalares
     product.name = updateProductDto.name ?? product.name;
@@ -122,10 +154,7 @@ export class ProductsService {
       updateProductDto.subCategoryId ?? product.subCategoryId;
     product.estimatedPrepTime =
       updateProductDto.estimatedPrepTime ?? product.estimatedPrepTime;
-    product.preparationScreenId =
-      updateProductDto.preparationScreenId === null
-        ? null
-        : (updateProductDto.preparationScreenId ?? product.preparationScreenId);
+    // product.preparationScreenId = ... // Eliminado - Se maneja más abajo
 
     // Actualizar foto
     if (updateProductDto.photoId !== undefined) {
@@ -163,7 +192,29 @@ export class ProductsService {
     }
     // Si modifierGroupIds es undefined, no se modifican las relaciones existentes.
 
-    // Guardar producto y relaciones (modifierGroups)
+    // Sincronizar pantalla de preparación
+    if (updateProductDto.preparationScreenId !== undefined) {
+      if (updateProductDto.preparationScreenId === null) {
+        product.preparationScreens = []; // O null
+      } else {
+        try {
+          const screen = await this.preparationScreensService.findOne(
+            updateProductDto.preparationScreenId,
+          );
+          product.preparationScreens = [screen];
+        } catch (error) {
+          if (error instanceof NotFoundException) {
+            throw new NotFoundException(
+              `PreparationScreen with ID ${updateProductDto.preparationScreenId} not found during product update`,
+            );
+          }
+          throw error;
+        }
+      }
+    }
+    // Si preparationScreenId es undefined, no se modifican las pantallas existentes.
+
+    // Guardar producto y relaciones (modifierGroups, preparationScreens)
     const savedProduct = await this.productRepository.save(product);
 
     // --- Sincronización de Variantes ---

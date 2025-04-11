@@ -8,10 +8,10 @@ import { PreparationScreensRelationalRepository } from './repositories/preparati
   imports: [TypeOrmModule.forFeature([PreparationScreenEntity])],
   providers: [
     {
-      provide: PreparationScreenRepository,
+      provide: 'PreparationScreenRepository', // Use token string
       useClass: PreparationScreensRelationalRepository,
     },
   ],
-  exports: [PreparationScreenRepository],
+  exports: ['PreparationScreenRepository'], // Export token string
 })
 export class RelationalPreparationScreenPersistenceModule {}

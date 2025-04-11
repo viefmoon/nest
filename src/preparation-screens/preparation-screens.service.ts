@@ -1,147 +1,142 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common'; // Add forwardRef
 import { PreparationScreen } from './domain/preparation-screen';
 import { CreatePreparationScreenDto } from './dto/create-preparation-screen.dto';
 import { FindAllPreparationScreensDto } from './dto/find-all-preparation-screens.dto';
 import { UpdatePreparationScreenDto } from './dto/update-preparation-screen.dto';
 import { PreparationScreenRepository } from './infrastructure/persistence/preparation-screen.repository';
 import { IPaginationOptions } from '../utils/types/pagination-options';
-import { ProductRepository } from '../products/infrastructure/persistence/product.repository'; // Import ProductRepository
+// Remove ProductRepository import
 import { Product } from '../products/domain/product';
+import { ProductsService } from '../products/products.service'; // Import ProductsService
 
 @Injectable()
 export class PreparationScreensService {
   constructor(
+    @Inject('PreparationScreenRepository') // Inject using token
     private readonly preparationScreenRepository: PreparationScreenRepository,
-    private readonly productRepository: ProductRepository, // Inject ProductRepository
+    @Inject(forwardRef(() => ProductsService)) // Use forwardRef for service injection
+    private readonly productsService: ProductsService,
   ) {}
 
   async create(
-    createPreparationScreenDto: CreatePreparationScreenDto,
+    createDto: CreatePreparationScreenDto,
   ): Promise<PreparationScreen> {
     const preparationScreen = new PreparationScreen();
-    preparationScreen.name = createPreparationScreenDto.name;
-    preparationScreen.description =
-      createPreparationScreenDto.description || null;
-    preparationScreen.isActive =
-      createPreparationScreenDto.isActive !== undefined
-        ? createPreparationScreenDto.isActive
-        : true;
-    let productEntities: Product[] = [];
-    if (createPreparationScreenDto.productIds?.length) {
-      productEntities = await this.productRepository.findByIds(
-        createPreparationScreenDto.productIds,
-      );
-      if (
-        productEntities.length !== createPreparationScreenDto.productIds.length
-      ) {
-        // Find which IDs were not found
-        const foundIds = productEntities.map((p) => p.id);
-        const notFoundIds = createPreparationScreenDto.productIds.filter(
-          (id) => !foundIds.includes(id),
-        );
+    preparationScreen.name = createDto.name;
+    preparationScreen.description = createDto.description ?? null;
+    preparationScreen.isActive = createDto.isActive ?? true;
+
+    if (createDto.productIds && createDto.productIds.length > 0) {
+      const products: Product[] = [];
+      const notFoundIds: string[] = [];
+      // Iterate and fetch each product using ProductsService.findOne
+      for (const productId of createDto.productIds) {
+        try {
+          const product = await this.productsService.findOne(productId);
+          products.push(product);
+        } catch (error) {
+          if (error instanceof NotFoundException) {
+            notFoundIds.push(productId);
+          } else {
+            // Re-throw unexpected errors
+            throw error;
+          }
+        }
+      }
+      // If any products were not found, throw an exception
+      if (notFoundIds.length > 0) {
         throw new NotFoundException(
           `Products with IDs ${notFoundIds.join(', ')} not found.`,
         );
       }
+      preparationScreen.products = products;
+    } else {
+      preparationScreen.products = []; // Initialize as empty array if no IDs provided
     }
 
-    // Assign products before creating
-    preparationScreen.products = productEntities;
-
-    return this.preparationScreenRepository.create(preparationScreen);
+    return this.preparationScreenRepository.save(preparationScreen);
   }
 
   async findAll(
     filterOptions: FindAllPreparationScreensDto,
     paginationOptions: IPaginationOptions,
-  ): Promise<PreparationScreen[]> {
-    return this.preparationScreenRepository.findManyWithPagination({
-      filterOptions,
-      paginationOptions,
+  ): Promise<[PreparationScreen[], number]> { // Return tuple
+    return this.preparationScreenRepository.findAll({
+      ...filterOptions, // Spread filter options
+      paginationOptions, // Pass pagination options object
     });
   }
 
   async findOne(id: string): Promise<PreparationScreen> {
-    const preparationScreen =
-      // Consider loading relations here if needed, e.g., using repository options
-      await this.preparationScreenRepository.findById(id);
+    const preparationScreen = await this.preparationScreenRepository.findOne(id); // Use findOne
 
     if (!preparationScreen) {
-      // Use NestJS standard NotFoundException
       throw new NotFoundException(`Preparation screen with ID ${id} not found`);
     }
-
-    // Optionally load products if not loaded by default in findById
-    // if (!preparationScreen.products) {
-    //   const screenWithProducts = await this.preparationScreenRepository.findByIdWithProducts(id);
-    //   if (!screenWithProducts) throw new NotFoundException(`Preparation screen with ID ${id} not found`);
-    //   return screenWithProducts;
-    // }
-
+    // findOne in the repository now loads relations by default based on our refactoring
     return preparationScreen;
   }
 
   async update(
     id: string,
-    updatePreparationScreenDto: UpdatePreparationScreenDto,
+    updateDto: UpdatePreparationScreenDto,
   ): Promise<PreparationScreen> {
-    // Fetch the existing screen first to manage relations
-    const existingScreen = await this.preparationScreenRepository.findById(id);
+    const existingScreen = await this.preparationScreenRepository.findOne(id); // Use findOne
     if (!existingScreen) {
       throw new NotFoundException(`Preparation screen with ID ${id} not found`);
     }
 
-    // Prepare the payload excluding productIds, as we handle relation separately
-    const { productIds, ...updatePayload } = updatePreparationScreenDto;
+    // Update scalar properties
+    existingScreen.name = updateDto.name ?? existingScreen.name;
+    existingScreen.description =
+      updateDto.description !== undefined
+        ? updateDto.description
+        : existingScreen.description; // Handle null explicitly if needed
+    existingScreen.isActive = updateDto.isActive ?? existingScreen.isActive;
 
-    let productsToAssign: Product[] | undefined = undefined;
-
-    // If productIds is provided (even an empty array), update the relation
-    if (productIds !== undefined) {
-      if (productIds.length > 0) {
-        productsToAssign = await this.productRepository.findByIds(productIds);
-        // Verificar si productsToAssign no es undefined antes de acceder a length y map
-        if (
-          !productsToAssign ||
-          productsToAssign.length !== productIds.length
-        ) {
-          const foundIds = productsToAssign
-            ? productsToAssign.map((p) => p.id)
-            : [];
-          const notFoundIds = productIds.filter(
-            (pid) => !foundIds.includes(pid),
-          );
+    // Handle product relations if productIds is provided
+    if (updateDto.productIds !== undefined) {
+      if (updateDto.productIds.length > 0) {
+        const products: Product[] = [];
+        const notFoundIds: string[] = [];
+        // Iterate and fetch each product using ProductsService.findOne
+        for (const productId of updateDto.productIds) {
+          try {
+            const product = await this.productsService.findOne(productId);
+            products.push(product);
+          } catch (error) {
+            if (error instanceof NotFoundException) {
+              notFoundIds.push(productId);
+            } else {
+              // Re-throw unexpected errors
+              throw error;
+            }
+          }
+        }
+        // If any products were not found, throw an exception
+        if (notFoundIds.length > 0) {
           throw new NotFoundException(
-            `Products with IDs ${notFoundIds.join(', ')} not found.`,
+            `Products with IDs ${notFoundIds.join(', ')} not found during update.`,
           );
         }
+        existingScreen.products = products;
       } else {
-        // If an empty array is provided, remove all relations
-        productsToAssign = [];
+        // Empty array means remove all relations
+        existingScreen.products = [];
       }
     }
+    // If productIds is undefined, don't modify the existing relations
 
-    // Create the final payload including the products relation if it was updated
-    const finalPayload: Partial<PreparationScreen> = {
-      ...updatePayload,
-      ...(productsToAssign !== undefined && { products: productsToAssign }),
-    };
-
-    const updatedPreparationScreen =
-      await this.preparationScreenRepository.update(id, finalPayload);
-
-    // The update method in repository should return the updated entity
-    // If it returns null, it means the entity wasn't found during the update process itself
-    if (!updatedPreparationScreen) {
-      throw new NotFoundException(
-        `Preparation screen with ID ${id} could not be updated or was not found.`,
-      );
-    }
-
-    return updatedPreparationScreen;
+    // Save the updated entity using the repository's save method
+    return this.preparationScreenRepository.save(existingScreen);
   }
 
   async remove(id: string): Promise<void> {
-    return this.preparationScreenRepository.remove(id);
+    // Ensure the entity exists before attempting to delete (optional but good practice)
+    const existingScreen = await this.preparationScreenRepository.findOne(id);
+    if (!existingScreen) {
+      throw new NotFoundException(`Preparation screen with ID ${id} not found`);
+    }
+    await this.preparationScreenRepository.softDelete(id); // Use softDelete
   }
 }
