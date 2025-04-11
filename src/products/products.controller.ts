@@ -20,7 +20,7 @@ import { RoleEnum } from '../roles/roles.enum';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../roles/roles.guard';
 import { FindAllProductsDto } from './dto/find-all-products.dto';
-import { AssignModifierGroupsDto } from './dto/assign-modifier-groups.dto';
+// AssignModifierGroupsDto ya no se usa directamente en endpoints separados
 
 @ApiTags('Productos')
 @Controller({
@@ -83,50 +83,7 @@ export class ProductsController {
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
   }
-
-  // Endpoints para manejar las relaciones con grupos de modificadores
-  @Post(':id/modifier-groups')
-  @ApiOperation({
-    summary: 'Asignar grupos de modificadores a un producto',
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin)
-  @HttpCode(HttpStatus.OK)
-  assignModifierGroups(
-    @Param('id') id: string,
-    @Body() assignModifierGroupsDto: AssignModifierGroupsDto,
-  ) {
-    return this.productsService.assignModifierGroups(
-      id,
-      assignModifierGroupsDto,
-    );
-  }
-
-  @Get(':id/modifier-groups')
-  @ApiOperation({
-    summary: 'Obtener los grupos de modificadores de un producto',
-  })
-  @HttpCode(HttpStatus.OK)
-  getModifierGroups(@Param('id') id: string) {
-    return this.productsService.getModifierGroups(id);
-  }
-
-  @Delete(':id/modifier-groups')
-  @ApiOperation({
-    summary: 'Eliminar grupos de modificadores de un producto',
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin)
-  @HttpCode(HttpStatus.OK)
-  removeModifierGroups(
-    @Param('id') id: string,
-    @Body() assignModifierGroupsDto: AssignModifierGroupsDto,
-  ) {
-    return this.productsService.removeModifierGroups(
-      id,
-      assignModifierGroupsDto,
-    );
-  }
+// Los endpoints específicos para modifier-groups se eliminan.
+// La asignación/actualización se maneja en POST /products y PATCH /products/:id.
+// La obtención se maneja en GET /products/:id (cargando la relación).
 }
