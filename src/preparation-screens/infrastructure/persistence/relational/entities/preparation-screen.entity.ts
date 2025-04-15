@@ -3,8 +3,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  JoinTable,
-  ManyToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -32,17 +31,7 @@ export class PreparationScreenEntity {
 
   @DeleteDateColumn()
   deletedAt: Date | null;
-  @ManyToMany(() => ProductEntity, (product) => product.preparationScreens)
-  @JoinTable({
-    name: 'preparation_screen_product', // Nombre de la tabla intermedia
-    joinColumn: {
-      name: 'preparation_screen_id',
-      referencedColumnName: 'id',
-    },
-    inverseJoinColumn: {
-      name: 'product_id',
-      referencedColumnName: 'id',
-    },
-  })
+
+  @OneToMany(() => ProductEntity, (product) => product.preparationScreen)
   products: ProductEntity[];
 }

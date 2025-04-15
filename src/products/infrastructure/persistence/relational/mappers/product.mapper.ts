@@ -41,9 +41,9 @@ export class ProductMapper {
       );
     }
 
-    if (entity.preparationScreens) {
-      product.preparationScreens = entity.preparationScreens.map((screen) =>
-        PreparationScreenMapper.toDomain(screen),
+    if (entity.preparationScreen) {
+      product.preparationScreen = PreparationScreenMapper.toDomain(
+        entity.preparationScreen,
       );
     }
 

@@ -18,6 +18,7 @@ import { ProductVariantEntity } from '../../../../../product-variants/infrastruc
 import { ModifierGroupEntity } from '../../../../../modifier-groups/infrastructure/persistence/relational/entities/modifier-group.entity';
 import { OrderItemEntity } from '../../../../../orders/infrastructure/persistence/relational/entities/order-item.entity';
 import { PreparationScreenEntity } from '../../../../../preparation-screens/infrastructure/persistence/relational/entities/preparation-screen.entity';
+
 @Entity({
   name: 'product',
 })
@@ -76,8 +77,15 @@ export class ProductEntity extends EntityRelationalHelper {
   })
   modifierGroups: ModifierGroupEntity[];
 
-  @ManyToMany(() => PreparationScreenEntity, (screen) => screen.products)
-  preparationScreens: PreparationScreenEntity[];
+  @ManyToOne(
+    () => PreparationScreenEntity,
+    (preparationScreen) => preparationScreen.products,
+    {
+      nullable: false,
+    },
+  )
+  @JoinColumn({ name: 'preparationScreenId' })
+  preparationScreen: PreparationScreenEntity;
 
   @CreateDateColumn()
   createdAt: Date;

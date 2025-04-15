@@ -49,7 +49,7 @@
 1. Next, generate migration file:
 
    ```bash
-   npm run migration:generate -- src/database/migrations/CreateAreaAndTableTables
+   npm run migration:generate -- src/database/migrations/CreateInitialTables
    ```
 
 1. Apply this migration to database via [npm run migration:run](#run-migration).

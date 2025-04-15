@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PreparationScreenRepository } from '../preparation-screen.repository';
 import { PreparationScreenEntity } from './entities/preparation-screen.entity';
 import { PreparationScreensRelationalRepository } from './repositories/preparation-screen.repository';
 
@@ -8,10 +7,10 @@ import { PreparationScreensRelationalRepository } from './repositories/preparati
   imports: [TypeOrmModule.forFeature([PreparationScreenEntity])],
   providers: [
     {
-      provide: 'PreparationScreenRepository', // Use token string
+      provide: 'PreparationScreenRepository',
       useClass: PreparationScreensRelationalRepository,
     },
   ],
-  exports: ['PreparationScreenRepository'], // Export token string
+  exports: ['PreparationScreenRepository'],
 })
 export class RelationalPreparationScreenPersistenceModule {}

@@ -84,11 +84,11 @@ export class Product {
   modifierGroups: ModifierGroup[];
 
   @ApiProperty({
-    type: () => [PreparationScreen],
-    isArray: true,
-    required: false,
+    type: () => PreparationScreen,
+    nullable: true,
   })
-  preparationScreens?: PreparationScreen[];
+  preparationScreen?: PreparationScreen;
+
   @ApiProperty()
   createdAt: Date;
 

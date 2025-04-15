@@ -1,4 +1,6 @@
-import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common'; // Import forwardRef
+import { Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { ProductRepository } from './infrastructure/persistence/product.repository';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -6,11 +8,9 @@ import { Product } from './domain/product';
 import { FindAllProductsDto } from './dto/find-all-products.dto';
 import { ProductVariantsService } from '../product-variants/product-variants.service';
 import { ProductVariant } from '../product-variants/domain/product-variant';
-// import { AssignModifierGroupsDto } from './dto/assign-modifier-groups.dto'; // Ya no se usa
 import { ModifierGroupsService } from '../modifier-groups/modifier-groups.service';
 import { ModifierGroup } from '../modifier-groups/domain/modifier-group';
-import { PreparationScreensService } from '../preparation-screens/preparation-screens.service'; // Añadido
-import { PreparationScreen } from '../preparation-screens/domain/preparation-screen'; // Añadido
+import { PreparationScreensService } from '../preparation-screens/preparation-screens.service';
 
 @Injectable()
 export class ProductsService {
@@ -19,7 +19,6 @@ export class ProductsService {
     private readonly productRepository: ProductRepository,
     private readonly productVariantsService: ProductVariantsService,
     private readonly modifierGroupsService: ModifierGroupsService,
-    @Inject(forwardRef(() => PreparationScreensService)) // Use forwardRef for service injection
     private readonly preparationScreensService: PreparationScreensService,
   ) {}
 
@@ -71,7 +70,7 @@ export class ProductsService {
         const screen = await this.preparationScreensService.findOne(
           createProductDto.preparationScreenId,
         );
-        product.preparationScreens = [screen];
+        product.preparationScreen = screen;
       } catch (error) {
         if (error instanceof NotFoundException) {
           throw new NotFoundException(
@@ -81,7 +80,7 @@ export class ProductsService {
         throw error;
       }
     } else {
-      product.preparationScreens = []; // O null, según la lógica de negocio
+      product.preparationScreen = undefined;
     }
 
     // Crear el producto
@@ -195,13 +194,13 @@ export class ProductsService {
     // Sincronizar pantalla de preparación
     if (updateProductDto.preparationScreenId !== undefined) {
       if (updateProductDto.preparationScreenId === null) {
-        product.preparationScreens = []; // O null
+        product.preparationScreen = undefined;
       } else {
         try {
           const screen = await this.preparationScreensService.findOne(
             updateProductDto.preparationScreenId,
           );
-          product.preparationScreens = [screen];
+          product.preparationScreen = screen;
         } catch (error) {
           if (error instanceof NotFoundException) {
             throw new NotFoundException(
@@ -214,7 +213,7 @@ export class ProductsService {
     }
     // Si preparationScreenId es undefined, no se modifican las pantallas existentes.
 
-    // Guardar producto y relaciones (modifierGroups, preparationScreens)
+    // Guardar producto y relaciones (modifierGroups, preparationScreen)
     const savedProduct = await this.productRepository.save(product);
 
     // --- Sincronización de Variantes ---

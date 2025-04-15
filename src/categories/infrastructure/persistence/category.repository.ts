@@ -10,4 +10,5 @@ export interface CategoryRepository {
   }): Promise<[Category[], number]>;
   update(id: string, data: Category): Promise<Category>;
   softDelete(id: string): Promise<void>;
+  findFullMenu(): Promise<Category[]>;
 }

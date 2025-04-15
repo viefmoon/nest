@@ -1,17 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PreparationScreenEntity } from '../entities/preparation-screen.entity';
-import { PreparationScreenMapper } from '../mappers/preparation-screen.mapper';
-import {
-  FindPreparationScreensRepositoryDto,
-  PreparationScreenRepository,
-} from '../../preparation-screen.repository'; // Import updated interface and DTO type
+import { PreparationScreenRepository } from '../../preparation-screen.repository';
 import { PreparationScreen } from '../../../../domain/preparation-screen';
-import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
-import { NullableType } from '../../../../../utils/types/nullable.type';
-import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity';
-import { FindOptionsWhere, In } from 'typeorm'; // Import necessary TypeORM types
+import { PreparationScreenMapper } from '../mappers/preparation-screen.mapper';
+
 @Injectable()
 export class PreparationScreensRelationalRepository
   implements PreparationScreenRepository
@@ -21,102 +15,107 @@ export class PreparationScreensRelationalRepository
     private readonly preparationScreenRepository: Repository<PreparationScreenEntity>,
   ) {}
 
-  async save(
-    domainEntity: PreparationScreen,
-  ): Promise<PreparationScreen> {
-    const persistenceEntity =
-      PreparationScreenMapper.toPersistence(domainEntity);
-
-    // Ensure products are mapped correctly for saving relations
-    if (domainEntity.products) {
-      persistenceEntity.products = domainEntity.products.map(
-        (p) => ({ id: p.id }) as ProductEntity,
-      );
-    } else {
-       // If domainEntity.products is null or undefined, ensure persistenceEntity.products is handled
-       // Depending on TypeORM config, might need to set to [] or handle differently
-       persistenceEntity.products = [];
+  async create(data: PreparationScreen): Promise<PreparationScreen> {
+    const entity = PreparationScreenMapper.toPersistence(data);
+    if (!entity) {
+      throw new Error('No se pudo crear la entidad de pantalla de preparación');
     }
-
-
-    const newEntity =
-      await this.preparationScreenRepository.save(persistenceEntity);
-
-    // It's often better to reload the entity after save to get all default values and relations populated correctly by the DB/ORM
-    const reloadedEntity = await this.preparationScreenRepository.findOne({
-       where: { id: newEntity.id },
-       relations: ['products'], // Ensure relations are loaded
-     });
-
-     if (!reloadedEntity) {
-       // This should ideally not happen after a successful save
-       throw new Error(`Failed to reload entity with id ${newEntity.id} after save.`);
-     }
-
-    return PreparationScreenMapper.toDomain(reloadedEntity);
+    const savedEntity = await this.preparationScreenRepository.save(entity);
+    const domainResult = PreparationScreenMapper.toDomain(savedEntity);
+    if (!domainResult) {
+      throw new Error('No se pudo mapear la entidad guardada a dominio');
+    }
+    return domainResult;
   }
 
-  async findAll(
-    options: FindPreparationScreensRepositoryDto,
-  ): Promise<[PreparationScreen[], number]> {
-    // Extract pagination options, providing defaults if necessary
-    const page = options.paginationOptions?.page ?? 1;
-    const limit = options.paginationOptions?.limit ?? 10;
-    // Extract filter options directly from the root 'options' object
-    const { name, isActive } = options;
-    const where: FindOptionsWhere<PreparationScreenEntity> = {};
-
-    if (name) {
-      // Add filtering logic if needed, e.g., using Like operator
-      // where.name = Like(`%${name}%`);
-      where.name = name; // Exact match for now
-    }
-
-    if (isActive !== undefined) {
-      where.isActive = isActive;
-    }
-
-    const [entities, total] = await this.preparationScreenRepository.findAndCount(
-      {
-        where,
-        skip: (page - 1) * limit, // Use destructured page and limit
-        take: limit, // Use destructured limit
-        order: {
-          name: 'ASC', // Or other default sorting
-        },
-        relations: ['products'], // Load relations if needed for the list view
-      },
-    );
-
-    return [entities.map(PreparationScreenMapper.toDomain), total];
-  }
-
-  async findOne(id: string): Promise<NullableType<PreparationScreen>> {
+  async findOne(id: string): Promise<PreparationScreen> {
     const entity = await this.preparationScreenRepository.findOne({
       where: { id },
-      relations: ['products'], // Ensure relations are loaded for detail view
+      relations: ['products'],
     });
 
-    return entity ? PreparationScreenMapper.toDomain(entity) : null;
-  }
-
-  // findByName is not part of the standard interface, remove or keep if specifically needed elsewhere
-
-  async findByIds(ids: string[]): Promise<PreparationScreen[]> {
-    if (ids.length === 0) {
-      return []; // Return empty array if no IDs are provided
+    if (!entity) {
+      throw new NotFoundException(
+        `Pantalla de preparación con ID ${id} no encontrada`,
+      );
     }
-    const entities = await this.preparationScreenRepository.find({
-      where: { id: In(ids) },
-      relations: ['products'], // Load relations if needed
-    });
-    return entities.map(PreparationScreenMapper.toDomain);
+    const domainResult = PreparationScreenMapper.toDomain(entity);
+    if (!domainResult) {
+      // Esto no debería ocurrir si la entidad existe y el mapper es correcto
+      throw new Error(`Error al mapear la entidad con ID ${id} a dominio.`);
+    }
+    return domainResult;
   }
 
-  // The 'update' method is replaced by 'save'.
-  // The 'save' method handles both creation and updates based on the presence of an ID.
+  async findAll(options?: {
+    page?: number;
+    limit?: number;
+    isActive?: boolean;
+  }): Promise<[PreparationScreen[], number]> {
+    const page = options?.page || 1;
+    const limit = options?.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.preparationScreenRepository
+      .createQueryBuilder('preparationScreen')
+      .leftJoinAndSelect('preparationScreen.products', 'products')
+      .skip(skip)
+      .take(limit)
+      .orderBy('preparationScreen.name', 'ASC');
+
+    if (options?.isActive !== undefined) {
+      queryBuilder.andWhere('preparationScreen.isActive = :isActive', {
+        isActive: options.isActive,
+      });
+    }
+
+    const [entities, count] = await queryBuilder.getManyAndCount();
+
+    const domainResults = entities
+      .map(PreparationScreenMapper.toDomain)
+      .filter((item): item is PreparationScreen => item !== null);
+
+    return [domainResults, count];
+  }
+
+  async update(
+    id: string,
+    data: PreparationScreen,
+  ): Promise<PreparationScreen> {
+    const entity = PreparationScreenMapper.toPersistence(data);
+    if (!entity) {
+      throw new Error(
+        'No se pudo crear la entidad de pantalla de preparación para actualizar',
+      );
+    }
+
+    await this.preparationScreenRepository.update(id, entity);
+
+    const updatedEntity = await this.preparationScreenRepository.findOne({
+      where: { id },
+      relations: ['products'],
+    });
+
+    if (!updatedEntity) {
+      throw new NotFoundException(
+        `Pantalla de preparación con ID ${id} no encontrada`,
+      );
+    }
+
+    const domainResult = PreparationScreenMapper.toDomain(updatedEntity);
+    if (!domainResult) {
+      throw new Error('No se pudo mapear la entidad actualizada a dominio');
+    }
+
+    return domainResult;
+  }
 
   async softDelete(id: string): Promise<void> {
-    await this.preparationScreenRepository.softDelete(id);
+    const result = await this.preparationScreenRepository.softDelete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(
+        `Pantalla de preparación con ID ${id} no encontrada`,
+      );
+    }
   }
 }
