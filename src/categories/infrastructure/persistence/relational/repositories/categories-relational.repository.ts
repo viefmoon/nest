@@ -103,4 +103,43 @@ export class CategoriesRelationalRepository implements CategoryRepository {
       throw new NotFoundException(`Categoría con ID ${id} no encontrada`);
     }
   }
+
+  async findFullMenu(): Promise<Category[]> {
+    const queryBuilder = this.categoryRepository
+      .createQueryBuilder('category')
+      // Cargar subcategorías activas
+      .leftJoinAndSelect(
+        'category.subCategories',
+        'subCategory',
+        'subCategory.isActive = :isActive',
+        { isActive: true },
+      )
+      // Cargar productos activos dentro de subcategorías activas
+      .leftJoinAndSelect(
+        'subCategory.products',
+        'product',
+        'product.isActive = :isActive',
+        { isActive: true },
+      )
+      // --- Añadir Joins para Fotos ---
+      .leftJoinAndSelect('category.photo', 'categoryPhoto')
+      .leftJoinAndSelect('subCategory.photo', 'subCategoryPhoto')
+      .leftJoinAndSelect('product.photo', 'productPhoto')
+      // --- Fin Joins para Fotos ---
+      .where('category.isActive = :isActive', { isActive: true })
+      .orderBy({
+        'category.name': 'ASC',
+        'subCategory.name': 'ASC',
+        'product.name': 'ASC',
+      });
+
+    const entities = await queryBuilder.getMany();
+
+    // Mapear a dominio
+    const domainResults = entities
+      .map(CategoryMapper.toDomain)
+      .filter((item): item is Category => item !== null);
+
+    return domainResults;
+  }
 }

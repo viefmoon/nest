@@ -2,6 +2,7 @@ import { SubCategory } from '../../../../domain/subcategory';
 import { SubCategoryEntity } from '../entities/subcategory.entity';
 import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
 import { CategoryMapper } from '../../../../../categories/infrastructure/persistence/relational/mappers/category.mapper';
+import { ProductMapper } from '../../../../../products/infrastructure/persistence/relational/mappers/product.mapper'; // Importar ProductMapper
 
 export class SubCategoryMapper {
   static toDomain(entity: SubCategoryEntity): SubCategory | null {
@@ -24,6 +25,13 @@ export class SubCategoryMapper {
     if (categoryDomain) {
       domain.category = categoryDomain;
     }
+
+    // Mapear productos si existen en la entidad cargada
+    domain.products = entity.products
+      ? (entity.products
+          .map((product) => ProductMapper.toDomain(product)) // Usar ProductMapper
+          .filter(Boolean) as any) // Filtrar nulos/undefined si ProductMapper puede devolverlos
+      : [];
 
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;

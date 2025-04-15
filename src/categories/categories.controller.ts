@@ -50,6 +50,19 @@ export class CategoriesController {
     return this.categoriesService.findAll(findAllCategoriesDto);
   }
 
+  // NUEVO ENDPOINT
+  @Get('full-menu')
+  @ApiOperation({
+    summary:
+      'Obtener el menú completo (categorías, subcategorías, productos, modificadores)',
+  })
+  @HttpCode(HttpStatus.OK)
+  getFullMenu() {
+    // Llamaremos a un nuevo método en el servicio
+    return this.categoriesService.getFullMenu();
+  }
+  // FIN NUEVO ENDPOINT
+
   @Get(':id')
   @ApiOperation({
     summary: 'Obtener una categoría por ID',

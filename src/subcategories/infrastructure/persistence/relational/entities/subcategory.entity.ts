@@ -7,10 +7,12 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  OneToMany, // Añadir importación
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { CategoryEntity } from '../../../../../categories/infrastructure/persistence/relational/entities/category.entity';
 import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
+import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity'; // Añadir importación
 
 @Entity({
   name: 'subcategory',
@@ -43,6 +45,9 @@ export class SubCategoryEntity extends EntityRelationalHelper {
   })
   @JoinColumn({ name: 'categoryId' })
   category: CategoryEntity;
+
+  @OneToMany(() => ProductEntity, (product) => product.subCategory)
+  products: ProductEntity[];
 
   @CreateDateColumn()
   createdAt: Date;

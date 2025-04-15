@@ -81,7 +81,7 @@ export class ProductEntity extends EntityRelationalHelper {
     () => PreparationScreenEntity,
     (preparationScreen) => preparationScreen.products,
     {
-      nullable: false,
+      nullable: true,
     },
   )
   @JoinColumn({ name: 'preparationScreenId' })

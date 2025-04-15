@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Category } from '../../categories/domain/category';
 import { FileType } from '../../files/domain/file';
+import { Product } from '../../products/domain/product'; // Importar Product
 
 export class SubCategory {
   @ApiProperty({
@@ -45,6 +46,13 @@ export class SubCategory {
     description: 'Categoría a la que pertenece esta subcategoría',
   })
   category: Category;
+
+  @ApiProperty({
+    type: () => [Product],
+    isArray: true,
+    description: 'Productos pertenecientes a esta subcategoría',
+  })
+  products: Product[];
 
   @ApiProperty()
   createdAt: Date;
