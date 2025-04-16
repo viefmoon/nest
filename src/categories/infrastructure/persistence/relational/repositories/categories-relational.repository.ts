@@ -121,6 +121,27 @@ export class CategoriesRelationalRepository implements CategoryRepository {
         'product.isActive = :isActive',
         { isActive: true },
       )
+      // Cargar variantes de producto activas dentro de productos activos
+      .leftJoinAndSelect(
+        'product.variants',
+        'productVariant',
+        'productVariant.isActive = :isActive',
+        { isActive: true },
+      )
+      // Cargar grupos de modificadores activos dentro de productos activos
+      .leftJoinAndSelect(
+        'product.modifierGroups',
+        'modifierGroup',
+        'modifierGroup.isActive = :isActive',
+        { isActive: true },
+      )
+      // Cargar modificadores activos dentro de grupos de modificadores activos
+      .leftJoinAndSelect(
+        'modifierGroup.productModifiers',
+        'modifier',
+        'modifier.isActive = :isActive',
+        { isActive: true },
+      )
       // --- Añadir Joins para Fotos ---
       .leftJoinAndSelect('category.photo', 'categoryPhoto')
       .leftJoinAndSelect('subCategory.photo', 'subCategoryPhoto')
