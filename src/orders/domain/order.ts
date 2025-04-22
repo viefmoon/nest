@@ -108,4 +108,31 @@ export class Order {
     nullable: true,
   })
   notes?: string;
+
+  @ApiProperty({
+    type: String,
+    example: '+1234567890',
+    description: 'Número de teléfono para la entrega',
+    nullable: true,
+    required: false,
+  })
+  phoneNumber?: string | null;
+
+  @ApiProperty({
+    type: String,
+    example: 'John Doe',
+    description: 'Customer name for take-away orders',
+    nullable: true,
+    required: false, // Conditionally required in DTOs
+  })
+  customer_name?: string | null;
+
+  @ApiProperty({
+    type: String,
+    example: '123 Main St, Anytown, USA 12345',
+    description: 'Delivery address for delivery orders',
+    nullable: true,
+    required: false, // Conditionally required in DTOs
+  })
+  delivery_address?: string | null;
 }

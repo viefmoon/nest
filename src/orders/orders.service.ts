@@ -39,6 +39,10 @@ export class OrdersService {
       orderStatus: OrderStatus.PENDING, // Por defecto, todas las órdenes comienzan en estado PENDING
       subtotal: createOrderDto.subtotal,
       total: createOrderDto.total,
+      notes: createOrderDto.notes, // Add notes
+      phoneNumber: createOrderDto.phoneNumber || null, // Add phoneNumber
+      customer_name: createOrderDto.customer_name || null, // Add customer_name
+      delivery_address: createOrderDto.delivery_address || null, // Add delivery_address
     });
   }
 
@@ -64,7 +68,23 @@ export class OrdersService {
     // Asegurarse de que la orden existe
     await this.findOne(id);
     // Actualizar la orden (el repositorio ya protege los campos dailyNumber y dailyOrderCounterId)
-    const updatedOrder = await this.orderRepository.update(id, updateOrderDto);
+    // Crear un objeto parcial solo con los campos que se pueden actualizar
+    const updatePayload: Partial<Order> = {
+      userId: updateOrderDto.userId,
+      tableId: updateOrderDto.tableId,
+      scheduledAt: updateOrderDto.scheduledAt,
+      orderStatus: updateOrderDto.orderStatus,
+      orderType: updateOrderDto.orderType,
+      subtotal: updateOrderDto.subtotal,
+      total: updateOrderDto.total,
+      notes: updateOrderDto.notes, // Add notes
+      phoneNumber: updateOrderDto.phoneNumber, // Add phoneNumber
+      customer_name: updateOrderDto.customer_name, // Add customer_name
+      delivery_address: updateOrderDto.delivery_address, // Add delivery_address
+      // No incluir items aquí, se manejan por separado si es necesario
+    };
+
+    const updatedOrder = await this.orderRepository.update(id, updatePayload);
     if (!updatedOrder) {
       throw new Error(`Failed to update order with ID ${id}`);
     }

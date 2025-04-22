@@ -8,6 +8,9 @@ import {
   IsPositive,
   IsUUID,
   ValidateNested,
+  ValidateIf, // Importar ValidateIf
+  IsPhoneNumber, // Asumiendo que tienes una validación para números de teléfono, si no, usar IsString
+  IsString,
 } from 'class-validator';
 import { OrderType } from '../domain/enums/order-type.enum';
 import { Type } from 'class-transformer';
@@ -77,6 +80,17 @@ export class CreateOrderDto {
   total: number;
 
   @ApiProperty({
+    type: String,
+    example: 'Extra cheese, no onions.',
+    description: 'Optional notes for the order',
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
+  @ApiProperty({
     type: [OrderItemDto],
     description: 'Items de la orden',
     required: true,
@@ -85,4 +99,50 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
   items: OrderItemDto[];
+
+  @ApiProperty({
+    type: String,
+    example: '+15551234567',
+    description:
+      'Número de teléfono para la entrega (obligatorio si orderType es DELIVERY)',
+    required: false, // Es condicionalmente requerido
+    nullable: true,
+  })
+  @IsOptional() // Es opcional en general
+  @ValidateIf((o) => o.orderType === OrderType.DELIVERY) // Validar solo si es DELIVERY
+  @IsNotEmpty({
+    message: 'El número de teléfono es obligatorio para entregas a domicilio',
+  }) // Requerido si es DELIVERY
+  @IsPhoneNumber(undefined, { message: 'El número de teléfono no es válido' }) // O usar @IsString() si no tienes @IsPhoneNumber
+  phoneNumber?: string | null;
+
+  @ApiProperty({
+    type: String,
+    example: 'John Doe',
+    description: 'Customer name (required if orderType is TAKE_AWAY)',
+    required: false, // Conditionally required
+    nullable: true,
+  })
+  @IsOptional() // Optional overall
+  @ValidateIf((o) => o.orderType === OrderType.TAKE_AWAY) // Validate only if TAKE_AWAY
+  @IsNotEmpty({
+    message: 'Customer name is required for take-away orders',
+  }) // Required if TAKE_AWAY
+  @IsString()
+  customer_name?: string | null;
+
+  @ApiProperty({
+    type: String,
+    example: '123 Main St, Anytown, USA 12345',
+    description: 'Delivery address (required if orderType is DELIVERY)',
+    required: false, // Conditionally required
+    nullable: true,
+  })
+  @IsOptional() // Optional overall
+  @ValidateIf((o) => o.orderType === OrderType.DELIVERY) // Validate only if DELIVERY
+  @IsNotEmpty({
+    message: 'Delivery address is required for delivery orders',
+  }) // Required if DELIVERY
+  @IsString()
+  delivery_address?: string | null;
 }

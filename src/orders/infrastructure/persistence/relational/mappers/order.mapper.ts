@@ -16,6 +16,9 @@ export class OrderMapper {
     domain.orderType = entity.orderType;
     domain.total = entity.total;
     domain.notes = entity.notes || undefined;
+    domain.phoneNumber = entity.phoneNumber; // Add mapping for phoneNumber
+    domain.customer_name = entity.customer_name; // Add mapping for customer_name
+    domain.delivery_address = entity.delivery_address; // Add mapping for delivery_address
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
@@ -48,6 +51,9 @@ export class OrderMapper {
     entity.orderType = domain.orderType;
     entity.total = domain.total;
     entity.notes = domain.notes || null;
+    entity.phoneNumber = domain.phoneNumber || null; // Add mapping for phoneNumber
+    entity.customer_name = domain.customer_name || null; // Add mapping for customer_name
+    entity.delivery_address = domain.delivery_address || null; // Add mapping for delivery_address
     entity.createdAt = domain.createdAt;
     entity.updatedAt = domain.updatedAt;
     entity.deletedAt = domain.deletedAt;

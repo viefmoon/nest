@@ -69,6 +69,18 @@ export class OrderEntity extends EntityRelationalHelper {
   @Column({ type: 'text', nullable: true })
   notes: string | null;
 
+  // Nueva columna para el número de teléfono
+  @Column({ type: 'varchar', nullable: true })
+  phoneNumber: string | null;
+
+  // New column for customer name
+  @Column({ name: 'customer_name', type: 'varchar', nullable: true })
+  customer_name: string | null;
+
+  // New column for delivery address
+  @Column({ name: 'delivery_address', type: 'text', nullable: true })
+  delivery_address: string | null;
+
   @OneToMany(() => OrderItemEntity, (orderItem) => orderItem.order)
   orderItems: OrderItemEntity[];
 
