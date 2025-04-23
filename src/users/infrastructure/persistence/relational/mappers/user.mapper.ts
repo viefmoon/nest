@@ -51,7 +51,8 @@ export class UserMapper {
     }
 
     const persistenceEntity = new UserEntity();
-    if (domainEntity.id && typeof domainEntity.id === 'number') {
+    // Asignar directamente el ID (string/uuid) si existe
+    if (domainEntity.id) {
       persistenceEntity.id = domainEntity.id;
     }
     persistenceEntity.email = domainEntity.email;

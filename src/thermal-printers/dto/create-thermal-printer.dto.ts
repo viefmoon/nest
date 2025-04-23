@@ -6,7 +6,7 @@ import {
   IsInt,
   IsNotEmpty,
   IsOptional,
-  IsPort,
+  // IsPort, // Eliminado ya que no se usa
   IsString,
   IsMACAddress,
   MaxLength,
@@ -56,7 +56,6 @@ export class CreateThermalPrinterDto {
   @IsNotEmpty({ message: 'El puerto es requerido para conexión NETWORK' })
   @IsInt()
   @Min(1)
-  @IsPort({ message: 'El puerto no es válido' })
   port?: number;
 
   @ApiPropertyOptional({

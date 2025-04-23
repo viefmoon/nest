@@ -20,10 +20,7 @@ export class ThermalPrintersRelationalRepository
   ) {}
 
   async create(
-    data: Omit<
-      ThermalPrinter,
-      'id' | 'createdAt' | 'deletedAt' | 'updatedAt'
-    >,
+    data: Omit<ThermalPrinter, 'id' | 'createdAt' | 'deletedAt' | 'updatedAt'>,
   ): Promise<ThermalPrinter> {
     const persistenceModel = ThermalPrinterMapper.toPersistence(
       data as ThermalPrinter,
@@ -90,6 +87,19 @@ export class ThermalPrintersRelationalRepository
   ): Promise<NullableType<ThermalPrinter>> {
     const entity = await this.printersRepository.findOne({
       where: { name },
+    });
+
+    return entity ? ThermalPrinterMapper.toDomain(entity) : null;
+  }
+
+  async findByIpAddress(
+    ipAddress: ThermalPrinter['ipAddress'],
+  ): Promise<NullableType<ThermalPrinter>> {
+    if (!ipAddress) {
+      return null; // No buscar si la IP es nula
+    }
+    const entity = await this.printersRepository.findOne({
+      where: { ipAddress },
     });
 
     return entity ? ThermalPrinterMapper.toDomain(entity) : null;

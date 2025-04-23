@@ -29,7 +29,9 @@ export class PrintingController {
 
   @Post('order') // Endpoint específico: POST /api/v1/print/order
   @HttpCode(HttpStatus.ACCEPTED) // Usamos 202 Accepted ya que la impresión puede ser asíncrona
-  @ApiOperation({ summary: 'Enviar una orden a imprimir en una impresora térmica' })
+  @ApiOperation({
+    summary: 'Enviar una orden a imprimir en una impresora térmica',
+  })
   @ApiResponse({
     status: HttpStatus.ACCEPTED,
     description: 'La solicitud de impresión ha sido aceptada.',
@@ -45,7 +47,9 @@ export class PrintingController {
   // @ApiBearerAuth() // Descomentar para requerir autenticación
   // @UseGuards(AuthGuard('jwt'), RolesGuard) // Descomentar para añadir guardias
   // @Roles(RoleEnum.admin) // Descomentar y ajustar roles según sea necesario
-  async printOrder(@Body() printOrderDto: PrintOrderDto): Promise<{ message: string }> {
+  async printOrder(
+    @Body() printOrderDto: PrintOrderDto,
+  ): Promise<{ message: string }> {
     // Llamamos al servicio para manejar la lógica de impresión
     await this.printingService.printOrder(printOrderDto);
     // Devolvemos una respuesta simple indicando que la solicitud fue aceptada

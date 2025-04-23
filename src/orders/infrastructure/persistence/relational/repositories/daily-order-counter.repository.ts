@@ -92,7 +92,7 @@ export class DailyOrderCounterRelationalRepository
   ): Promise<DailyOrderCounter> {
     // Incrementamos el contador de forma atómica utilizando una consulta SQL
     await this.dailyOrderCounterRepository.query(
-      `UPDATE daily_order_counter SET "currentNumber" = "currentNumber" + 1 WHERE id = $1`,
+      `UPDATE daily_order_counter SET "current_number" = "current_number" + 1 WHERE id = $1`,
       [id],
     );
 

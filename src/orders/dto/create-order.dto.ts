@@ -11,6 +11,7 @@ import {
   ValidateIf, // Importar ValidateIf
   IsPhoneNumber, // Asumiendo que tienes una validación para números de teléfono, si no, usar IsString
   IsString,
+  Length, // Añadir Length
 } from 'class-validator';
 import { OrderType } from '../domain/enums/order-type.enum';
 import { Type } from 'class-transformer';
@@ -113,7 +114,8 @@ export class CreateOrderDto {
   @IsNotEmpty({
     message: 'El número de teléfono es obligatorio para entregas a domicilio',
   }) // Requerido si es DELIVERY
-  @IsPhoneNumber(undefined, { message: 'El número de teléfono no es válido' }) // O usar @IsString() si no tienes @IsPhoneNumber
+  @IsString({ message: 'El número de teléfono debe ser una cadena de texto' })
+  @Length(10, 10, { message: 'El número de teléfono debe tener 10 dígitos' })
   phoneNumber?: string | null;
 
   @ApiProperty({

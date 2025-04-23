@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common'; // Eliminado NotFoundException
 import { OrdersService } from '../orders/orders.service'; // Asegúrate que OrdersService esté exportado
 import { PrintOrderDto } from './dto/print-order.dto';
 // Importar ThermalPrintersService si se necesita obtener detalles de la impresora
@@ -33,7 +33,9 @@ export class PrintingService {
 
     // 2. (Opcional) Verificar la impresora si se proporciona printerId
     if (printerId) {
-      this.logger.log(`Se intentará usar la impresora con ID: ${printerId} (lógica de verificación pendiente).`);
+      this.logger.log(
+        `Se intentará usar la impresora con ID: ${printerId} (lógica de verificación pendiente).`,
+      );
       // Aquí iría la lógica para buscar la impresora por ID usando ThermalPrintersService
       // try {
       //   const printer = await this.thermalPrintersService.findOne(printerId);
@@ -46,7 +48,9 @@ export class PrintingService {
       //    throw error;
       // }
     } else {
-      this.logger.log('No se especificó impresora. Se usaría la configuración predeterminada (lógica pendiente).');
+      this.logger.log(
+        'No se especificó impresora. Se usaría la configuración predeterminada (lógica pendiente).',
+      );
     }
 
     // 3. Simular la impresión registrando en la consola
@@ -59,7 +63,9 @@ export class PrintingService {
     // await printerDevice.print(formattedTicket);
     // await printerDevice.cut();
     // await printerDevice.close();
-    this.logger.log(`--- FIN SIMULACIÓN IMPRESIÓN para Orden ID: ${orderId} ---`);
+    this.logger.log(
+      `--- FIN SIMULACIÓN IMPRESIÓN para Orden ID: ${orderId} ---`,
+    );
 
     // El método no necesita devolver nada por ahora
     return;

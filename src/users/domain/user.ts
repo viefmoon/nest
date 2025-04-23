@@ -11,7 +11,7 @@ export class User {
   @ApiProperty({
     type: idType,
   })
-  id: number | string;
+  id: string; // Cambiado a string para reflejar el tipo UUID
 
   @ApiProperty({
     type: String,

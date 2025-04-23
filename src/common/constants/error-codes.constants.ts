@@ -40,6 +40,7 @@ export const ERROR_CODES = {
   CONFLICT_ERROR: 'CONFLICT_ERROR', // Error genérico 409
   AREA_NAME_EXISTS: 'AREA_NAME_EXISTS',
   // ... otros conflictos específicos
+  THERMAL_PRINTER_DUPLICATE_FIELD: 'THERMAL_PRINTER_DUPLICATE_FIELD',
 
   // Errores del Servidor (SERVER_*)
   INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR', // Error genérico 500

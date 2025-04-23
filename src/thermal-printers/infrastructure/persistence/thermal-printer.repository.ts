@@ -6,10 +6,7 @@ import { FindAllThermalPrintersDto } from '../../dto/find-all-thermal-printers.d
 
 export abstract class ThermalPrinterRepository {
   abstract create(
-    data: Omit<
-      ThermalPrinter,
-      'id' | 'createdAt' | 'deletedAt' | 'updatedAt'
-    >,
+    data: Omit<ThermalPrinter, 'id' | 'createdAt' | 'deletedAt' | 'updatedAt'>,
   ): Promise<ThermalPrinter>;
 
   abstract findManyWithPagination({
@@ -26,6 +23,10 @@ export abstract class ThermalPrinterRepository {
 
   abstract findByName(
     name: ThermalPrinter['name'],
+  ): Promise<NullableType<ThermalPrinter>>;
+
+  abstract findByIpAddress(
+    ipAddress: ThermalPrinter['ipAddress'],
   ): Promise<NullableType<ThermalPrinter>>;
 
   abstract update(

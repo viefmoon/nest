@@ -6,6 +6,7 @@ import { AuthModule } from '../auth/auth.module';
 import { PrintingController } from './printing.controller'; // Añadido
 import { PrintingService } from './printing.service'; // Añadido
 import { OrdersModule } from '../orders/orders.module'; // Añadido
+import { DiscoveryService } from './discovery.service'; // Añadido
 
 const infrastructurePersistenceModule =
   RelationalThermalPrinterPersistenceModule;
@@ -17,7 +18,7 @@ const infrastructurePersistenceModule =
     OrdersModule, // Añadido para que PrintingService pueda usar OrdersService
   ],
   controllers: [ThermalPrintersController, PrintingController], // Añadido PrintingController
-  providers: [ThermalPrintersService, PrintingService], // Añadido PrintingService
+  providers: [ThermalPrintersService, PrintingService, DiscoveryService], // Corregido: DiscoveryService añadido aquí
   exports: [ThermalPrintersService, infrastructurePersistenceModule], // No exportamos PrintingService por ahora
 })
 export class ThermalPrintersModule {}

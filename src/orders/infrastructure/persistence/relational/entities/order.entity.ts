@@ -35,7 +35,7 @@ export class OrderEntity extends EntityRelationalHelper {
   @JoinColumn({ name: 'daily_order_counter_id' })
   dailyOrderCounter: DailyOrderCounterEntity;
 
-  @Column({ name: 'user_id' })
+  @Column({ name: 'user_id', type: 'uuid' }) // Especificar tipo UUID
   userId: string;
 
   @ManyToOne(() => UserEntity)

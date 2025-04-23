@@ -5,6 +5,7 @@ import {
   Entity,
   Index,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
@@ -13,6 +14,7 @@ import { PrinterConnectionType } from '../../../../domain/thermal-printer';
 @Entity({
   name: 'thermal_printer',
 })
+@Unique(['ipAddress'])
 export class ThermalPrinterEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
   id: string;

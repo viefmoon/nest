@@ -95,6 +95,10 @@ export class AuthService {
       hash,
     });
 
+    console.log('--- User object included in login response ---');
+    console.log(user);
+    console.log('--- End User object ---');
+
     return {
       refreshToken,
       token,
