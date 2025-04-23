@@ -1,3 +1,14 @@
 {
-  "bundles": {}
+  "bundles": {
+    "src-234": {
+      "name": "src",
+      "created": "2025-04-23T00:52:23.275Z",
+      "lastUsed": "2025-04-23T00:52:42.598Z",
+      "tags": [],
+      "files": [
+        "src",
+        "docs"
+      ]
+    }
+  }
 }

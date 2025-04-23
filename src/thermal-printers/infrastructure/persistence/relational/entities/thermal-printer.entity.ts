@@ -1,0 +1,51 @@
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  Index,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
+import { PrinterConnectionType } from '../../../../domain/thermal-printer';
+
+@Entity({
+  name: 'thermal_printer',
+})
+export class ThermalPrinterEntity extends EntityRelationalHelper {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar', length: 100 })
+  name: string;
+
+  @Column({ type: 'enum', enum: PrinterConnectionType })
+  connectionType: PrinterConnectionType;
+
+  @Index()
+  @Column({ type: 'varchar', nullable: true })
+  ipAddress: string | null;
+
+  @Column({ type: 'int', nullable: true })
+  port: number | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  path: string | null;
+
+  @Column({ type: 'boolean', default: true })
+  isActive: boolean;
+
+  @Index()
+  @Column({ type: 'varchar', length: 17, nullable: true })
+  macAddress: string | null;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date | null;
+}
