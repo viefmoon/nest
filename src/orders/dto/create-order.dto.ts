@@ -9,7 +9,6 @@ import {
   IsUUID,
   ValidateNested,
   ValidateIf, // Importar ValidateIf
-  IsPhoneNumber, // Asumiendo que tienes una validación para números de teléfono, si no, usar IsString
   IsString,
   Length, // Añadir Length
 } from 'class-validator';

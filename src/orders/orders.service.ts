@@ -16,6 +16,9 @@ import { UpdateOrderItemDto } from './dto/update-order-item.dto';
 import { UpdateOrderItemModifierDto } from './dto/update-order-item-modifier.dto';
 import { PreparationStatus } from './domain/order-item';
 import { v4 as uuidv4 } from 'uuid';
+import { TicketImpressionRepository } from './infrastructure/persistence/ticket-impression.repository'; // Importar repo
+import { TicketType } from './domain/enums/ticket-type.enum'; // Importar enum
+import { TicketImpression } from './domain/ticket-impression'; // Importar dominio
 
 @Injectable()
 export class OrdersService {
@@ -28,6 +31,8 @@ export class OrdersService {
     private readonly orderItemModifierRepository: OrderItemModifierRepository,
     @Inject('OrderItemRepository')
     private readonly orderItemRepository: OrderItemRepository,
+    @Inject('TicketImpressionRepository') // Inyectar el nuevo repositorio
+    private readonly ticketImpressionRepository: TicketImpressionRepository,
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
@@ -49,7 +54,8 @@ export class OrdersService {
   async findAll(
     filterOptions: FindAllOrdersDto,
     paginationOptions: IPaginationOptions,
-  ): Promise<Order[]> {
+  ): Promise<[Order[], number]> {
+    // Cambiado el tipo de retorno
     return this.orderRepository.findManyWithPagination({
       filterOptions,
       paginationOptions,
@@ -288,5 +294,33 @@ export class OrdersService {
   async deleteOrderItemModifier(id: string): Promise<void> {
     const orderItemModifier = await this.findOrderItemModifierById(id);
     await this.orderItemModifierRepository.delete(orderItemModifier.id);
+  }
+
+  // --- Ticket Impression Methods ---
+
+  async registerTicketImpression(
+    orderId: string,
+    userId: string,
+    ticketType: TicketType,
+  ): Promise<TicketImpression> {
+    // 1. Verificar que la orden existe
+    await this.findOne(orderId);
+
+    // 2. Crear el registro de impresión
+    const impressionData = {
+      orderId,
+      userId,
+      ticketType,
+      impressionTime: new Date(), // Registrar la hora actual
+    };
+    return this.ticketImpressionRepository.create(impressionData);
+  }
+
+  async findImpressionsByOrderId(orderId: string): Promise<TicketImpression[]> {
+    // 1. Verificar que la orden existe (opcional pero recomendado)
+    await this.findOne(orderId);
+
+    // 2. Buscar las impresiones usando el repositorio
+    return this.ticketImpressionRepository.findByOrderId(orderId);
   }
 }

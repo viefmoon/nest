@@ -17,6 +17,7 @@ import { OrderStatus } from '../../../../domain/enums/order-status.enum';
 import { OrderType } from '../../../../domain/enums/order-type.enum';
 import { OrderItemEntity } from './order-item.entity';
 import { PaymentEntity } from '../../../../../payments/infrastructure/persistence/relational/entities/payment.entity';
+import { TicketImpressionEntity } from './ticket-impression.entity'; // Importar TicketImpressionEntity
 
 @Entity({
   name: 'orders',
@@ -86,6 +87,9 @@ export class OrderEntity extends EntityRelationalHelper {
 
   @OneToMany(() => PaymentEntity, (payment) => payment.order)
   payments: PaymentEntity[];
+
+  @OneToMany(() => TicketImpressionEntity, (impression) => impression.order) // Añadir relación
+  ticketImpressions: TicketImpressionEntity[]; // Añadir propiedad
 
   @CreateDateColumn()
   createdAt: Date;

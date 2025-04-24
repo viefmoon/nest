@@ -69,7 +69,8 @@ export class OrdersRelationalRepository implements OrderRepository {
   }: {
     filterOptions?: FindAllOrdersDto | null;
     paginationOptions: IPaginationOptions;
-  }): Promise<Order[]> {
+  }): Promise<[Order[], number]> {
+    // Cambiado el tipo de retorno
     const where: FindOptionsWhere<OrderEntity> = {};
 
     if (filterOptions?.userId) {
@@ -106,7 +107,8 @@ export class OrdersRelationalRepository implements OrderRepository {
       where.createdAt = Between(startDate, endDate);
     }
 
-    const entities = await this.ordersRepository.find({
+    // Usar findAndCount en lugar de find
+    const [entities, count] = await this.ordersRepository.findAndCount({
       skip: (paginationOptions.page - 1) * paginationOptions.limit,
       take: paginationOptions.limit,
       where: where,
@@ -116,7 +118,8 @@ export class OrdersRelationalRepository implements OrderRepository {
       },
     });
 
-    return entities.map((order) => OrderMapper.toDomain(order));
+    // Devolver la tupla [datos, conteo]
+    return [entities.map((order) => OrderMapper.toDomain(order)), count];
   }
 
   async findById(id: Order['id']): Promise<NullableType<Order>> {
