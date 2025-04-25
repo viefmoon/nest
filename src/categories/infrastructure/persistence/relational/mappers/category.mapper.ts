@@ -1,7 +1,8 @@
 import { Category } from '../../../../domain/category';
 import { CategoryEntity } from '../entities/category.entity';
 import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
-import { SubcategoryMapper } from '../../../../../subcategories/infrastructure/persistence/relational/mappers/Subcategory.mapper';
+import { SubcategoryMapper } from '../../../../../subcategories/infrastructure/persistence/relational/mappers/subcategory.mapper'; // Corregido casing
+import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity'; // Necesario para stub
 
 export class CategoryMapper {
   static toDomain(entity: CategoryEntity): Category | null {
@@ -15,8 +16,8 @@ export class CategoryMapper {
     domain.description = entity.description;
     domain.isActive = entity.isActive;
     domain.photo = entity.photo ? FileMapper.toDomain(entity.photo) : null;
-    domain.subCategories = entity.subCategories
-      ? (entity.subCategories
+    domain.subcategories = entity.subcategories
+      ? (entity.subcategories
           .map((subcategory) => SubcategoryMapper.toDomain(subcategory))
           .filter(Boolean) as any)
       : [];
@@ -27,7 +28,7 @@ export class CategoryMapper {
     return domain;
   }
 
-  static toEntity(domain: Category): CategoryEntity | null {
+  static toPersistence(domain: Category): CategoryEntity | null {
     if (!domain) {
       return null;
     }
@@ -37,7 +38,9 @@ export class CategoryMapper {
     entity.name = domain.name;
     entity.description = domain.description;
     entity.isActive = domain.isActive;
-    entity.photoId = domain.photo?.id || null;
+    entity.photo = domain.photo
+      ? ({ id: domain.photo.id } as FileEntity)
+      : null;
 
     return entity;
   }

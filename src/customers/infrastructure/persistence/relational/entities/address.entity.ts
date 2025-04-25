@@ -8,6 +8,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  RelationId,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { CustomerEntity } from './customer.entity'; // Importar CustomerEntity
@@ -19,7 +20,7 @@ export class AddressEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid' }) // Columna para la clave foránea
+  @RelationId((address: AddressEntity) => address.customer)
   customerId: string;
 
   @ManyToOne(() => CustomerEntity, (customer) => customer.addresses, {

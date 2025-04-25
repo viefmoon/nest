@@ -1,6 +1,7 @@
 import { Address } from '../../../../domain/address';
 import { AddressEntity } from '../entities/address.entity';
-// import { CustomerMapper } from './customer.mapper'; // Comentar o eliminar esta línea
+import { CustomerEntity } from '../entities/customer.entity'; // Necesario para stub
+// import { CustomerMapper } from './customer.mapper';
 
 export class AddressMapper {
   static toDomain(entity: AddressEntity): Address | null {
@@ -41,7 +42,7 @@ export class AddressMapper {
   static toPersistence(domain: Address): AddressEntity {
     const entity = new AddressEntity();
     entity.id = domain.id;
-    entity.customerId = domain.customerId;
+    entity.customer = { id: domain.customerId } as CustomerEntity;
     entity.street = domain.street;
     entity.number = domain.number ?? null;
     entity.interiorNumber = domain.interiorNumber ?? null;
@@ -52,8 +53,6 @@ export class AddressMapper {
     entity.country = domain.country;
     entity.references = domain.references ?? null;
     entity.isDefault = domain.isDefault;
-    // No mapeamos createdAt, updatedAt, deletedAt
-    // No mapeamos la relación 'customer' aquí, se maneja por JoinColumn
-    return entity;
+return entity;
   }
 }

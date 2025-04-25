@@ -25,12 +25,11 @@ export class ModifierGroupMapper {
       group.productModifiers = [];
     }
 
-    // La relación 'products' no se mapea aquí generalmente.
 
     return group;
   }
 
-  static toEntity(domain: ModifierGroup): ModifierGroupEntity {
+  static toPersistence(domain: ModifierGroup): ModifierGroupEntity {
     const entity = new ModifierGroupEntity();
     entity.id = domain.id;
     entity.name = domain.name;

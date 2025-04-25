@@ -8,10 +8,11 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  RelationId,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
-import { SubcategoryEntity } from '../../../../../subcategories/infrastructure/persistence/relational/entities/Subcategory.entity';
+import { SubcategoryEntity } from '../../../../../subcategories/infrastructure/persistence/relational/entities/subcategory.entity';
 
 @Entity({
   name: 'category',
@@ -29,7 +30,7 @@ export class CategoryEntity extends EntityRelationalHelper {
   @Column({ default: true })
   isActive: boolean;
 
-  @Column({ nullable: true })
+  @RelationId((category: CategoryEntity) => category.photo)
   photoId: string | null;
 
   @ManyToOne(() => FileEntity, { nullable: true })
@@ -37,7 +38,7 @@ export class CategoryEntity extends EntityRelationalHelper {
   photo: FileEntity | null;
 
   @OneToMany(() => SubcategoryEntity, (subcategory) => subcategory.category)
-  subCategories: SubcategoryEntity[];
+  subcategories: SubcategoryEntity[];
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

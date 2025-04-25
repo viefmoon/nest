@@ -86,7 +86,7 @@ export class Order {
   })
   dailyOrderCounter: DailyOrderCounter;
 
-@ApiProperty({
+  @ApiProperty({
     type: () => [OrderItem],
     description: 'Items asociados a la orden',
   })

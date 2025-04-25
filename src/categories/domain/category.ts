@@ -38,7 +38,7 @@ export class Category {
     type: () => [Subcategory],
     description: 'Subcategorías asociadas a esta categoría',
   })
-  subCategories: Subcategory[];
+  subcategories: Subcategory[];
 
   @ApiProperty()
   createdAt: Date;

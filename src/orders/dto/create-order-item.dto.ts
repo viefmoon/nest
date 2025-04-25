@@ -9,7 +9,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { OrderItemModifierDto } from './create-order-item-modifier.dto';
+import { CreateOrderItemModifierDto } from './create-order-item-modifier.dto';
 
 export class CreateOrderItemDto {
   @IsNotEmpty()
@@ -46,7 +46,6 @@ export class CreateOrderItemDto {
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  
-  @Type(() => OrderItemModifierDto)
-  modifiers?: OrderItemModifierDto[];
+  @Type(() => CreateOrderItemModifierDto)
+  modifiers?: CreateOrderItemModifierDto[];
 }

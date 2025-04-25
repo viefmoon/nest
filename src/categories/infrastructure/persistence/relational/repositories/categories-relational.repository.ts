@@ -14,7 +14,7 @@ export class CategoriesRelationalRepository implements CategoryRepository {
   ) {}
 
   async create(data: Category): Promise<Category> {
-    const entity = CategoryMapper.toEntity(data);
+    const entity = CategoryMapper.toPersistence(data);
     if (!entity) {
       throw new Error('No se pudo crear la entidad de categoría');
     }
@@ -29,7 +29,7 @@ export class CategoriesRelationalRepository implements CategoryRepository {
   async findOne(id: string): Promise<Category> {
     const entity = await this.categoryRepository.findOne({
       where: { id },
-      relations: ['photo', 'subCategories'],
+      relations: ['photo', 'subcategories'],
     });
 
     const domainResult = entity ? CategoryMapper.toDomain(entity) : null;
@@ -51,7 +51,7 @@ export class CategoriesRelationalRepository implements CategoryRepository {
     const queryBuilder = this.categoryRepository
       .createQueryBuilder('category')
       .leftJoinAndSelect('category.photo', 'photo')
-      .leftJoinAndSelect('category.subCategories', 'subCategories')
+      .leftJoinAndSelect('category.subcategories', 'subcategories')
       .skip(skip)
       .take(limit);
 
@@ -71,7 +71,7 @@ export class CategoriesRelationalRepository implements CategoryRepository {
   }
 
   async update(id: string, data: Category): Promise<Category> {
-    const entity = CategoryMapper.toEntity(data);
+    const entity = CategoryMapper.toPersistence(data);
     if (!entity) {
       throw new Error(
         'No se pudo crear la entidad de categoría para actualizar',
@@ -82,7 +82,7 @@ export class CategoriesRelationalRepository implements CategoryRepository {
 
     const updatedEntity = await this.categoryRepository.findOne({
       where: { id },
-      relations: ['photo', 'subCategories'],
+      relations: ['photo', 'subcategories'],
     });
 
     if (!updatedEntity) {
@@ -109,7 +109,7 @@ export class CategoriesRelationalRepository implements CategoryRepository {
       .createQueryBuilder('category')
       // Cargar subcategorías activas
       .leftJoinAndSelect(
-        'category.subCategories',
+        'category.subcategories',
         'subcategory',
         'subcategory.isActive = :isActive',
         { isActive: true },
