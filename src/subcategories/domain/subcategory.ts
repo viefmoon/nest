@@ -1,28 +1,25 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { Category } from '../../categories/domain/category';
 import { FileType } from '../../files/domain/file';
-import { Product } from '../../products/domain/product'; 
+import { Product } from '../../products/domain/product';
 
 
 export class Subcategory {
-  @ApiProperty() id!: string;
-  @ApiProperty() categoryId!: string;
-  @ApiProperty() name!: string;
-  @ApiProperty({ nullable: true }) description!: string | null;
-  @ApiProperty() isActive!: boolean;
+  id: string;
+  categoryId: string;
+  name: string;
+  description: string | null;
+  isActive: boolean;
 
-  
-  @ApiProperty({ nullable: true }) photoId!: string | null;
 
-  @ApiProperty({ type: () => Category, nullable: true })
-  category!: Category | null;
+  photoId: string | null;
 
-  @ApiProperty({ type: () => FileType, nullable: true })
-  photo!: FileType | null;
-  
-  @ApiProperty({ type: () => [Product] }) products!: Product[];
+  category: Category | null;
 
-  @ApiProperty() createdAt!: Date;
-  @ApiProperty() updatedAt!: Date;
-  @ApiProperty({ nullable: true }) deletedAt!: Date | null;
+  photo: FileType | null;
+
+  products: Product[] | null;
+
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
 }

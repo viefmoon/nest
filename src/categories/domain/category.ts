@@ -1,21 +1,18 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { FileType } from '../../files/domain/file';
 import { Subcategory } from '../../subcategories/domain/Subcategory';
 
 export class Category {
-  @ApiProperty({ example: 'uuid' })  id!: string;
-  @ApiProperty()                     name!: string;
-  @ApiProperty({ nullable: true })   description!: string | null;
-  @ApiProperty()                     isActive!: boolean;
-  @ApiProperty({ nullable: true })   photoId!: string | null;
+  id: string;
+  name: string;
+  description: string | null;
+  isActive: boolean;
+  photoId: string | null;
 
-  @ApiProperty({ type: () => FileType, nullable: true })
-  photo!: FileType | null;
+  photo: FileType | null;
 
-  @ApiProperty({ type: () => [Subcategory], nullable: true })
-  subcategories!: Subcategory[] | null;
+  subcategories: Subcategory[] | null;
 
-  @ApiProperty()                     createdAt!: Date;
-  @ApiProperty()                     updatedAt!: Date;
-  @ApiProperty({ nullable: true })   deletedAt!: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
 }

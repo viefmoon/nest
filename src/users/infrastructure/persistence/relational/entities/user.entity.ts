@@ -7,12 +7,8 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-  JoinColumn,
-  OneToOne,
 } from 'typeorm';
 import { RoleEntity } from '../../../../../roles/infrastructure/persistence/relational/entities/role.entity';
-import { StatusEntity } from '../../../../../statuses/infrastructure/persistence/relational/entities/status.entity';
-import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
 import { GenderEnum } from '../../../../enums/gender.enum';
 
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
@@ -21,11 +17,9 @@ import { EntityRelationalHelper } from '../../../../../utils/relational-entity-h
   name: 'user',
 })
 export class UserEntity extends EntityRelationalHelper {
-  @PrimaryGeneratedColumn('uuid') // Cambiado a UUID
-  id: string; // Cambiado a string
+  @PrimaryGeneratedColumn('uuid')
+  id: string; 
 
-  // For "string | null" we need to use String type.
-  // More info: https://github.com/typeorm/typeorm/issues/2567
   @Column({ type: String, unique: true, nullable: true })
   email: string | null;
 
@@ -70,21 +64,15 @@ export class UserEntity extends EntityRelationalHelper {
   @Column({ type: 'jsonb', nullable: true })
   emergencyContact: Record<string, any> | null;
 
-  @OneToOne(() => FileEntity, {
-    eager: true,
-  })
-  @JoinColumn()
-  photo?: FileEntity | null;
 
   @ManyToOne(() => RoleEntity, {
     eager: true,
   })
   role?: RoleEntity | null;
 
-  @ManyToOne(() => StatusEntity, {
-    eager: true,
-  })
-  status?: StatusEntity;
+
+  @Column({ type: 'boolean', default: true })
+  isActive: boolean;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
