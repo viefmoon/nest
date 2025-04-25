@@ -3,6 +3,8 @@ import { OrderEntity } from '../entities/order.entity';
 import { UserMapper } from '../../../../../users/infrastructure/persistence/relational/mappers/user.mapper';
 import { TableMapper } from '../../../../../tables/infrastructure/persistence/relational/mappers/table.mapper';
 import { DailyOrderCounterMapper } from './daily-order-counter.mapper';
+import { OrderItemMapper } from './order-item.mapper';
+import { PaymentMapper } from '../../../../../payments/infrastructure/persistence/relational/mappers/payment.mapper'; // Importar PaymentMapper
 
 export class OrderMapper {
   static toDomain(entity: OrderEntity): Order {
@@ -35,6 +37,23 @@ export class OrderMapper {
       domain.dailyOrderCounter = DailyOrderCounterMapper.toDomain(
         entity.dailyOrderCounter,
       );
+    }
+    
+    if (entity.orderItems) {
+      domain.orderItems = entity.orderItems.map((item) =>
+        OrderItemMapper.toDomain(item),
+      );
+    } else {
+      domain.orderItems = [];
+    }
+
+    if (entity.payments) {
+      const paymentMapper = new PaymentMapper();
+      domain.payments = entity.payments.map((payment) =>
+        paymentMapper.toDomain(payment),
+      );
+    } else {
+      domain.payments = [];
     }
 
     return domain;
