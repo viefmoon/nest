@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SubCategoryEntity } from './entities/subcategory.entity';
-import { SubCategoriesRelationalRepository } from './repositories/subcategories-relational.repository';
+import { SubcategoryEntity } from './entities/Subcategory.entity';
+import { SubcategoriesRelationalRepository } from './repositories/subcategories-relational.repository';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([SubCategoryEntity])],
+  imports: [TypeOrmModule.forFeature([SubcategoryEntity])],
   providers: [
     {
-      provide: 'SubCategoryRepository',
-      useClass: SubCategoriesRelationalRepository,
+      provide: 'SubcategoryRepository',
+      useClass: SubcategoriesRelationalRepository,
     },
   ],
-  exports: ['SubCategoryRepository'],
+  exports: ['SubcategoryRepository'],
 })
-export class SubCategoriesRelationalPersistenceModule {}
+export class SubcategoriesRelationalPersistenceModule {}

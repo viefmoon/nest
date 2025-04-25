@@ -17,7 +17,7 @@ import { ProductEntity } from '../../../../../products/infrastructure/persistenc
 @Entity({
   name: 'subcategory',
 })
-export class SubCategoryEntity extends EntityRelationalHelper {
+export class SubcategoryEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -37,16 +37,16 @@ export class SubCategoryEntity extends EntityRelationalHelper {
   photoId: string | null;
 
   @ManyToOne(() => FileEntity, { nullable: true })
-  @JoinColumn({ name: 'photoId' })
+  @JoinColumn({ name: 'photo_id' })
   photo: FileEntity | null;
 
   @ManyToOne(() => CategoryEntity, (category) => category.subCategories, {
     nullable: false,
   })
-  @JoinColumn({ name: 'categoryId' })
+  @JoinColumn({ name: 'category_id' })
   category: CategoryEntity;
 
-  @OneToMany(() => ProductEntity, (product) => product.subCategory)
+  @OneToMany(() => ProductEntity, (product) => product.subcategory)
   products: ProductEntity[];
 
   @CreateDateColumn({ type: 'timestamptz' })

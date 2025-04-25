@@ -18,7 +18,7 @@ import { MailerModule } from './mailer/mailer.module';
 import { AreasModule } from './areas/areas.module';
 import { TablesModule } from './tables/tables.module';
 import { CategoriesModule } from './categories/categories.module';
-import { SubCategoriesModule } from './subcategories/subcategories.module';
+import { SubcategoriesModule } from './subcategories/subcategories.module';
 import { ProductsModule } from './products/products.module';
 import { ProductVariantsModule } from './product-variants/product-variants.module';
 import { ModifierGroupsModule } from './modifier-groups/modifier-groups.module';
@@ -53,7 +53,7 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     AreasModule,
     TablesModule,
     CategoriesModule,
-    SubCategoriesModule,
+    SubcategoriesModule,
     ProductsModule,
     ProductVariantsModule,
     ModifierGroupsModule,

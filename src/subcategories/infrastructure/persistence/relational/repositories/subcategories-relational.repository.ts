@@ -1,40 +1,40 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { SubCategoryEntity } from '../entities/subcategory.entity';
-import { SubCategoryRepository } from '../../subcategory.repository';
-import { SubCategory } from '../../../../domain/subcategory';
-import { SubCategoryMapper } from '../mappers/subcategory.mapper';
+import { SubcategoryEntity } from '../entities/Subcategory.entity';
+import { SubcategoryRepository } from '../../Subcategory.repository';
+import { Subcategory } from '../../../../domain/Subcategory';
+import { SubcategoryMapper } from '../mappers/Subcategory.mapper';
 
 @Injectable()
-export class SubCategoriesRelationalRepository
-  implements SubCategoryRepository
+export class SubcategoriesRelationalRepository
+  implements SubcategoryRepository
 {
   constructor(
-    @InjectRepository(SubCategoryEntity)
-    private readonly subCategoryRepository: Repository<SubCategoryEntity>,
+    @InjectRepository(SubcategoryEntity)
+    private readonly subcategoryRepository: Repository<SubcategoryEntity>,
   ) {}
 
-  async create(data: SubCategory): Promise<SubCategory> {
-    const entity = SubCategoryMapper.toEntity(data);
+  async create(data: Subcategory): Promise<Subcategory> {
+    const entity = SubcategoryMapper.toEntity(data);
     if (!entity) {
       throw new Error('No se pudo crear la entidad de subcategoría');
     }
-    const savedEntity = await this.subCategoryRepository.save(entity);
-    const domainResult = SubCategoryMapper.toDomain(savedEntity);
+    const savedEntity = await this.subcategoryRepository.save(entity);
+    const domainResult = SubcategoryMapper.toDomain(savedEntity);
     if (!domainResult) {
       throw new Error('No se pudo mapear la entidad guardada a dominio');
     }
     return domainResult;
   }
 
-  async findOne(id: string): Promise<SubCategory> {
-    const entity = await this.subCategoryRepository.findOne({
+  async findOne(id: string): Promise<Subcategory> {
+    const entity = await this.subcategoryRepository.findOne({
       where: { id },
       relations: ['photo', 'category'],
     });
 
-    const domainResult = entity ? SubCategoryMapper.toDomain(entity) : null;
+    const domainResult = entity ? SubcategoryMapper.toDomain(entity) : null;
     if (!domainResult) {
       throw new NotFoundException(`Subcategoría con ID ${id} no encontrada`);
     }
@@ -46,12 +46,12 @@ export class SubCategoriesRelationalRepository
     limit?: number;
     categoryId?: string;
     isActive?: boolean;
-  }): Promise<[SubCategory[], number]> {
+  }): Promise<[Subcategory[], number]> {
     const page = options?.page || 1;
     const limit = options?.limit || 10;
     const skip = (page - 1) * limit;
 
-    const queryBuilder = this.subCategoryRepository
+    const queryBuilder = this.subcategoryRepository
       .createQueryBuilder('subcategory')
       .leftJoinAndSelect('subcategory.photo', 'photo')
       .leftJoinAndSelect('subcategory.category', 'category')
@@ -73,23 +73,23 @@ export class SubCategoriesRelationalRepository
     const [entities, count] = await queryBuilder.getManyAndCount();
 
     const domainResults = entities
-      .map(SubCategoryMapper.toDomain)
-      .filter((item): item is SubCategory => item !== null);
+      .map(SubcategoryMapper.toDomain)
+      .filter((item): item is Subcategory => item !== null);
 
     return [domainResults, count];
   }
 
-  async update(id: string, data: SubCategory): Promise<SubCategory> {
-    const entity = SubCategoryMapper.toEntity(data);
+  async update(id: string, data: Subcategory): Promise<Subcategory> {
+    const entity = SubcategoryMapper.toEntity(data);
     if (!entity) {
       throw new Error(
         'No se pudo crear la entidad de subcategoría para actualizar',
       );
     }
 
-    await this.subCategoryRepository.update(id, entity);
+    await this.subcategoryRepository.update(id, entity);
 
-    const updatedEntity = await this.subCategoryRepository.findOne({
+    const updatedEntity = await this.subcategoryRepository.findOne({
       where: { id },
       relations: ['photo', 'category'],
     });
@@ -98,7 +98,7 @@ export class SubCategoriesRelationalRepository
       throw new NotFoundException(`Subcategoría con ID ${id} no encontrada`);
     }
 
-    const domainResult = SubCategoryMapper.toDomain(updatedEntity);
+    const domainResult = SubcategoryMapper.toDomain(updatedEntity);
     if (!domainResult) {
       throw new Error('No se pudo mapear la entidad actualizada a dominio');
     }
@@ -107,7 +107,7 @@ export class SubCategoriesRelationalRepository
   }
 
   async softDelete(id: string): Promise<void> {
-    const result = await this.subCategoryRepository.softDelete(id);
+    const result = await this.subcategoryRepository.softDelete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`Subcategoría con ID ${id} no encontrada`);
     }

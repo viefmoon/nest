@@ -1,16 +1,16 @@
-import { SubCategory } from '../../../../domain/subcategory';
-import { SubCategoryEntity } from '../entities/subcategory.entity';
+import { Subcategory } from '../../../../domain/Subcategory';
+import { SubcategoryEntity } from '../entities/Subcategory.entity';
 import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
 import { CategoryMapper } from '../../../../../categories/infrastructure/persistence/relational/mappers/category.mapper';
 import { ProductMapper } from '../../../../../products/infrastructure/persistence/relational/mappers/product.mapper'; // Importar ProductMapper
 
-export class SubCategoryMapper {
-  static toDomain(entity: SubCategoryEntity): SubCategory | null {
+export class SubcategoryMapper {
+  static toDomain(entity: SubcategoryEntity): Subcategory | null {
     if (!entity) {
       return null;
     }
 
-    const domain = new SubCategory();
+    const domain = new Subcategory();
     domain.id = entity.id;
     domain.name = entity.name;
     domain.description = entity.description;
@@ -40,12 +40,12 @@ export class SubCategoryMapper {
     return domain;
   }
 
-  static toEntity(domain: SubCategory): SubCategoryEntity | null {
+  static toEntity(domain: Subcategory): SubcategoryEntity | null {
     if (!domain) {
       return null;
     }
 
-    const entity = new SubCategoryEntity();
+    const entity = new SubcategoryEntity();
     entity.id = domain.id;
     entity.name = domain.name;
     entity.description = domain.description;
