@@ -31,18 +31,24 @@ export class OrderItemModifierRepositoryImpl
   }
 
   async findByOrderItemId(orderItemId: string): Promise<OrderItemModifier[]> {
-    const orderItemModifierEntities =
-      await this.orderItemModifierRepository.find({
-        where: { orderItemId },
-        relations: ['orderItem'],
-      });
+    // Usar QueryBuilder para filtrar por el ID de la relación orderItem
+    const queryBuilder = this.orderItemModifierRepository
+      .createQueryBuilder('oim') // Alias para OrderItemModifierEntity
+      .leftJoinAndSelect('oim.orderItem', 'oi') // Unir y seleccionar la relación orderItem (alias 'oi')
+      // Añadimos también la relación con modifier si es necesaria (equivalente a relations: ['orderItem', 'modifier'])
+      // Si 'modifier' no se necesita aquí, se puede quitar el siguiente leftJoinAndSelect.
+      // Basado en el otro repositorio, parece que sí se necesita.
+      .leftJoinAndSelect('oim.modifier', 'pm')
+      .where('oi.id = :orderItemId', { orderItemId }); // Filtrar por el ID del orderItem relacionado
 
-    return orderItemModifierEntities.map(OrderItemModifierMapper.toDomain);
+    const entities = await queryBuilder.getMany(); // Ejecutar la consulta
+
+    return entities.map(OrderItemModifierMapper.toDomain);
   }
 
   async save(orderItemModifier: OrderItemModifier): Promise<OrderItemModifier> {
     const orderItemModifierEntity =
-      OrderItemModifierMapper.toEntity(orderItemModifier);
+      OrderItemModifierMapper.toPersistence(orderItemModifier);
     const savedEntity = await this.orderItemModifierRepository.save(
       orderItemModifierEntity,
     );
@@ -54,7 +60,7 @@ export class OrderItemModifierRepositoryImpl
     orderItemModifier: OrderItemModifier,
   ): Promise<OrderItemModifier> {
     const orderItemModifierEntity =
-      OrderItemModifierMapper.toEntity(orderItemModifier);
+      OrderItemModifierMapper.toPersistence(orderItemModifier);
     const updatedEntity = await this.orderItemModifierRepository.save(
       orderItemModifierEntity,
     );

@@ -1,3 +1,4 @@
+import { Paginated } from '../../../common/types/paginated.type';
 import { Category } from '../../domain/category';
 
 export interface CategoryRepository {
@@ -7,7 +8,7 @@ export interface CategoryRepository {
     page?: number;
     limit?: number;
     isActive?: boolean;
-  }): Promise<[Category[], number]>;
+  }): Promise<Paginated<Category>>;
   update(id: string, data: Category): Promise<Category>;
   softDelete(id: string): Promise<void>;
   findFullMenu(): Promise<Category[]>;

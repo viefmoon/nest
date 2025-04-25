@@ -1,3 +1,4 @@
+import { Paginated } from '../../../common/types/paginated.type';
 import { Subcategory } from '../../domain/Subcategory';
 
 export interface SubcategoryRepository {
@@ -8,7 +9,7 @@ export interface SubcategoryRepository {
     limit?: number;
     categoryId?: string;
     isActive?: boolean;
-  }): Promise<[Subcategory[], number]>;
+  }): Promise<Paginated<Subcategory>>;
   update(id: string, data: Subcategory): Promise<Subcategory>;
   softDelete(id: string): Promise<void>;
 }

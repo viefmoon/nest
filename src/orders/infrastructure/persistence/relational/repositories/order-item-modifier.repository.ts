@@ -29,16 +29,20 @@ export class OrderItemModifierRelationalRepository
   }
 
   async findByOrderItemId(orderItemId: string): Promise<OrderItemModifier[]> {
-    const entities = await this.orderItemModifierRepository.find({
-      where: { orderItemId },
-      relations: ['orderItem', 'productModifier'],
-    });
+    // Usar QueryBuilder para filtrar por el ID de la relación orderItem
+    const queryBuilder = this.orderItemModifierRepository
+      .createQueryBuilder('oim') // Alias para OrderItemModifierEntity
+      .leftJoinAndSelect('oim.orderItem', 'oi') // Unir y seleccionar la relación orderItem (alias 'oi')
+      .leftJoinAndSelect('oim.modifier', 'pm') // Unir y seleccionar la relación modifier (alias 'pm', equivalente a relations: ['productModifier'])
+      .where('oi.id = :orderItemId', { orderItemId }); // Filtrar por el ID del orderItem relacionado
+
+    const entities = await queryBuilder.getMany(); // Ejecutar la consulta
 
     return entities.map((entity) => OrderItemModifierMapper.toDomain(entity));
   }
 
   async save(orderItemModifier: OrderItemModifier): Promise<OrderItemModifier> {
-    const entity = OrderItemModifierMapper.toEntity(orderItemModifier);
+    const entity = OrderItemModifierMapper.toPersistence(orderItemModifier);
     const savedEntity = await this.orderItemModifierRepository.save(entity);
 
     return this.findById(savedEntity.id) as Promise<OrderItemModifier>;
@@ -47,7 +51,7 @@ export class OrderItemModifierRelationalRepository
   async update(
     orderItemModifier: OrderItemModifier,
   ): Promise<OrderItemModifier> {
-    const entity = OrderItemModifierMapper.toEntity(orderItemModifier);
+    const entity = OrderItemModifierMapper.toPersistence(orderItemModifier);
     await this.orderItemModifierRepository.update(entity.id, entity);
 
     return this.findById(entity.id) as Promise<OrderItemModifier>;

@@ -1,14 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { CategoryRepository } from './infrastructure/persistence/category.repository';
+import { CategoryRepository } from './infrastructure/persistence/category.repository'; // Keep type for interface
+import { CATEGORY_REPOSITORY } from '../common/tokens';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Category } from './domain/category';
 import { FindAllCategoriesDto } from './dto/find-all-categories.dto';
+import { Paginated } from '../common/types/paginated.type';
 
 @Injectable()
 export class CategoriesService {
   constructor(
-    @Inject('CategoryRepository')
+    @Inject(CATEGORY_REPOSITORY)
     private readonly categoryRepository: CategoryRepository,
   ) {}
 
@@ -30,7 +32,7 @@ export class CategoriesService {
 
   async findAll(
     findAllCategoriesDto: FindAllCategoriesDto,
-  ): Promise<[Category[], number]> {
+  ): Promise<Paginated<Category>> {
     return this.categoryRepository.findAll({
       page: findAllCategoriesDto.page,
       limit: findAllCategoriesDto.limit,

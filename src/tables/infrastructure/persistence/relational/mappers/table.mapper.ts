@@ -8,7 +8,7 @@ export class TableMapper {
     const domainEntity = new Table();
     domainEntity.id = raw.id;
     domainEntity.name = raw.name;
-    domainEntity.areaId = raw.areaId;
+    domainEntity.areaId = raw.area?.id;
     domainEntity.capacity = raw.capacity;
     domainEntity.isActive = raw.isActive;
     domainEntity.isAvailable = raw.isAvailable;
@@ -22,7 +22,8 @@ export class TableMapper {
 
     // Asignar el área si está presente
     if (raw.area) {
-      domainEntity.area = AreaMapper.toDomain(raw.area);
+      // Añadir '!' porque sabemos que raw.area no es null aquí, y toDomain no devolverá null
+      domainEntity.area = AreaMapper.toDomain(raw.area)!;
     }
 
     domainEntity.createdAt = raw.createdAt;

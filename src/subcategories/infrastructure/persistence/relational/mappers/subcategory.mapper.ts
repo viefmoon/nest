@@ -1,62 +1,43 @@
-import { Subcategory } from '../../../../domain/subcategory'; // Corregido casing
-import { SubcategoryEntity } from '../entities/subcategory.entity'; // Corregido casing
+import { Injectable } from '@nestjs/common'; 
+import { Subcategory } from '../../../../domain/subcategory'; 
+import { SubcategoryEntity } from '../entities/subcategory.entity'; 
 import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
 import { CategoryMapper } from '../../../../../categories/infrastructure/persistence/relational/mappers/category.mapper';
 import { ProductMapper } from '../../../../../products/infrastructure/persistence/relational/mappers/product.mapper';
-import { CategoryEntity } from '../../../../../categories/infrastructure/persistence/relational/entities/category.entity'; // Necesario para el stub
-import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity'; // Necesario para el stub
+import { CategoryEntity } from '../../../../../categories/infrastructure/persistence/relational/entities/category.entity'; 
+import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity'; 
+import { BaseMapper, mapArray } from '../../../../../common/mappers/base.mapper';
 
-export class SubcategoryMapper {
-  static toDomain(entity: SubcategoryEntity): Subcategory | null {
-    if (!entity) {
-      return null;
-    }
-
-    const domain = new Subcategory();
-    domain.id = entity.id;
-    domain.name = entity.name;
-    domain.description = entity.description;
-    domain.isActive = entity.isActive;
-    domain.categoryId = entity.categoryId;
-    domain.photo = entity.photo ? FileMapper.toDomain(entity.photo) : null;
-
-    // Asignar la categoría solo si existe y se puede mapear correctamente
-    const categoryDomain = entity.category
-      ? CategoryMapper.toDomain(entity.category)
-      : null;
-    if (categoryDomain) {
-      domain.category = categoryDomain;
-    }
-
-    // Mapear productos si existen en la entidad cargada
-    domain.products = entity.products
-      ? (entity.products
-          .map((product) => ProductMapper.toDomain(product)) // Usar ProductMapper
-          .filter(Boolean) as any) // Filtrar nulos/undefined si ProductMapper puede devolverlos
-      : [];
-
-    domain.createdAt = entity.createdAt;
-    domain.updatedAt = entity.updatedAt;
-    domain.deletedAt = entity.deletedAt;
-
-    return domain;
+@Injectable() 
+export class SubcategoryMapper extends BaseMapper<SubcategoryEntity, Subcategory> {
+  
+  override toDomain(entity: SubcategoryEntity): Subcategory | null {
+    if (!entity) return null;
+    const d = new Subcategory();
+    d.id          = entity.id;
+    d.name        = entity.name;
+    d.description = entity.description;
+    d.isActive    = entity.isActive;
+    d.categoryId  = entity.categoryId;
+    d.photoId     = entity.photoId;
+    d.category    = entity.category ? CategoryMapper.toDomain(entity.category) : null;
+    d.photo       = entity.photo    ? FileMapper.toDomain(entity.photo)       : null;
+    d.products    = mapArray(entity.products, ProductMapper.toDomain);
+    d.createdAt   = entity.createdAt;
+    d.updatedAt   = entity.updatedAt;
+    d.deletedAt   = entity.deletedAt;
+    return d;
   }
 
-  static toPersistence(domain: Subcategory): SubcategoryEntity | null {
-    if (!domain) {
-      return null;
-    }
-
-    const entity = new SubcategoryEntity();
-    entity.id = domain.id;
-    entity.name = domain.name;
-    entity.description = domain.description;
-    entity.isActive = domain.isActive;
-    entity.category = { id: domain.categoryId } as CategoryEntity;
-    entity.photo = domain.photo
-      ? ({ id: domain.photo.id } as FileEntity)
-      : null;
-
-    return entity;
+  override toEntity(domain: Subcategory): SubcategoryEntity | null {
+    if (!domain) return null;
+    const e = new SubcategoryEntity();
+    if (domain.id) e.id = domain.id;
+    e.name        = domain.name;
+    e.description = domain.description;
+    e.isActive    = domain.isActive;
+    e.category    = { id: domain.categoryId } as CategoryEntity;
+    e.photo       = domain.photoId ? ({ id: domain.photoId } as FileEntity) : null;
+    return e;
   }
 }

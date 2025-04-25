@@ -6,6 +6,7 @@ import {
   IsString,
   IsUUID,
 } from 'class-validator';
+import { TransformDefault } from '../../utils/transformers/transform-default.decorator';
 
 export class CreateSubcategoryDto {
   @ApiProperty({
@@ -28,8 +29,9 @@ export class CreateSubcategoryDto {
   @ApiProperty({
     type: Boolean,
     example: true,
-    default: true,
+    default: true, // Keep for Swagger documentation clarity
   })
+  @TransformDefault(true) // Apply default value if undefined
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;

@@ -17,7 +17,7 @@ export class ProductRelationalRepository implements ProductRepository {
   ) {}
 
   async create(product: Product): Promise<Product> {
-    const entity = ProductMapper.toEntity(product);
+    const entity = ProductMapper.toPersistence(product);
     const savedEntity = await this.productRepository.save(entity);
     return ProductMapper.toDomain(savedEntity);
   }
@@ -33,7 +33,7 @@ export class ProductRelationalRepository implements ProductRepository {
     const where: any = {};
 
     if (options.subcategoryId) {
-      where.subcategoryId = options.subcategoryId;
+      where.subcategory = { id: options.subcategoryId };
     }
 
     if (options.hasVariants !== undefined) {
@@ -113,7 +113,7 @@ export class ProductRelationalRepository implements ProductRepository {
   }
 
   async save(product: Product): Promise<Product> {
-    const entity = ProductMapper.toEntity(product);
+    const entity = ProductMapper.toPersistence(product);
     // Asegurarse de que las relaciones (como modifierGroups) estén mapeadas correctamente si es necesario
     // En este caso, el mapeador podría necesitar lógica adicional si el dominio no tiene las entidades TypeORM
     // Pero como el servicio ya está manejando las entidades ModifierGroup, debería funcionar.

@@ -1,30 +1,31 @@
+import { Injectable } from '@nestjs/common'; 
 import { Area } from '../../../../domain/area';
 import { AreaEntity } from '../entities/area.entity';
+import { BaseMapper } from '../../../../../common/mappers/base.mapper'; 
 
-export class AreaMapper {
-  static toDomain(raw: AreaEntity): Area {
-    const domainEntity = new Area();
-    domainEntity.id = raw.id;
-    domainEntity.name = raw.name;
-    domainEntity.description = raw.description;
-    domainEntity.isActive = raw.isActive;
-    domainEntity.createdAt = raw.createdAt;
-    domainEntity.updatedAt = raw.updatedAt;
-    domainEntity.deletedAt = raw.deletedAt;
-    return domainEntity;
+@Injectable() 
+export class AreaMapper extends BaseMapper<AreaEntity, Area> {
+  
+  override toDomain(entity: AreaEntity): Area | null {
+    if (!entity) return null;
+    const domain = new Area();
+    domain.id         = entity.id;
+    domain.name       = entity.name;
+    domain.description= entity.description;
+    domain.isActive   = entity.isActive;
+    domain.createdAt  = entity.createdAt;
+    domain.updatedAt  = entity.updatedAt;
+    domain.deletedAt  = entity.deletedAt;
+    return domain;
   }
 
-  static toPersistence(domainEntity: Area): AreaEntity {
-    const persistenceEntity = new AreaEntity();
-    if (domainEntity.id) {
-      persistenceEntity.id = domainEntity.id;
-    }
-    persistenceEntity.name = domainEntity.name;
-    persistenceEntity.description = domainEntity.description;
-    persistenceEntity.isActive = domainEntity.isActive;
-    persistenceEntity.createdAt = domainEntity.createdAt;
-    persistenceEntity.updatedAt = domainEntity.updatedAt;
-    persistenceEntity.deletedAt = domainEntity.deletedAt;
-    return persistenceEntity;
+  override toEntity(domain: Area): AreaEntity | null {
+    if (!domain) return null;
+    const entity = new AreaEntity();
+    if (domain.id) entity.id = domain.id;      
+    entity.name        = domain.name;
+    entity.description = domain.description;
+    entity.isActive    = domain.isActive;
+    return entity;
   }
 }

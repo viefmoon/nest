@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SubcategoryEntity } from '../entities/Subcategory.entity';
 import { SubcategoryRepository } from '../../Subcategory.repository';
 import { Subcategory } from '../../../../domain/Subcategory';
 import { SubcategoryMapper } from '../mappers/Subcategory.mapper';
+import { Paginated } from '../../../../../common/types/paginated.type';
+import { SUBCATEGORY_MAPPER } from '../relational-persistence.module'; 
 
 @Injectable()
 export class SubcategoriesRelationalRepository
@@ -13,17 +15,19 @@ export class SubcategoriesRelationalRepository
   constructor(
     @InjectRepository(SubcategoryEntity)
     private readonly subcategoryRepository: Repository<SubcategoryEntity>,
+    @Inject(SUBCATEGORY_MAPPER) 
+    private readonly subcategoryMapper: SubcategoryMapper,
   ) {}
 
   async create(data: Subcategory): Promise<Subcategory> {
-    const entity = SubcategoryMapper.toEntity(data);
+    const entity = this.subcategoryMapper.toEntity(data); 
     if (!entity) {
-      throw new Error('No se pudo crear la entidad de subcategoría');
+      throw new InternalServerErrorException('Error creating subcategory entity');
     }
     const savedEntity = await this.subcategoryRepository.save(entity);
-    const domainResult = SubcategoryMapper.toDomain(savedEntity);
+    const domainResult = this.subcategoryMapper.toDomain(savedEntity); 
     if (!domainResult) {
-      throw new Error('No se pudo mapear la entidad guardada a dominio');
+      throw new InternalServerErrorException('Error mapping saved subcategory entity to domain');
     }
     return domainResult;
   }
@@ -34,7 +38,7 @@ export class SubcategoriesRelationalRepository
       relations: ['photo', 'category'],
     });
 
-    const domainResult = entity ? SubcategoryMapper.toDomain(entity) : null;
+    const domainResult = entity ? this.subcategoryMapper.toDomain(entity) : null; 
     if (!domainResult) {
       throw new NotFoundException(`Subcategoría con ID ${id} no encontrada`);
     }
@@ -46,7 +50,7 @@ export class SubcategoriesRelationalRepository
     limit?: number;
     categoryId?: string;
     isActive?: boolean;
-  }): Promise<[Subcategory[], number]> {
+  }): Promise<Paginated<Subcategory>> {
     const page = options?.page || 1;
     const limit = options?.limit || 10;
     const skip = (page - 1) * limit;
@@ -59,7 +63,7 @@ export class SubcategoriesRelationalRepository
       .take(limit);
 
     if (options?.categoryId) {
-      queryBuilder.andWhere('subcategory.categoryId = :categoryId', {
+      queryBuilder.andWhere('category.id = :categoryId', {
         categoryId: options.categoryId,
       });
     }
@@ -73,17 +77,17 @@ export class SubcategoriesRelationalRepository
     const [entities, count] = await queryBuilder.getManyAndCount();
 
     const domainResults = entities
-      .map(SubcategoryMapper.toDomain)
+      .map((entity) => this.subcategoryMapper.toDomain(entity)) 
       .filter((item): item is Subcategory => item !== null);
 
-    return [domainResults, count];
+    return new Paginated(domainResults, count, page, limit);
   }
 
   async update(id: string, data: Subcategory): Promise<Subcategory> {
-    const entity = SubcategoryMapper.toEntity(data);
+    const entity = this.subcategoryMapper.toEntity(data); 
     if (!entity) {
-      throw new Error(
-        'No se pudo crear la entidad de subcategoría para actualizar',
+      throw new InternalServerErrorException(
+        'Error creating subcategory entity for update',
       );
     }
 
@@ -98,9 +102,9 @@ export class SubcategoriesRelationalRepository
       throw new NotFoundException(`Subcategoría con ID ${id} no encontrada`);
     }
 
-    const domainResult = SubcategoryMapper.toDomain(updatedEntity);
+    const domainResult = this.subcategoryMapper.toDomain(updatedEntity); 
     if (!domainResult) {
-      throw new Error('No se pudo mapear la entidad actualizada a dominio');
+      throw new InternalServerErrorException('Error mapping updated subcategory entity to domain');
     }
 
     return domainResult;

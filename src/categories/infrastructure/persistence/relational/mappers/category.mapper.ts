@@ -1,47 +1,47 @@
+import { Injectable, Inject } from '@nestjs/common'; 
 import { Category } from '../../../../domain/category';
 import { CategoryEntity } from '../entities/category.entity';
 import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
-import { SubcategoryMapper } from '../../../../../subcategories/infrastructure/persistence/relational/mappers/subcategory.mapper'; // Corregido casing
-import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity'; // Necesario para stub
+import { SubcategoryMapper } from '../../../../../subcategories/infrastructure/persistence/relational/mappers/subcategory.mapper'; 
+import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity'; 
+import { BaseMapper, mapArray } from '../../../../../common/mappers/base.mapper';
+import { SUBCATEGORY_MAPPER } from '../../../../../subcategories/infrastructure/persistence/relational/relational-persistence.module'; 
 
-export class CategoryMapper {
-  static toDomain(entity: CategoryEntity): Category | null {
-    if (!entity) {
-      return null;
-    }
-
-    const domain = new Category();
-    domain.id = entity.id;
-    domain.name = entity.name;
-    domain.description = entity.description;
-    domain.isActive = entity.isActive;
-    domain.photo = entity.photo ? FileMapper.toDomain(entity.photo) : null;
-    domain.subcategories = entity.subcategories
-      ? (entity.subcategories
-          .map((subcategory) => SubcategoryMapper.toDomain(subcategory))
-          .filter(Boolean) as any)
-      : [];
-    domain.createdAt = entity.createdAt;
-    domain.updatedAt = entity.updatedAt;
-    domain.deletedAt = entity.deletedAt;
-
-    return domain;
+@Injectable() 
+export class CategoryMapper extends BaseMapper<CategoryEntity, Category> {
+  constructor(
+    @Inject(SUBCATEGORY_MAPPER) 
+    private readonly subcategoryMapper: SubcategoryMapper,
+    
+  ) {
+    super();
   }
 
-  static toPersistence(domain: Category): CategoryEntity | null {
-    if (!domain) {
-      return null;
-    }
+  
+  override toDomain(entity: CategoryEntity): Category | null {
+    if (!entity) return null;
+    const d = new Category();
+    d.id          = entity.id;
+    d.name        = entity.name;
+    d.description = entity.description;
+    d.isActive    = entity.isActive;
+    d.photoId     = entity.photoId;
+    d.photo       = entity.photo ? FileMapper.toDomain(entity.photo) : null; 
+    d.subcategories = mapArray(entity.subcategories, (sub) => this.subcategoryMapper.toDomain(sub)); 
+    d.createdAt   = entity.createdAt;
+    d.updatedAt   = entity.updatedAt;
+    d.deletedAt   = entity.deletedAt;
+    return d;
+  }
 
-    const entity = new CategoryEntity();
-    entity.id = domain.id;
-    entity.name = domain.name;
-    entity.description = domain.description;
-    entity.isActive = domain.isActive;
-    entity.photo = domain.photo
-      ? ({ id: domain.photo.id } as FileEntity)
-      : null;
-
-    return entity;
+  override toEntity(domain: Category): CategoryEntity | null {
+    if (!domain) return null;
+    const e = new CategoryEntity();
+    if (domain.id) e.id = domain.id;
+    e.name        = domain.name;
+    e.description = domain.description;
+    e.isActive    = domain.isActive;
+    e.photo       = domain.photoId ? ({ id: domain.photoId } as FileEntity) : null;
+    return e;
   }
 }

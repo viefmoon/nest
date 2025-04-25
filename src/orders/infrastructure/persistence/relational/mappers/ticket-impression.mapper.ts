@@ -1,3 +1,5 @@
+import { OrderEntity } from '../entities/order.entity'; // Añadir importación
+import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity'; // Añadir importación
 import { TicketImpression } from '../../../../domain/ticket-impression';
 import { TicketImpressionEntity } from '../entities/ticket-impression.entity';
 import { OrderMapper } from './order.mapper';
@@ -29,8 +31,10 @@ export class TicketImpressionMapper {
   static toPersistence(domain: TicketImpression): TicketImpressionEntity {
     const entity = new TicketImpressionEntity();
     entity.id = domain.id;
-    entity.orderId = domain.orderId;
-    entity.userId = domain.userId;
+    // Asignar stubs a las relaciones en lugar de a los IDs directamente
+    // TypeORM usará estos IDs para poblar las columnas FK definidas con @JoinColumn
+    entity.order = { id: domain.orderId } as OrderEntity;
+    entity.user = { id: domain.userId } as UserEntity;
     entity.ticketType = domain.ticketType;
     entity.impressionTime = domain.impressionTime; // Usar impressionTime
     // No mapear createdAt, updatedAt, deletedAt (manejados por TypeORM)

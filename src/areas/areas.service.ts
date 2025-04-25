@@ -1,17 +1,21 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, Inject } from '@nestjs/common';
 import { Area } from './domain/area';
 import { CreateAreaDto } from './dto/create-area.dto';
 import { FindAllAreasDto } from './dto/find-all-areas.dto';
 import { UpdateAreaDto } from './dto/update-area.dto';
-import { AreaRepository } from './infrastructure/persistence/area.repository';
+import { AreaRepository } from './infrastructure/persistence/area.repository'; // Keep type for interface
 import { IPaginationOptions } from '../utils/types/pagination-options';
+import { AREA_REPOSITORY } from '../common/tokens';
+import { Paginated } from '../common/types/paginated.type';
 
 @Injectable()
 export class AreasService {
-  constructor(private readonly areaRepository: AreaRepository) {}
+  constructor(
+    @Inject(AREA_REPOSITORY) private readonly areaRepository: AreaRepository,
+  ) {}
 
   async create(createAreaDto: CreateAreaDto): Promise<Area> {
-    // Verificar si ya existe un área con el mismo nombre
+    
     const existingArea = await this.areaRepository.findByName(
       createAreaDto.name,
     );
@@ -33,7 +37,7 @@ export class AreasService {
   async findAll(
     filterOptions: FindAllAreasDto,
     paginationOptions: IPaginationOptions,
-  ): Promise<Area[]> {
+  ): Promise<Paginated<Area>> {
     return this.areaRepository.findManyWithPagination({
       filterOptions,
       paginationOptions,
@@ -44,14 +48,14 @@ export class AreasService {
     const area = await this.areaRepository.findById(id);
 
     if (!area) {
-      throw new Error('Area not found');
+      throw new NotFoundException('Area not found');
     }
 
     return area;
   }
 
   async update(id: string, updateAreaDto: UpdateAreaDto): Promise<Area> {
-    // Si se está actualizando el nombre, verificar que no exista otro área con ese nombre
+    
     if (updateAreaDto.name) {
       const existingArea = await this.areaRepository.findByName(
         updateAreaDto.name,
@@ -66,7 +70,7 @@ export class AreasService {
     const updatedArea = await this.areaRepository.update(id, updateAreaDto);
 
     if (!updatedArea) {
-      throw new Error('Area not found');
+      throw new NotFoundException('Area not found');
     }
 
     return updatedArea;

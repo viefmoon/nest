@@ -5,6 +5,9 @@ import { TableMapper } from '../../../../../tables/infrastructure/persistence/re
 import { DailyOrderCounterMapper } from './daily-order-counter.mapper';
 import { OrderItemMapper } from './order-item.mapper';
 import { PaymentMapper } from '../../../../../payments/infrastructure/persistence/relational/mappers/payment.mapper'; // Importar PaymentMapper
+import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
+import { TableEntity } from '../../../../../tables/infrastructure/persistence/relational/entities/table.entity';
+import { DailyOrderCounterEntity } from '../entities/daily-order-counter.entity';
 
 export class OrderMapper {
   static toDomain(entity: OrderEntity): Order {
@@ -38,7 +41,7 @@ export class OrderMapper {
         entity.dailyOrderCounter,
       );
     }
-    
+
     if (entity.orderItems) {
       domain.orderItems = entity.orderItems.map((item) =>
         OrderItemMapper.toDomain(item),
@@ -63,9 +66,9 @@ export class OrderMapper {
     const entity = new OrderEntity();
     entity.id = domain.id;
     entity.dailyNumber = domain.dailyNumber;
-    entity.dailyOrderCounterId = domain.dailyOrderCounterId;
-    entity.userId = domain.userId;
-    entity.tableId = domain.tableId;
+    entity.dailyOrderCounter = { id: domain.dailyOrderCounterId } as DailyOrderCounterEntity;
+    entity.user = { id: domain.userId } as UserEntity;
+    entity.table = domain.tableId ? ({ id: domain.tableId } as TableEntity) : null;
     entity.orderStatus = domain.orderStatus;
     entity.orderType = domain.orderType;
     entity.total = domain.total;

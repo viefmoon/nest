@@ -1,67 +1,28 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Category } from '../../categories/domain/category';
 import { FileType } from '../../files/domain/file';
-import { Product } from '../../products/domain/product'; // Importar Product
+import { Product } from '../../products/domain/product'; 
+
 
 export class Subcategory {
-  @ApiProperty({
-    type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  id: string;
+  @ApiProperty() id!: string;
+  @ApiProperty() categoryId!: string;
+  @ApiProperty() name!: string;
+  @ApiProperty({ nullable: true }) description!: string | null;
+  @ApiProperty() isActive!: boolean;
 
-  @ApiProperty({
-    type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  categoryId: string;
+  
+  @ApiProperty({ nullable: true }) photoId!: string | null;
 
-  @ApiProperty({
-    type: String,
-    example: 'Smartphones',
-  })
-  name: string;
+  @ApiProperty({ type: () => Category, nullable: true })
+  category!: Category | null;
 
-  @ApiProperty({
-    type: String,
-    example: 'Teléfonos inteligentes y accesorios',
-    nullable: true,
-  })
-  description: string | null;
+  @ApiProperty({ type: () => FileType, nullable: true })
+  photo!: FileType | null;
+  
+  @ApiProperty({ type: () => [Product] }) products!: Product[];
 
-  @ApiProperty({
-    type: Boolean,
-    example: true,
-  })
-  isActive: boolean;
-
-  @ApiProperty({
-    type: () => FileType,
-    nullable: true,
-  })
-  photo: FileType | null;
-
-  @ApiProperty({
-    type: () => Category,
-    description: 'Categoría a la que pertenece esta subcategoría',
-  })
-  category: Category;
-
-  @ApiProperty({
-    type: () => [Product],
-    isArray: true,
-    description: 'Productos pertenecientes a esta subcategoría',
-  })
-  products: Product[];
-
-  @ApiProperty()
-  createdAt: Date;
-
-  @ApiProperty()
-  updatedAt: Date;
-
-  @ApiProperty({
-    nullable: true,
-  })
-  deletedAt: Date | null;
+  @ApiProperty() createdAt!: Date;
+  @ApiProperty() updatedAt!: Date;
+  @ApiProperty({ nullable: true }) deletedAt!: Date | null;
 }

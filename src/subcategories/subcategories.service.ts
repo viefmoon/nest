@@ -1,14 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { SubcategoryRepository } from './infrastructure/persistence/subcategory.repository';
+import { SubcategoryRepository } from './infrastructure/persistence/subcategory.repository'; // Keep type for interface
+import { SUBCATEGORY_REPOSITORY } from '../common/tokens';
 import { CreateSubcategoryDto } from './dto/create-subcategory.dto';
 import { UpdateSubcategoryDto } from './dto/update-subcategory.dto';
 import { Subcategory } from './domain/subcategory';
 import { FindAllSubcategoriesDto } from './dto/find-all-subcategories.dto';
+import { Paginated } from '../common/types/paginated.type';
 
 @Injectable()
 export class SubcategoriesService {
   constructor(
-    @Inject('SubcategoryRepository')
+    @Inject(SUBCATEGORY_REPOSITORY)
     private readonly subcategoryRepository: SubcategoryRepository,
   ) {}
 
@@ -33,7 +35,7 @@ export class SubcategoriesService {
 
   async findAll(
     findAllSubcategoriesDto: FindAllSubcategoriesDto,
-  ): Promise<[Subcategory[], number]> {
+  ): Promise<Paginated<Subcategory>> {
     return this.subcategoryRepository.findAll({
       page: findAllSubcategoriesDto.page,
       limit: findAllSubcategoriesDto.limit,

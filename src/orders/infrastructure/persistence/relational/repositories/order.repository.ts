@@ -129,7 +129,7 @@ export class OrdersRelationalRepository implements OrderRepository {
         'orderItems',
         'orderItems.modifiers',
         'payments',
-      ], 
+      ],
       order: {
         createdAt: 'DESC',
       },

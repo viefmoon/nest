@@ -1,27 +1,31 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CategoryEntity } from '../entities/category.entity';
 import { CategoryRepository } from '../../category.repository';
 import { Category } from '../../../../domain/category';
 import { CategoryMapper } from '../mappers/category.mapper';
+import { Paginated } from '../../../../../common/types/paginated.type';
+import { CATEGORY_MAPPER } from '../relational-persistence.module'; 
 
 @Injectable()
 export class CategoriesRelationalRepository implements CategoryRepository {
   constructor(
     @InjectRepository(CategoryEntity)
     private readonly categoryRepository: Repository<CategoryEntity>,
+    @Inject(CATEGORY_MAPPER) 
+    private readonly categoryMapper: CategoryMapper,
   ) {}
 
   async create(data: Category): Promise<Category> {
-    const entity = CategoryMapper.toPersistence(data);
+    const entity = this.categoryMapper.toEntity(data); 
     if (!entity) {
-      throw new Error('No se pudo crear la entidad de categoría');
+      throw new InternalServerErrorException('Error creating category entity');
     }
     const savedEntity = await this.categoryRepository.save(entity);
-    const domainResult = CategoryMapper.toDomain(savedEntity);
+    const domainResult = this.categoryMapper.toDomain(savedEntity); 
     if (!domainResult) {
-      throw new Error('No se pudo mapear la entidad guardada a dominio');
+      throw new InternalServerErrorException('Error mapping saved category entity to domain');
     }
     return domainResult;
   }
@@ -32,7 +36,7 @@ export class CategoriesRelationalRepository implements CategoryRepository {
       relations: ['photo', 'subcategories'],
     });
 
-    const domainResult = entity ? CategoryMapper.toDomain(entity) : null;
+    const domainResult = entity ? this.categoryMapper.toDomain(entity) : null; 
     if (!domainResult) {
       throw new NotFoundException(`Categoría con ID ${id} no encontrada`);
     }
@@ -43,7 +47,7 @@ export class CategoriesRelationalRepository implements CategoryRepository {
     page?: number;
     limit?: number;
     isActive?: boolean;
-  }): Promise<[Category[], number]> {
+  }): Promise<Paginated<Category>> {
     const page = options?.page || 1;
     const limit = options?.limit || 10;
     const skip = (page - 1) * limit;
@@ -64,17 +68,17 @@ export class CategoriesRelationalRepository implements CategoryRepository {
     const [entities, count] = await queryBuilder.getManyAndCount();
 
     const domainResults = entities
-      .map(CategoryMapper.toDomain)
+      .map((entity) => this.categoryMapper.toDomain(entity)) 
       .filter((item): item is Category => item !== null);
 
-    return [domainResults, count];
+    return new Paginated(domainResults, count, page, limit);
   }
 
   async update(id: string, data: Category): Promise<Category> {
-    const entity = CategoryMapper.toPersistence(data);
+    const entity = this.categoryMapper.toEntity(data); 
     if (!entity) {
-      throw new Error(
-        'No se pudo crear la entidad de categoría para actualizar',
+      throw new InternalServerErrorException(
+        'Error creating category entity for update',
       );
     }
 
@@ -89,9 +93,9 @@ export class CategoriesRelationalRepository implements CategoryRepository {
       throw new NotFoundException(`Categoría con ID ${id} no encontrada`);
     }
 
-    const domainResult = CategoryMapper.toDomain(updatedEntity);
+    const domainResult = this.categoryMapper.toDomain(updatedEntity); 
     if (!domainResult) {
-      throw new Error('No se pudo mapear la entidad actualizada a dominio');
+      throw new InternalServerErrorException('Error mapping updated category entity to domain');
     }
 
     return domainResult;
@@ -107,35 +111,35 @@ export class CategoriesRelationalRepository implements CategoryRepository {
   async findFullMenu(): Promise<Category[]> {
     const queryBuilder = this.categoryRepository
       .createQueryBuilder('category')
-      // Cargar subcategorías activas
+      
       .leftJoinAndSelect(
         'category.subcategories',
         'subcategory',
         'subcategory.isActive = :isActive',
         { isActive: true },
       )
-      // Cargar productos activos dentro de subcategorías activas
+      
       .leftJoinAndSelect(
         'subcategory.products',
         'product',
         'product.isActive = :isActive',
         { isActive: true },
       )
-      // Cargar variantes de producto activas dentro de productos activos
+      
       .leftJoinAndSelect(
         'product.variants',
         'productVariant',
         'productVariant.isActive = :isActive',
         { isActive: true },
       )
-      // Cargar grupos de modificadores activos dentro de productos activos
+      
       .leftJoinAndSelect(
         'product.modifierGroups',
         'modifierGroup',
         'modifierGroup.isActive = :isActive',
         { isActive: true },
       )
-      // Cargar modificadores activos dentro de grupos de modificadores activos
+      
       .leftJoinAndSelect(
         'modifierGroup.productModifiers',
         'modifier',
@@ -155,7 +159,7 @@ export class CategoriesRelationalRepository implements CategoryRepository {
     const entities = await queryBuilder.getMany();
 
     const domainResults = entities
-      .map(CategoryMapper.toDomain)
+      .map((entity) => this.categoryMapper.toDomain(entity)) 
       .filter((item): item is Category => item !== null);
 
     return domainResults;

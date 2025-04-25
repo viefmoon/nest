@@ -1,27 +1,32 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Repository } from 'typeorm';
 import { NullableType } from '../../../../../utils/types/nullable.type';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
+import { mapArray } from '../../../../../common/mappers/base.mapper'; 
 import { Area } from '../../../../domain/area';
 import { FindAllAreasDto } from '../../../../dto/find-all-areas.dto';
+import { Paginated } from '../../../../../common/types/paginated.type';
 import { AreaRepository } from '../../area.repository';
 import { AreaEntity } from '../entities/area.entity';
 import { AreaMapper } from '../mappers/area.mapper';
+import { AREA_MAPPER } from '../relational-persistence.module'; 
 
 @Injectable()
 export class AreasRelationalRepository implements AreaRepository {
   constructor(
     @InjectRepository(AreaEntity)
     private readonly areasRepository: Repository<AreaEntity>,
+    @Inject(AREA_MAPPER) 
+    private readonly areaMapper: AreaMapper,
   ) {}
 
   async create(data: Area): Promise<Area> {
-    const persistenceModel = AreaMapper.toPersistence(data);
+    const persistenceModel = this.areaMapper.toEntity(data); 
     const newEntity = await this.areasRepository.save(
-      this.areasRepository.create(persistenceModel),
+      this.areasRepository.create(persistenceModel!),
     );
-    return AreaMapper.toDomain(newEntity);
+    return this.areaMapper.toDomain(newEntity)!; 
   }
 
   async findManyWithPagination({
@@ -30,7 +35,7 @@ export class AreasRelationalRepository implements AreaRepository {
   }: {
     filterOptions?: FindAllAreasDto | null;
     paginationOptions: IPaginationOptions;
-  }): Promise<Area[]> {
+  }): Promise<Paginated<Area>> {
     const where: FindOptionsWhere<AreaEntity> = {};
 
     if (filterOptions?.name) {
@@ -41,13 +46,15 @@ export class AreasRelationalRepository implements AreaRepository {
       where.isActive = filterOptions.isActive;
     }
 
-    const entities = await this.areasRepository.find({
+    const [entities, total] = await this.areasRepository.findAndCount({
       skip: (paginationOptions.page - 1) * paginationOptions.limit,
       take: paginationOptions.limit,
       where: where,
     });
 
-    return entities.map((area) => AreaMapper.toDomain(area));
+    
+    const items = mapArray(entities, (entity) => this.areaMapper.toDomain(entity));
+    return new Paginated(items, total, paginationOptions.page, paginationOptions.limit);
   }
 
   async findById(id: Area['id']): Promise<NullableType<Area>> {
@@ -55,7 +62,7 @@ export class AreasRelationalRepository implements AreaRepository {
       where: { id },
     });
 
-    return entity ? AreaMapper.toDomain(entity) : null;
+    return entity ? this.areaMapper.toDomain(entity) : null; 
   }
 
   async findByName(name: Area['name']): Promise<NullableType<Area>> {
@@ -63,7 +70,7 @@ export class AreasRelationalRepository implements AreaRepository {
       where: { name },
     });
 
-    return entity ? AreaMapper.toDomain(entity) : null;
+    return entity ? this.areaMapper.toDomain(entity) : null; 
   }
 
   async update(id: Area['id'], payload: Partial<Area>): Promise<Area> {
@@ -72,19 +79,20 @@ export class AreasRelationalRepository implements AreaRepository {
     });
 
     if (!entity) {
-      throw new Error('Area not found');
+      throw new NotFoundException('Area not found');
     }
 
     const updatedEntity = await this.areasRepository.save(
       this.areasRepository.create(
-        AreaMapper.toPersistence({
-          ...AreaMapper.toDomain(entity),
+        this.areaMapper.toEntity({ 
+          ...this.areaMapper.toDomain(entity)!, 
           ...payload,
-        }),
+        } as Area)!,
       ),
     );
 
-    return AreaMapper.toDomain(updatedEntity);
+    
+    return this.areaMapper.toDomain(updatedEntity as AreaEntity)!; 
   }
 
   async remove(id: Area['id']): Promise<void> {

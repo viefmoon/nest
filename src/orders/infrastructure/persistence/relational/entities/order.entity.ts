@@ -48,7 +48,7 @@ export class OrderEntity extends EntityRelationalHelper {
 
   @ManyToOne(() => TableEntity, { nullable: true })
   @JoinColumn({ name: 'table_id' })
-  table: TableEntity;
+  table: TableEntity | null;
 
   @Column({
     type: 'enum',

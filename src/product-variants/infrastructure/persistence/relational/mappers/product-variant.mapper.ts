@@ -7,7 +7,7 @@ export class ProductVariantMapper {
   static toDomain(entity: ProductVariantEntity): ProductVariant {
     const productVariant = new ProductVariant();
     productVariant.id = entity.id;
-    productVariant.productId = entity.productId;
+    productVariant.productId = entity.product?.id;
     productVariant.name = entity.name;
     productVariant.price = entity.price;
     productVariant.isActive = entity.isActive;

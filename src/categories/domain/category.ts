@@ -3,51 +3,19 @@ import { FileType } from '../../files/domain/file';
 import { Subcategory } from '../../subcategories/domain/Subcategory';
 
 export class Category {
-  @ApiProperty({
-    type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  id: string;
+  @ApiProperty({ example: 'uuid' })  id!: string;
+  @ApiProperty()                     name!: string;
+  @ApiProperty({ nullable: true })   description!: string | null;
+  @ApiProperty()                     isActive!: boolean;
+  @ApiProperty({ nullable: true })   photoId!: string | null;
 
-  @ApiProperty({
-    type: String,
-    example: 'Electrónicos',
-  })
-  name: string;
+  @ApiProperty({ type: () => FileType, nullable: true })
+  photo!: FileType | null;
 
-  @ApiProperty({
-    type: String,
-    example: 'Productos electrónicos y gadgets',
-    nullable: true,
-  })
-  description: string | null;
+  @ApiProperty({ type: () => [Subcategory], nullable: true })
+  subcategories!: Subcategory[] | null;
 
-  @ApiProperty({
-    type: Boolean,
-    example: true,
-  })
-  isActive: boolean;
-
-  @ApiProperty({
-    type: () => FileType,
-    nullable: true,
-  })
-  photo: FileType | null;
-
-  @ApiProperty({
-    type: () => [Subcategory],
-    description: 'Subcategorías asociadas a esta categoría',
-  })
-  subcategories: Subcategory[];
-
-  @ApiProperty()
-  createdAt: Date;
-
-  @ApiProperty()
-  updatedAt: Date;
-
-  @ApiProperty({
-    nullable: true,
-  })
-  deletedAt: Date | null;
+  @ApiProperty()                     createdAt!: Date;
+  @ApiProperty()                     updatedAt!: Date;
+  @ApiProperty({ nullable: true })   deletedAt!: Date | null;
 }

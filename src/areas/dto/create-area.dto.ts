@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { TransformDefault } from '../../utils/transformers/transform-default.decorator';
 
 export class CreateAreaDto {
   @ApiProperty({
@@ -23,8 +24,9 @@ export class CreateAreaDto {
     type: Boolean,
     example: true,
     required: false,
-    default: true,
+    default: true, // Keep for Swagger documentation clarity
   })
+  @TransformDefault(true) // Apply default value if undefined
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

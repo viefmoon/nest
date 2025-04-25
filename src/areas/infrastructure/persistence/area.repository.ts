@@ -3,6 +3,7 @@ import { NullableType } from '../../../utils/types/nullable.type';
 import { IPaginationOptions } from '../../../utils/types/pagination-options';
 import { Area } from '../../domain/area';
 import { FindAllAreasDto } from '../../dto/find-all-areas.dto';
+import { Paginated } from '../../../common/types/paginated.type';
 
 export abstract class AreaRepository {
   abstract create(
@@ -15,7 +16,7 @@ export abstract class AreaRepository {
   }: {
     filterOptions?: FindAllAreasDto | null;
     paginationOptions: IPaginationOptions;
-  }): Promise<Area[]>;
+  }): Promise<Paginated<Area>>;
 
   abstract findById(id: Area['id']): Promise<NullableType<Area>>;
   abstract findByName(name: Area['name']): Promise<NullableType<Area>>;

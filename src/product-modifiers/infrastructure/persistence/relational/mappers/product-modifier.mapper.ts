@@ -1,3 +1,4 @@
+import { ModifierGroupEntity } from '../../../../../modifier-groups/infrastructure/persistence/relational/entities/modifier-group.entity';
 import { ProductModifier } from '../../../../domain/product-modifier';
 import { ProductModifierEntity } from '../entities/product-modifier.entity';
 
@@ -21,8 +22,7 @@ export class ProductModifierMapper {
   static toPersistence(domain: ProductModifier): ProductModifierEntity {
     const entity = new ProductModifierEntity();
     entity.id = domain.id;
-    entity.groupId = domain.groupId;
-    entity.name = domain.name;
+    entity.group = { id: domain.groupId } as ModifierGroupEntity;
     entity.description = domain.description;
     entity.price = domain.price;
     entity.sortOrder = domain.sortOrder;

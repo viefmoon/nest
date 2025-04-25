@@ -16,8 +16,8 @@ export class ProductMapper {
     product.price = entity.price;
     product.hasVariants = entity.hasVariants;
     product.isActive = entity.isActive;
-    product.subcategoryId = entity.subcategoryId;
-    product.photoId = entity.photoId;
+    product.subcategoryId = entity.subcategory?.id ?? null;
+    product.photoId = entity.photo?.id ?? null; 
     product.estimatedPrepTime = entity.estimatedPrepTime;
     product.createdAt = entity.createdAt;
     product.updatedAt = entity.updatedAt;

@@ -15,8 +15,8 @@ export abstract class OrderRepository {
     total: number;
     notes?: string;
     phoneNumber?: string | null;
-    customerName?: string | null; 
-    deliveryAddress?: string | null; 
+    customerName?: string | null;
+    deliveryAddress?: string | null;
   }): Promise<Order>;
 
   abstract findManyWithPagination({

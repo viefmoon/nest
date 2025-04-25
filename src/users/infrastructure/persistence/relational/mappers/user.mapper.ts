@@ -17,6 +17,8 @@ export class UserMapper {
     if (raw.photo) {
       domainEntity.photo = FileMapper.toDomain(raw.photo);
     }
+    // Eliminar la línea siguiente, ya que User.photo contiene el objeto FileType, no solo el ID
+    // domainEntity.photoId = raw.photo?.id ?? null;
     domainEntity.role = raw.role;
     domainEntity.status = raw.status;
     domainEntity.createdAt = raw.createdAt;

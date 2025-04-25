@@ -51,7 +51,7 @@ export class TablesRelationalRepository implements TableRepository {
     }
 
     if (filterOptions?.areaId) {
-      where.areaId = filterOptions.areaId;
+      where.area = { id: filterOptions.areaId };
     }
 
     if (filterOptions?.capacity !== undefined) {
@@ -100,7 +100,7 @@ export class TablesRelationalRepository implements TableRepository {
 
   async findByAreaId(areaId: Table['areaId']): Promise<Table[]> {
     const entities = await this.tablesRepository.find({
-      where: { areaId },
+      where: { area: { id: areaId } },
       relations: ['area'],
     });
 
