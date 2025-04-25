@@ -42,12 +42,12 @@ export class ThermalPrinterEntity extends EntityRelationalHelper {
   @Column({ type: 'varchar', length: 17, nullable: true })
   macAddress: string | null;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deletedAt: Date | null;
 }

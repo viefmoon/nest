@@ -41,12 +41,12 @@ export class ProductVariantEntity extends EntityRelationalHelper {
   @OneToMany(() => OrderItemEntity, (orderItem) => orderItem.productVariant)
   orderItems: OrderItemEntity[];
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deletedAt: Date | null;
 }

@@ -46,12 +46,12 @@ export class TableEntity extends EntityRelationalHelper {
   @JoinColumn({ name: 'areaId' })
   area: AreaEntity;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deletedAt: Date | null;
 }

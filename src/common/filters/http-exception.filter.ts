@@ -1,11 +1,10 @@
-// src/common/filters/http-exception.filter.ts
 import {
   ExceptionFilter,
   Catch,
   ArgumentsHost,
   HttpException,
   HttpStatus,
-  Logger, // Importar Logger
+  Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ERROR_CODES } from '../constants/error-codes.constants';
@@ -22,7 +21,7 @@ interface StandardErrorResponse {
 
 @Catch() // Captura todas las excepciones si no se especifica un tipo
 export class AllExceptionsFilter implements ExceptionFilter {
-  private readonly logger = new Logger(AllExceptionsFilter.name); // Instanciar Logger
+  private readonly logger = new Logger(AllExceptionsFilter.name);
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();

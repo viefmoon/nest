@@ -142,11 +142,9 @@ export class CategoriesRelationalRepository implements CategoryRepository {
         'modifier.isActive = :isActive',
         { isActive: true },
       )
-      // --- Añadir Joins para Fotos ---
       .leftJoinAndSelect('category.photo', 'categoryPhoto')
       .leftJoinAndSelect('subCategory.photo', 'subCategoryPhoto')
       .leftJoinAndSelect('product.photo', 'productPhoto')
-      // --- Fin Joins para Fotos ---
       .where('category.isActive = :isActive', { isActive: true })
       .orderBy({
         'category.name': 'ASC',
@@ -156,7 +154,6 @@ export class CategoriesRelationalRepository implements CategoryRepository {
 
     const entities = await queryBuilder.getMany();
 
-    // Mapear a dominio
     const domainResults = entities
       .map(CategoryMapper.toDomain)
       .filter((item): item is Category => item !== null);

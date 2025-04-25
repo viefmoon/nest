@@ -50,12 +50,12 @@ export class ModifierGroupEntity extends EntityRelationalHelper {
   @ManyToMany(() => ProductEntity, (product) => product.modifierGroups)
   products: ProductEntity[];
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deletedAt: Date | null;
 }

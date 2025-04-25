@@ -25,7 +25,7 @@ import { Session } from '../session/domain/session';
 import { SessionService } from '../session/session.service';
 import { StatusEnum } from '../statuses/statuses.enum';
 import { User } from '../users/domain/user';
-import { ERROR_CODES } from '../common/constants/error-codes.constants'; // Importar códigos
+import { ERROR_CODES } from '../common/constants/error-codes.constants';
 
 @Injectable()
 export class AuthService {
@@ -61,7 +61,7 @@ export class AuthService {
       // Podría ser un error interno si se espera que siempre haya contraseña
       // O un error específico si es un estado válido pero no permite login
       throw new UnprocessableEntityException({
-        code: ERROR_CODES.AUTH_ACCOUNT_INACTIVE, // O un código más apropiado
+        code: ERROR_CODES.AUTH_ACCOUNT_INACTIVE,
         message: 'La cuenta no tiene una contraseña configurada.',
       });
     }
@@ -94,10 +94,6 @@ export class AuthService {
       sessionId: session.id,
       hash,
     });
-
-    console.log('--- User object included in login response ---');
-    console.log(user);
-    console.log('--- End User object ---');
 
     return {
       refreshToken,
@@ -237,7 +233,6 @@ export class AuthService {
       // Aunque el usuario no exista, por seguridad, podríamos no revelarlo explícitamente.
       // Pero para seguir el patrón, lanzamos el error.
       throw new NotFoundException({
-        // Cambiado a NotFoundException para ser más semántico
         code: ERROR_CODES.USER_NOT_FOUND,
         message: 'No se encontró un usuario con ese correo electrónico.',
       });
@@ -295,7 +290,6 @@ export class AuthService {
 
     if (!user) {
       throw new NotFoundException({
-        // Cambiado a NotFoundException
         code: ERROR_CODES.USER_NOT_FOUND,
         message: 'Usuario asociado al enlace no encontrado.',
       });
@@ -366,7 +360,7 @@ export class AuthService {
       if (!currentUser.password) {
         // Caso raro: el usuario no tiene contraseña pero intenta cambiarla.
         throw new UnprocessableEntityException({
-          code: ERROR_CODES.AUTH_INCORRECT_OLD_PASSWORD, // O un código más específico
+          code: ERROR_CODES.AUTH_INCORRECT_OLD_PASSWORD,
           message: 'La cuenta actual no tiene una contraseña configurada.',
           details: { field: 'oldPassword' },
         });
@@ -396,7 +390,6 @@ export class AuthService {
 
       if (userByEmail && userByEmail.id !== currentUser.id) {
         throw new UnprocessableEntityException({
-          // Podría ser ConflictException(409) también
           code: ERROR_CODES.AUTH_DUPLICATE_EMAIL,
           message: 'El correo electrónico ya está registrado por otro usuario.',
           details: { field: 'email' },
@@ -482,7 +475,7 @@ export class AuthService {
       // El usuario asociado a la sesión ya no existe o no tiene rol
       await this.sessionService.deleteById(session.id); // Limpiar sesión huérfana
       throw new UnauthorizedException({
-        code: ERROR_CODES.AUTH_UNAUTHORIZED, // O USER_NOT_FOUND si se prefiere
+        code: ERROR_CODES.AUTH_UNAUTHORIZED,
         message: 'Usuario asociado a la sesión no válido.',
       });
     }

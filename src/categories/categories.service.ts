@@ -76,7 +76,6 @@ export class CategoriesService {
     return this.categoryRepository.softDelete(id);
   }
 
-  // NUEVO MÉTODO PARA OBTENER EL MENÚ COMPLETO
   async getFullMenu(): Promise<Category[]> {
     // Aquí asumimos que el repositorio tiene un método para obtener
     // las categorías con todas las relaciones necesarias cargadas (eager/lazy loading o una consulta específica).
@@ -88,9 +87,6 @@ export class CategoriesService {
     // - subcategories.products.modifierGroups.modifiers
     // - subcategories.products.variants (si aplica)
 
-    // Idealmente, el repositorio debería manejar esto con una consulta optimizada.
-    // Por ejemplo, usando QueryBuilder o find con relaciones anidadas.
-    return this.categoryRepository.findFullMenu(); // Llamamos al método implementado en el repositorio
+    return this.categoryRepository.findFullMenu();
   }
-  // FIN NUEVO MÉTODO
 }

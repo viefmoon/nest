@@ -1,73 +1,117 @@
-import { Injectable, Inject, Logger } from '@nestjs/common'; // Eliminado NotFoundException
-import { OrdersService } from '../orders/orders.service'; // Asegúrate que OrdersService esté exportado
+import {
+  Injectable,
+  Inject,
+  Logger,
+  InternalServerErrorException,
+  BadRequestException,
+} from '@nestjs/common';
+import { OrdersService } from '../orders/orders.service';
 import { PrintOrderDto } from './dto/print-order.dto';
-// Importar ThermalPrintersService si se necesita obtener detalles de la impresora
-// import { ThermalPrintersService } from './thermal-printers.service';
+import { ThermalPrintersService } from './thermal-printers.service'; // Importar servicio
+import { PrinterTypes, ThermalPrinter } from 'node-thermal-printer'; // Importar librería
+import { PrinterConnectionType } from './domain/thermal-printer'; // Importar enum
 
 @Injectable()
 export class PrintingService {
   private readonly logger = new Logger(PrintingService.name);
 
   constructor(
-    // Inyectamos OrdersService. Asegúrate de que esté disponible en el módulo.
     @Inject(OrdersService)
     private readonly ordersService: OrdersService,
-    // Descomenta si necesitas interactuar con los detalles de la impresora más adelante
-    // @Inject(ThermalPrintersService)
-    // private readonly thermalPrintersService: ThermalPrintersService,
+    @Inject(ThermalPrintersService) // Inyectar ThermalPrintersService
+    private readonly thermalPrintersService: ThermalPrintersService,
   ) {}
 
-  async printOrder(printOrderDto: PrintOrderDto): Promise<void> {
+  async printKitchenTicket(printOrderDto: PrintOrderDto): Promise<void> {
+    // Renombrar función
     const { orderId, printerId } = printOrderDto;
 
-    // 1. Verificar que la orden existe
-    try {
-      // Usamos findOne para asegurarnos que la orden existe antes de "imprimir"
-      await this.ordersService.findOne(orderId);
-      this.logger.log(`Orden ${orderId} encontrada.`);
-    } catch (error) {
-      // Si findOne lanza NotFoundException (o cualquier otro error), lo relanzamos
-      this.logger.error(`Error buscando la orden ${orderId}: ${error.message}`);
-      throw error;
+    // 1. Obtener detalles de la orden
+    const order = await this.ordersService.findOne(orderId); // findOne ya lanza error si no existe
+    this.logger.log(`Orden ${orderId} encontrada.`);
+
+    // 2. Obtener detalles de la impresora (si se proporcionó ID)
+    if (!printerId) {
+      this.logger.error('No se proporcionó ID de impresora para la impresión.');
+      throw new BadRequestException('Se requiere el ID de la impresora.');
     }
 
-    // 2. (Opcional) Verificar la impresora si se proporciona printerId
-    if (printerId) {
-      this.logger.log(
-        `Se intentará usar la impresora con ID: ${printerId} (lógica de verificación pendiente).`,
-      );
-      // Aquí iría la lógica para buscar la impresora por ID usando ThermalPrintersService
-      // try {
-      //   const printer = await this.thermalPrintersService.findOne(printerId);
-      //   if (!printer.isActive) {
-      //     throw new Error(`La impresora ${printerId} no está activa.`);
-      //   }
-      //   // Usar detalles de la impresora (printer.ipAddress, printer.port, etc.)
-      // } catch (error) {
-      //    this.logger.error(`Error buscando la impresora ${printerId}: ${error.message}`);
-      //    throw error;
-      // }
-    } else {
-      this.logger.log(
-        'No se especificó impresora. Se usaría la configuración predeterminada (lógica pendiente).',
+    const printerDetails = await this.thermalPrintersService.findOne(printerId);
+    if (!printerDetails.isActive) {
+      throw new BadRequestException(
+        `La impresora ${printerId} no está activa.`,
       );
     }
 
-    // 3. Simular la impresión registrando en la consola
-    this.logger.log(`--- SIMULANDO IMPRESIÓN para Orden ID: ${orderId} ---`);
-    // En una implementación real, aquí conectarías con la librería de impresión térmica
-    // y enviarías los datos formateados de la orden.
-    // Ejemplo:
-    // const printerDevice = await connectToPrinter(printerDetails);
-    // const formattedTicket = formatOrderForPrinting(orderDetails);
-    // await printerDevice.print(formattedTicket);
-    // await printerDevice.cut();
-    // await printerDevice.close();
+    // Validar que sea impresora de red (Ethernet)
+    if (
+      printerDetails.connectionType !== PrinterConnectionType.NETWORK ||
+      !printerDetails.ipAddress ||
+      !printerDetails.port
+    ) {
+      throw new BadRequestException(
+        `La impresora ${printerId} no es una impresora de red válida (IP/Puerto).`,
+      );
+    }
+
     this.logger.log(
-      `--- FIN SIMULACIÓN IMPRESIÓN para Orden ID: ${orderId} ---`,
+      `Usando impresora: ${printerDetails.name} (${printerDetails.ipAddress}:${printerDetails.port})`,
     );
 
-    // El método no necesita devolver nada por ahora
-    return;
+    // 3. Configurar e imprimir usando node-thermal-printer
+    const printer = new ThermalPrinter({
+      type: PrinterTypes.EPSON, // Ajustar según el tipo de impresora real (EPSON es común)
+      interface: `tcp://${printerDetails.ipAddress}:${printerDetails.port}`,
+      // options: { // Opciones adicionales si son necesarias
+      //   timeout: 3000
+      // }
+    });
+
+    try {
+      const isConnected = await printer.isPrinterConnected();
+      if (!isConnected) {
+        this.logger.error(
+          `No se pudo conectar a la impresora ${printerDetails.name} en ${printerDetails.ipAddress}:${printerDetails.port}`,
+        );
+        throw new InternalServerErrorException(
+          'No se pudo conectar a la impresora.',
+        );
+      }
+
+      this.logger.log(
+        `Conectado a la impresora ${printerDetails.name}. Imprimiendo ticket de cocina...`,
+      );
+
+      // --- Contenido del Ticket de Cocina ---
+      printer.alignCenter();
+      printer.bold(true);
+      printer.println('*** TICKET DE COCINA ***');
+      printer.bold(false);
+      printer.newLine();
+
+      printer.alignLeft();
+      printer.println(`Orden ID: ${order.id}`);
+      printer.println(`Folio del día: ${order.dailyNumber}`); // Usar dailyNumber
+
+      // Aquí añadirías más detalles de la orden si fuera necesario (items, notas, etc.)
+      // Por ahora, solo ID y Folio como solicitado.
+
+      printer.cut(); // Cortar papel
+
+      // --- Fin Contenido ---
+
+      await printer.execute(); // Enviar comandos a la impresora
+      this.logger.log(
+        `Ticket de cocina para orden ${orderId} enviado a ${printerDetails.name} exitosamente.`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Error al imprimir en ${printerDetails.name}: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException(
+        `Error al enviar la impresión: ${error.message}`,
+      );
+    }
   }
 }

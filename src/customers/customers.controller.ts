@@ -19,7 +19,7 @@ import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
-import { FindAllCustomersDto } from './dto/find-all-customers.dto'; // Importar DTO de filtro
+import { FindAllCustomersDto } from './dto/find-all-customers.dto';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -74,13 +74,13 @@ export class CustomersController {
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-    @Query() filterDto: FindAllCustomersDto, // Añadir filterDto como parámetro de query
+    @Query() filterDto: FindAllCustomersDto,
   ): Promise<InfinityPaginationResponseDto<Customer>> {
     limit = limit > 50 ? 50 : limit;
-    const [data] = await this.customersService.findAll( // Eliminar 'total'
+    const [data] = await this.customersService.findAll(
       { page, limit },
       filterDto,
-    ); // Pasar filterDto al servicio
+    );
     return infinityPagination(data, { page, limit });
   }
 

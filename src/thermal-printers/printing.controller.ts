@@ -47,12 +47,13 @@ export class PrintingController {
   // @ApiBearerAuth() // Descomentar para requerir autenticación
   // @UseGuards(AuthGuard('jwt'), RolesGuard) // Descomentar para añadir guardias
   // @Roles(RoleEnum.admin) // Descomentar y ajustar roles según sea necesario
-  async printOrder(
+  async printKitchenTicket(
+    // Renombrar endpoint si se desea, o mantener /order y llamar a la función específica
     @Body() printOrderDto: PrintOrderDto,
   ): Promise<{ message: string }> {
-    // Llamamos al servicio para manejar la lógica de impresión
-    await this.printingService.printOrder(printOrderDto);
+    // Llamamos al servicio para manejar la lógica de impresión de cocina
+    await this.printingService.printKitchenTicket(printOrderDto); // Llamar a la función renombrada
     // Devolvemos una respuesta simple indicando que la solicitud fue aceptada
-    return { message: 'Solicitud de impresión aceptada.' };
+    return { message: 'Solicitud de impresión de cocina aceptada.' };
   }
 }

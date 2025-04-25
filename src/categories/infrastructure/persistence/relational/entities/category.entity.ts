@@ -39,12 +39,12 @@ export class CategoryEntity extends EntityRelationalHelper {
   @OneToMany(() => SubCategoryEntity, (subCategory) => subCategory.category)
   subCategories: SubCategoryEntity[];
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deletedAt: Date | null;
 }

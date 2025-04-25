@@ -1,4 +1,3 @@
-// src/common/constants/error-codes.constants.ts
 export const ERROR_CODES = {
   // Autenticación (AUTH_*)
   AUTH_INVALID_CREDENTIALS: 'AUTH_INVALID_CREDENTIALS',
@@ -34,12 +33,10 @@ export const ERROR_CODES = {
   USER_NOT_FOUND: 'USER_NOT_FOUND',
   FILE_NOT_FOUND: 'FILE_NOT_FOUND',
   PREPARATION_SCREEN_NOT_FOUND: 'PREPARATION_SCREEN_NOT_FOUND',
-  // ... otros recursos
 
   // Conflictos (CONFLICT_*)
   CONFLICT_ERROR: 'CONFLICT_ERROR', // Error genérico 409
   AREA_NAME_EXISTS: 'AREA_NAME_EXISTS',
-  // ... otros conflictos específicos
   THERMAL_PRINTER_DUPLICATE_FIELD: 'THERMAL_PRINTER_DUPLICATE_FIELD',
 
   // Errores del Servidor (SERVER_*)

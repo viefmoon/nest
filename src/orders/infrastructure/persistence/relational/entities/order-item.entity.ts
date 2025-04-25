@@ -48,7 +48,7 @@ export class OrderItemEntity extends EntityRelationalHelper {
   })
   preparationStatus: PreparationStatus;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   statusChangedAt: Date;
 
   @Column({ type: 'varchar', nullable: true })
@@ -85,12 +85,12 @@ export class OrderItemEntity extends EntityRelationalHelper {
   )
   modifiers: OrderItemModifierEntity[];
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deletedAt: Date | null;
 }

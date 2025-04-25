@@ -12,7 +12,7 @@ import { Address } from './domain/address';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { IPaginationOptions } from '../utils/types/pagination-options';
-import { FindAllCustomersDto } from './dto/find-all-customers.dto'; // Importar DTO de filtro
+import { FindAllCustomersDto } from './dto/find-all-customers.dto';
 import { DeepPartial } from '../utils/types/deep-partial.type';
 import { ERROR_CODES } from '../common/constants/error-codes.constants';
 import { CreateAddressDto } from './dto/create-address.dto';
@@ -22,9 +22,9 @@ import { v4 as uuidv4 } from 'uuid';
 @Injectable()
 export class CustomersService {
   constructor(
-    @Inject(CustomerRepository) // Inyectar usando el token/clase abstracta
+    @Inject(CustomerRepository)
     private readonly customerRepository: CustomerRepository,
-    @Inject(AddressRepository) // Inyectar usando el token/clase abstracta
+    @Inject(AddressRepository)
     private readonly addressRepository: AddressRepository,
   ) {}
 
@@ -86,16 +86,16 @@ export class CustomersService {
       createdCustomer.addresses = createdAddresses;
     }
 
-    return createdCustomer; // Devolver el cliente con las direcciones creadas
+    return createdCustomer;
   }
 
   async findAll(
     paginationOptions: IPaginationOptions,
-    filterOptions?: FindAllCustomersDto, // Añadir filterOptions aquí
+    filterOptions?: FindAllCustomersDto,
   ): Promise<[Customer[], number]> {
     return this.customerRepository.findManyWithPagination({
       paginationOptions,
-      filterOptions, // Pasar filterOptions al repositorio
+      filterOptions,
     });
   }
 
@@ -150,15 +150,12 @@ export class CustomersService {
       customer.phoneNumber = null;
     }
 
-    // Actualizar otros campos
     customer.firstName = updateCustomerDto.firstName ?? customer.firstName;
     customer.lastName = updateCustomerDto.lastName ?? customer.lastName;
 
-    // --- Sincronización de Direcciones ---
     if (updateCustomerDto.addresses !== undefined) {
       await this.syncAddresses(customer, updateCustomerDto.addresses);
     }
-    // --- Fin Sincronización de Direcciones ---
 
     // Guardar el cliente actualizado (incluyendo potencialmente las relaciones de dirección actualizadas)
     // Usamos 'save' para que TypeORM maneje las relaciones correctamente.
@@ -173,8 +170,6 @@ export class CustomersService {
     // La eliminación en cascada debería manejar las direcciones si está configurada en la entidad Address
     await this.customerRepository.remove(id);
   }
-
-  // --- Métodos específicos para Direcciones ---
 
   async addAddressToCustomer(
     customerId: string,
@@ -361,7 +356,6 @@ export class CustomersService {
       // No hay direcciones nuevas ni existentes, no hay default
     }
 
-    // 1. Actualizar o Crear direcciones entrantes
     const processedAddresses: Address[] = [];
     for (const addressDto of addressesToProcess) {
       let processedAddress: Address | null = null;
@@ -390,7 +384,6 @@ export class CustomersService {
       }
     }
 
-    // 2. Eliminar direcciones antiguas no incluidas en la petición
     const addressIdsToDelete = currentAddressIds.filter(
       (id) => !incomingAddressIds.has(id),
     );

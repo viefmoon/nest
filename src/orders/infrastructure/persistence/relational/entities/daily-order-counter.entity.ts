@@ -26,12 +26,12 @@ export class DailyOrderCounterEntity extends EntityRelationalHelper {
   @OneToMany(() => OrderEntity, (order) => order.dailyOrderCounter)
   orders: OrderEntity[];
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deletedAt: Date | null;
 }

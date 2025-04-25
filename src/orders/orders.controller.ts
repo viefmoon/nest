@@ -102,6 +102,21 @@ export class OrdersController {
     return infinityPagination(data, paginationOptions); // Devolver respuesta paginada
   }
 
+  @Get('open-today') // Nueva ruta
+  @ApiOperation({ summary: 'Obtener las órdenes abiertas del día actual' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de órdenes abiertas del día actual.',
+    type: [Order], // Devuelve un array de órdenes
+  })
+  @ApiBearerAuth() // Asumiendo que se requiere autenticación
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.user) // Ajustar roles según sea necesario
+  @HttpCode(HttpStatus.OK)
+  findOpenOrders(): Promise<Order[]> {
+    return this.ordersService.findOpenOrders();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific order by ID' })
   @ApiResponse({

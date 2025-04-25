@@ -1,6 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, ILike, Repository, DeepPartial as TypeOrmDeepPartial } from 'typeorm'; // Importar y renombrar DeepPartial
+import {
+  FindOptionsWhere,
+  ILike,
+  Repository,
+  DeepPartial as TypeOrmDeepPartial,
+} from 'typeorm'; // Importar y renombrar DeepPartial
 import { CustomerEntity } from '../entities/customer.entity';
 import { CustomerRepository } from '../../customer.repository';
 import { Customer } from '../../../../domain/customer';
