@@ -10,6 +10,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  RelationId,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { SubcategoryEntity } from '../../../../../subcategories/infrastructure/persistence/relational/entities/subcategory.entity';
@@ -38,10 +39,10 @@ export class ProductEntity extends EntityRelationalHelper {
   @Column({ default: true })
   isActive: boolean;
 
-  @Column({ type: 'uuid' })
-  subCategoryId: string;
+  @RelationId((product: ProductEntity) => product.subcategory)
+  subcategoryId: string;
 
-  @Column({ type: 'uuid', nullable: true })
+  @RelationId((product: ProductEntity) => product.photo)
   photoId: string | null;
 
   @Column()

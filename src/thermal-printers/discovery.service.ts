@@ -23,7 +23,7 @@ export class DiscoveryService {
     opts: TcpScanOptions = {},
   ): Promise<DiscoveredPrinterDto[]> {
     const {
-      scanTimeout = 500,
+      scanTimeout = 1000, // Aumentado a 1 segundo
       maxConcurrency = 100,
       ports = [9100, 631, 515], // Puertos TCP comunes para impresoras
       subnet = null,

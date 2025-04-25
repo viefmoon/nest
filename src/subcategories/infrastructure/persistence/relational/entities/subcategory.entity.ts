@@ -8,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   OneToMany, // Añadir importación
+  RelationId,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { CategoryEntity } from '../../../../../categories/infrastructure/persistence/relational/entities/category.entity';
@@ -30,17 +31,17 @@ export class SubcategoryEntity extends EntityRelationalHelper {
   @Column({ default: true })
   isActive: boolean;
 
-  @Column({ type: 'uuid', nullable: false })
+  @RelationId((subcategory: SubcategoryEntity) => subcategory.category)
   categoryId: string;
 
-  @Column({ type: 'uuid', nullable: true })
+  @RelationId((subcategory: SubcategoryEntity) => subcategory.photo)
   photoId: string | null;
 
   @ManyToOne(() => FileEntity, { nullable: true })
   @JoinColumn({ name: 'photo_id' })
   photo: FileEntity | null;
 
-  @ManyToOne(() => CategoryEntity, (category) => category.subCategories, {
+  @ManyToOne(() => CategoryEntity, (category) => category.subcategories, {
     nullable: false,
   })
   @JoinColumn({ name: 'category_id' })

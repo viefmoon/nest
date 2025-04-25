@@ -1,8 +1,10 @@
-import { Subcategory } from '../../../../domain/Subcategory';
-import { SubcategoryEntity } from '../entities/Subcategory.entity';
+import { Subcategory } from '../../../../domain/subcategory'; // Corregido casing
+import { SubcategoryEntity } from '../entities/subcategory.entity'; // Corregido casing
 import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
 import { CategoryMapper } from '../../../../../categories/infrastructure/persistence/relational/mappers/category.mapper';
-import { ProductMapper } from '../../../../../products/infrastructure/persistence/relational/mappers/product.mapper'; // Importar ProductMapper
+import { ProductMapper } from '../../../../../products/infrastructure/persistence/relational/mappers/product.mapper';
+import { CategoryEntity } from '../../../../../categories/infrastructure/persistence/relational/entities/category.entity'; // Necesario para el stub
+import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity'; // Necesario para el stub
 
 export class SubcategoryMapper {
   static toDomain(entity: SubcategoryEntity): Subcategory | null {
@@ -40,7 +42,7 @@ export class SubcategoryMapper {
     return domain;
   }
 
-  static toEntity(domain: Subcategory): SubcategoryEntity | null {
+  static toPersistence(domain: Subcategory): SubcategoryEntity | null {
     if (!domain) {
       return null;
     }
@@ -50,8 +52,10 @@ export class SubcategoryMapper {
     entity.name = domain.name;
     entity.description = domain.description;
     entity.isActive = domain.isActive;
-    entity.categoryId = domain.categoryId;
-    entity.photoId = domain.photo?.id || null;
+    entity.category = { id: domain.categoryId } as CategoryEntity;
+    entity.photo = domain.photo
+      ? ({ id: domain.photo.id } as FileEntity)
+      : null;
 
     return entity;
   }

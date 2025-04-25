@@ -1,6 +1,7 @@
 import { AreaMapper } from '../../../../../areas/infrastructure/persistence/relational/mappers/area.mapper';
 import { Table } from '../../../../domain/table';
 import { TableEntity } from '../entities/table.entity';
+import { AreaEntity } from '../../../../../areas/infrastructure/persistence/relational/entities/area.entity'; // Necesario para el stub
 
 export class TableMapper {
   static toDomain(raw: TableEntity): Table {
@@ -36,7 +37,7 @@ export class TableMapper {
       persistenceEntity.id = domainEntity.id;
     }
     persistenceEntity.name = domainEntity.name;
-    persistenceEntity.areaId = domainEntity.areaId;
+    persistenceEntity.area = { id: domainEntity.areaId } as AreaEntity;
     persistenceEntity.capacity = domainEntity.capacity;
     persistenceEntity.isActive = domainEntity.isActive;
     persistenceEntity.isAvailable = domainEntity.isAvailable;

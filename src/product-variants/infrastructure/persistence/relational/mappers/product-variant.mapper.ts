@@ -1,6 +1,7 @@
 import { ProductVariant } from '../../../../domain/product-variant';
 import { ProductVariantEntity } from '../entities/product-variant.entity';
 import { ProductMapper } from '../../../../../products/infrastructure/persistence/relational/mappers/product.mapper';
+import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity'; // Necesario para stub
 
 export class ProductVariantMapper {
   static toDomain(entity: ProductVariantEntity): ProductVariant {
@@ -21,10 +22,10 @@ export class ProductVariantMapper {
     return productVariant;
   }
 
-  static toEntity(domain: ProductVariant): ProductVariantEntity {
+  static toPersistence(domain: ProductVariant): ProductVariantEntity {
     const entity = new ProductVariantEntity();
     entity.id = domain.id;
-    entity.productId = domain.productId;
+    entity.product = { id: domain.productId } as ProductEntity;
     entity.name = domain.name;
     entity.price = domain.price;
     entity.isActive = domain.isActive;

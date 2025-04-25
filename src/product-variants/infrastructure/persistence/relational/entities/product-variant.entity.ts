@@ -8,6 +8,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  RelationId,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity';
@@ -20,7 +21,7 @@ export class ProductVariantEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid' })
+  @RelationId((variant: ProductVariantEntity) => variant.product)
   productId: string;
 
   @Column()

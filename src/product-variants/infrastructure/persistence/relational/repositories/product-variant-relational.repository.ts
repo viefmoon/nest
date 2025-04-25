@@ -16,7 +16,7 @@ export class ProductVariantRelationalRepository
   ) {}
 
   async create(productVariant: ProductVariant): Promise<ProductVariant> {
-    const entity = ProductVariantMapper.toEntity(productVariant);
+    const entity = ProductVariantMapper.toPersistence(productVariant);
     const savedEntity = await this.productVariantRepository.save(entity);
     return ProductVariantMapper.toDomain(savedEntity);
   }
@@ -69,7 +69,7 @@ export class ProductVariantRelationalRepository
     id: string,
     productVariant: ProductVariant,
   ): Promise<ProductVariant> {
-    const entity = ProductVariantMapper.toEntity(productVariant);
+    const entity = ProductVariantMapper.toPersistence(productVariant);
     await this.productVariantRepository.update(id, entity);
 
     const updatedEntity = await this.productVariantRepository.findOne({
@@ -87,7 +87,7 @@ export class ProductVariantRelationalRepository
   }
 
   async save(productVariant: ProductVariant): Promise<ProductVariant> {
-    const entity = ProductVariantMapper.toEntity(productVariant);
+    const entity = ProductVariantMapper.toPersistence(productVariant);
     const savedEntity = await this.productVariantRepository.save(entity);
     // Recargar para asegurar que las relaciones estén actualizadas
     const reloadedEntity = await this.productVariantRepository.findOne({

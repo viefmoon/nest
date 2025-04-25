@@ -7,6 +7,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  RelationId,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { AreaEntity } from '../../../../../areas/infrastructure/persistence/relational/entities/area.entity';
@@ -21,7 +22,7 @@ export class TableEntity extends EntityRelationalHelper {
   @Column()
   name: string;
 
-  @Column({ type: 'uuid', nullable: false })
+  @RelationId((table: TableEntity) => table.area)
   areaId: string;
 
   @Column({ type: 'int', nullable: true })

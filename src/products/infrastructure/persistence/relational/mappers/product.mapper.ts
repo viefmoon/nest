@@ -1,10 +1,12 @@
 import { Product } from '../../../../domain/product';
 import { ProductEntity } from '../entities/product.entity';
-import { SubcategoryMapper } from '../../../../../subcategories/infrastructure/persistence/relational/mappers/Subcategory.mapper';
+import { SubcategoryMapper } from '../../../../../subcategories/infrastructure/persistence/relational/mappers/subcategory.mapper'; // Corregido casing
 import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
 import { ProductVariantMapper } from '../../../../../product-variants/infrastructure/persistence/relational/mappers/product-variant.mapper';
 import { ModifierGroupMapper } from '../../../../../modifier-groups/infrastructure/persistence/relational/mappers/modifier-group.mapper';
 import { PreparationScreenMapper } from '../../../../../preparation-screens/infrastructure/persistence/relational/mappers/preparation-screen.mapper';
+import { SubcategoryEntity } from '../../../../../subcategories/infrastructure/persistence/relational/entities/subcategory.entity'; // Necesario para stub
+import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity'; // Necesario para stub
 
 export class ProductMapper {
   static toDomain(entity: ProductEntity): Product {
@@ -14,7 +16,7 @@ export class ProductMapper {
     product.price = entity.price;
     product.hasVariants = entity.hasVariants;
     product.isActive = entity.isActive;
-    product.subcategoryId = entity.subCategoryId;
+    product.subcategoryId = entity.subcategoryId;
     product.photoId = entity.photoId;
     product.estimatedPrepTime = entity.estimatedPrepTime;
     product.createdAt = entity.createdAt;
@@ -50,32 +52,30 @@ export class ProductMapper {
     return product;
   }
 
-  static toEntity(domain: Product): ProductEntity {
+  static toPersistence(domain: Product): ProductEntity {
     const entity = new ProductEntity();
     entity.id = domain.id;
     entity.name = domain.name;
     entity.price = domain.price;
     entity.hasVariants = domain.hasVariants;
     entity.isActive = domain.isActive;
-    entity.subCategoryId = domain.subcategoryId;
-    entity.photoId = domain.photoId;
+    entity.subcategory = { id: domain.subcategoryId } as SubcategoryEntity;
+    entity.photo = domain.photoId
+      ? ({ id: domain.photoId } as FileEntity)
+      : null;
     entity.estimatedPrepTime = domain.estimatedPrepTime;
 
     if (domain.modifierGroups !== undefined) {
       entity.modifierGroups = domain.modifierGroups.map((group) =>
-        ModifierGroupMapper.toEntity(group),
+        ModifierGroupMapper.toPersistence(group),
       );
     }
 
     if (domain.variants !== undefined) {
       entity.variants = domain.variants.map((variant) =>
-        ProductVariantMapper.toEntity(variant),
+        ProductVariantMapper.toPersistence(variant),
       );
     }
-
-    // Mapear preparationScreens si existen en el dominio
-    // Similar al otro mapper, TypeORM maneja la tabla intermedia.
-    // La asignación se hará en el servicio.
 
     return entity;
   }
