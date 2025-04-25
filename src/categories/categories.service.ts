@@ -77,7 +77,6 @@ export class CategoriesService {
   }
 
   async getFullMenu(): Promise<Category[]> {
-
     return this.categoryRepository.findFullMenu();
   }
 }
