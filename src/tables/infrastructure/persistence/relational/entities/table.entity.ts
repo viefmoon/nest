@@ -21,7 +21,7 @@ export class TableEntity extends EntityRelationalHelper {
   @Column()
   name: string;
 
-  @Column({ nullable: false })
+  @Column({ type: 'uuid', nullable: false })
   areaId: string;
 
   @Column({ type: 'int', nullable: true })

@@ -30,10 +30,10 @@ export class SubcategoryEntity extends EntityRelationalHelper {
   @Column({ default: true })
   isActive: boolean;
 
-  @Column({ nullable: false })
+  @Column({ type: 'uuid', nullable: false })
   categoryId: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   photoId: string | null;
 
   @ManyToOne(() => FileEntity, { nullable: true })

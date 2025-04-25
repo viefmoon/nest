@@ -38,10 +38,10 @@ export class ProductEntity extends EntityRelationalHelper {
   @Column({ default: true })
   isActive: boolean;
 
-  @Column()
+  @Column({ type: 'uuid' })
   subCategoryId: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   photoId: string | null;
 
   @Column()

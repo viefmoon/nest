@@ -18,7 +18,7 @@ export class ProductModifierEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'group_id' })
+  @Column({ name: 'group_id', type: 'uuid' })
   groupId: string;
 
   @Column()

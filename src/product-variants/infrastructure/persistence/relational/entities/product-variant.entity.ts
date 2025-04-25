@@ -20,7 +20,7 @@ export class ProductVariantEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ type: 'uuid' })
   productId: string;
 
   @Column()

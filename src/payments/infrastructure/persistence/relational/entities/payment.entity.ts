@@ -20,7 +20,7 @@ export class PaymentEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ nullable: false })
+  @Column({ type: 'uuid', nullable: false })
   orderId: string;
 
   @Column({
