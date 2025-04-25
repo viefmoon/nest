@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { FileType } from '../../files/domain/file';
-import { SubCategory } from '../../subcategories/domain/subcategory';
+import { Subcategory } from '../../subcategories/domain/Subcategory';
 
 export class Category {
   @ApiProperty({
@@ -35,10 +35,10 @@ export class Category {
   photo: FileType | null;
 
   @ApiProperty({
-    type: () => [SubCategory],
+    type: () => [Subcategory],
     description: 'Subcategorías asociadas a esta categoría',
   })
-  subCategories: SubCategory[];
+  subCategories: Subcategory[];
 
   @ApiProperty()
   createdAt: Date;

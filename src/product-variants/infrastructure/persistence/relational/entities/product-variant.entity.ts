@@ -35,7 +35,7 @@ export class ProductVariantEntity extends EntityRelationalHelper {
   @ManyToOne(() => ProductEntity, (product) => product.variants, {
     nullable: false,
   })
-  @JoinColumn({ name: 'productId' })
+  @JoinColumn({ name: 'product_id' })
   product: ProductEntity;
 
   @OneToMany(() => OrderItemEntity, (orderItem) => orderItem.productVariant)

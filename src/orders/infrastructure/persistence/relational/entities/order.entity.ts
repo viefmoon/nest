@@ -17,7 +17,7 @@ import { OrderStatus } from '../../../../domain/enums/order-status.enum';
 import { OrderType } from '../../../../domain/enums/order-type.enum';
 import { OrderItemEntity } from './order-item.entity';
 import { PaymentEntity } from '../../../../../payments/infrastructure/persistence/relational/entities/payment.entity';
-import { TicketImpressionEntity } from './ticket-impression.entity'; // Importar TicketImpressionEntity
+import { TicketImpressionEntity } from './ticket-impression.entity';
 
 @Entity({
   name: 'orders',
@@ -36,7 +36,7 @@ export class OrderEntity extends EntityRelationalHelper {
   @JoinColumn({ name: 'daily_order_counter_id' })
   dailyOrderCounter: DailyOrderCounterEntity;
 
-  @Column({ name: 'user_id', type: 'uuid' }) // Especificar tipo UUID
+  @Column({ name: 'user_id', type: 'uuid' })
   userId: string;
 
   @ManyToOne(() => UserEntity)
@@ -70,17 +70,14 @@ export class OrderEntity extends EntityRelationalHelper {
   @Column({ type: 'text', nullable: true })
   notes: string | null;
 
-  // Nueva columna para el número de teléfono
   @Column({ type: 'varchar', nullable: true })
   phoneNumber: string | null;
 
-  // New column for customer name
   @Column({ name: 'customer_name', type: 'varchar', nullable: true })
-  customer_name: string | null;
+  customerName: string | null;
 
-  // New column for delivery address
   @Column({ name: 'delivery_address', type: 'text', nullable: true })
-  delivery_address: string | null;
+  deliveryAddress: string | null;
 
   @OneToMany(() => OrderItemEntity, (orderItem) => orderItem.order)
   orderItems: OrderItemEntity[];
@@ -88,15 +85,15 @@ export class OrderEntity extends EntityRelationalHelper {
   @OneToMany(() => PaymentEntity, (payment) => payment.order)
   payments: PaymentEntity[];
 
-  @OneToMany(() => TicketImpressionEntity, (impression) => impression.order) // Añadir relación
-  ticketImpressions: TicketImpressionEntity[]; // Añadir propiedad
+  @OneToMany(() => TicketImpressionEntity, (impression) => impression.order)
+  ticketImpressions: TicketImpressionEntity[];
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deletedAt: Date | null;
 }

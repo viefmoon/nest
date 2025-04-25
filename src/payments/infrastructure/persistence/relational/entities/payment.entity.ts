@@ -44,7 +44,7 @@ export class PaymentEntity extends EntityRelationalHelper {
     eager: true,
     nullable: false,
   })
-  @JoinColumn({ name: 'orderId' })
+  @JoinColumn({ name: 'order_id' })
   order: OrderEntity;
 
   @CreateDateColumn({ type: 'timestamptz' })

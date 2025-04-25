@@ -77,15 +77,6 @@ export class CategoriesService {
   }
 
   async getFullMenu(): Promise<Category[]> {
-    // Aquí asumimos que el repositorio tiene un método para obtener
-    // las categorías con todas las relaciones necesarias cargadas (eager/lazy loading o una consulta específica).
-    // Es crucial que la implementación del repositorio sea eficiente.
-    // Necesitaremos cargar:
-    // - subcategories
-    // - subcategories.products
-    // - subcategories.products.modifierGroups (o la relación producto <-> grupo modificador)
-    // - subcategories.products.modifierGroups.modifiers
-    // - subcategories.products.variants (si aplica)
 
     return this.categoryRepository.findFullMenu();
   }

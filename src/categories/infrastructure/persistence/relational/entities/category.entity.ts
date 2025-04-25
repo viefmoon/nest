@@ -11,7 +11,7 @@ import {
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
-import { SubCategoryEntity } from '../../../../../subcategories/infrastructure/persistence/relational/entities/subcategory.entity';
+import { SubcategoryEntity } from '../../../../../subcategories/infrastructure/persistence/relational/entities/Subcategory.entity';
 
 @Entity({
   name: 'category',
@@ -33,11 +33,11 @@ export class CategoryEntity extends EntityRelationalHelper {
   photoId: string | null;
 
   @ManyToOne(() => FileEntity, { nullable: true })
-  @JoinColumn({ name: 'photoId' })
+  @JoinColumn({ name: 'photo_id' })
   photo: FileEntity | null;
 
-  @OneToMany(() => SubCategoryEntity, (subCategory) => subCategory.category)
-  subCategories: SubCategoryEntity[];
+  @OneToMany(() => SubcategoryEntity, (subcategory) => subcategory.category)
+  subCategories: SubcategoryEntity[];
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

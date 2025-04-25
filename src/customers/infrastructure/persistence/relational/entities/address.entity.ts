@@ -26,7 +26,7 @@ export class AddressEntity extends EntityRelationalHelper {
     nullable: false, // Una dirección siempre debe pertenecer a un cliente
     onDelete: 'CASCADE', // Si se elimina el cliente, se eliminan sus direcciones
   })
-  @JoinColumn({ name: 'customerId' }) // Especificar la columna de unión
+  @JoinColumn({ name: 'customer_id' }) // Especificar la columna de unión
   customer: CustomerEntity; // Relación muchos a uno con Customer
 
   @Column({ type: 'varchar', length: 200 })

@@ -5,6 +5,7 @@ import { DailyOrderCounter } from './daily-order-counter';
 import { OrderStatus } from './enums/order-status.enum';
 import { OrderType } from './enums/order-type.enum';
 import { Payment } from '../../payments/domain/payment';
+import { OrderItem } from './order-item'; // Importar OrderItem
 
 export class Order {
   @ApiProperty({
@@ -85,6 +86,11 @@ export class Order {
   })
   dailyOrderCounter: DailyOrderCounter;
 
+@ApiProperty({
+    type: () => [OrderItem],
+    description: 'Items asociados a la orden',
+  })
+  orderItems?: OrderItem[];
   @ApiProperty({
     type: () => [Payment],
     description: 'Pagos asociados a la orden',

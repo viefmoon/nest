@@ -130,7 +130,7 @@ export class CreateOrderDto {
     message: 'Customer name is required for take-away orders',
   }) // Required if TAKE_AWAY
   @IsString()
-  customer_name?: string | null;
+  customerName?: string | null;
 
   @ApiProperty({
     type: String,
@@ -145,5 +145,5 @@ export class CreateOrderDto {
     message: 'Delivery address is required for delivery orders',
   }) // Required if DELIVERY
   @IsString()
-  delivery_address?: string | null;
+  deliveryAddress?: string | null;
 }

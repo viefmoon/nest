@@ -110,13 +110,13 @@ export class CategoriesRelationalRepository implements CategoryRepository {
       // Cargar subcategorías activas
       .leftJoinAndSelect(
         'category.subCategories',
-        'subCategory',
-        'subCategory.isActive = :isActive',
+        'subcategory',
+        'subcategory.isActive = :isActive',
         { isActive: true },
       )
       // Cargar productos activos dentro de subcategorías activas
       .leftJoinAndSelect(
-        'subCategory.products',
+        'subcategory.products',
         'product',
         'product.isActive = :isActive',
         { isActive: true },
@@ -143,12 +143,12 @@ export class CategoriesRelationalRepository implements CategoryRepository {
         { isActive: true },
       )
       .leftJoinAndSelect('category.photo', 'categoryPhoto')
-      .leftJoinAndSelect('subCategory.photo', 'subCategoryPhoto')
+      .leftJoinAndSelect('subcategory.photo', 'subcategoryPhoto')
       .leftJoinAndSelect('product.photo', 'productPhoto')
       .where('category.isActive = :isActive', { isActive: true })
       .orderBy({
         'category.name': 'ASC',
-        'subCategory.name': 'ASC',
+        'subcategory.name': 'ASC',
         'product.name': 'ASC',
       });
 

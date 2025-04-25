@@ -1,7 +1,7 @@
 import { Category } from '../../../../domain/category';
 import { CategoryEntity } from '../entities/category.entity';
 import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
-import { SubCategoryMapper } from '../../../../../subcategories/infrastructure/persistence/relational/mappers/subcategory.mapper';
+import { SubcategoryMapper } from '../../../../../subcategories/infrastructure/persistence/relational/mappers/Subcategory.mapper';
 
 export class CategoryMapper {
   static toDomain(entity: CategoryEntity): Category | null {
@@ -17,7 +17,7 @@ export class CategoryMapper {
     domain.photo = entity.photo ? FileMapper.toDomain(entity.photo) : null;
     domain.subCategories = entity.subCategories
       ? (entity.subCategories
-          .map((subCategory) => SubCategoryMapper.toDomain(subCategory))
+          .map((subcategory) => SubcategoryMapper.toDomain(subcategory))
           .filter(Boolean) as any)
       : [];
     domain.createdAt = entity.createdAt;
