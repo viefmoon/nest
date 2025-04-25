@@ -125,7 +125,7 @@ export class Order {
     nullable: true,
     required: false, // Conditionally required in DTOs
   })
-  customer_name?: string | null;
+  customerName?: string | null;
 
   @ApiProperty({
     type: String,
@@ -134,5 +134,5 @@ export class Order {
     nullable: true,
     required: false, // Conditionally required in DTOs
   })
-  delivery_address?: string | null;
+  deliveryAddress?: string | null;
 }

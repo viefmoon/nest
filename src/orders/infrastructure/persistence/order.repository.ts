@@ -14,9 +14,9 @@ export abstract class OrderRepository {
     subtotal: number;
     total: number;
     notes?: string;
-    phoneNumber?: string | null; // Add phoneNumber
-    customer_name?: string | null; // Add customer_name
-    delivery_address?: string | null; // Add delivery_address
+    phoneNumber?: string | null;
+    customerName?: string | null; 
+    deliveryAddress?: string | null; 
   }): Promise<Order>;
 
   abstract findManyWithPagination({
@@ -33,7 +33,6 @@ export abstract class OrderRepository {
   abstract findByDailyOrderCounterId(
     dailyOrderCounterId: Order['dailyOrderCounterId'],
   ): Promise<Order[]>;
-  abstract findByDateRange(startDate: Date, endDate: Date): Promise<Order[]>;
   abstract findOpenOrdersByDate(date: Date): Promise<Order[]>;
 
   abstract update(

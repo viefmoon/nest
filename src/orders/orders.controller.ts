@@ -210,25 +210,6 @@ export class OrdersController {
     return this.ordersService.findByDailyOrderCounterId(counterId);
   }
 
-  @Get('date-range')
-  @ApiOperation({ summary: 'Get all orders within a date range' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return all orders within the specified date range.',
-    type: [Order],
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin) // Probablemente solo admin necesita esto
-  findByDateRange(
-    @Query('startDate') startDate: string,
-    @Query('endDate') endDate: string,
-  ): Promise<Order[]> {
-    return this.ordersService.findByDateRange(
-      new Date(startDate),
-      new Date(endDate),
-    );
-  }
   // OrderItem endpoints
   @Post(':orderId/items')
   @ApiOperation({ summary: 'Create a new order item for an order' })
