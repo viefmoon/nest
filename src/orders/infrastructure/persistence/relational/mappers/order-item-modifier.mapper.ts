@@ -22,7 +22,7 @@ export class OrderItemModifierMapper {
     );
   }
 
-  static toEntity(domain: OrderItemModifier): OrderItemModifierEntity {
+  static toPersistence(domain: OrderItemModifier): OrderItemModifierEntity {
     const entity = new OrderItemModifierEntity();
     entity.id = domain.id;
     entity.orderItemId = domain.orderItemId;

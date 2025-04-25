@@ -8,6 +8,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  RelationId,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { OrderEntity } from './order.entity';
@@ -23,13 +24,13 @@ export class OrderItemEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ nullable: false })
+  @RelationId((orderItem: OrderItemEntity) => orderItem.order)
   orderId: string;
 
-  @Column({ nullable: false })
+  @RelationId((orderItem: OrderItemEntity) => orderItem.product)
   productId: string;
 
-  @Column({ nullable: true })
+  @RelationId((orderItem: OrderItemEntity) => orderItem.productVariant)
   productVariantId: string | null;
 
   @Column({ type: 'int', nullable: false })
@@ -58,14 +59,14 @@ export class OrderItemEntity extends EntityRelationalHelper {
     eager: true,
     nullable: false,
   })
-  @JoinColumn({ name: 'orderId' })
+  @JoinColumn({ name: 'order_id' })
   order: OrderEntity;
 
   @ManyToOne(() => ProductEntity, (product) => product.orderItems, {
     eager: true,
     nullable: false,
   })
-  @JoinColumn({ name: 'productId' })
+  @JoinColumn({ name: 'product_id' })
   product: ProductEntity;
 
   @ManyToOne(
@@ -76,7 +77,7 @@ export class OrderItemEntity extends EntityRelationalHelper {
       nullable: true,
     },
   )
-  @JoinColumn({ name: 'productVariantId' })
+  @JoinColumn({ name: 'product_variant_id' })
   productVariant: ProductVariantEntity | null;
 
   @OneToMany(

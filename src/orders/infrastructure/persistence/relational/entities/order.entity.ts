@@ -29,7 +29,7 @@ export class OrderEntity extends EntityRelationalHelper {
   @Column({ name: 'daily_number' })
   dailyNumber: number;
 
-  @Column({ name: 'daily_order_counter_id' })
+  @Column({ name: 'daily_order_counter_id', type: 'uuid' })
   dailyOrderCounterId: string;
 
   @ManyToOne(() => DailyOrderCounterEntity, (counter) => counter.orders)
@@ -43,7 +43,7 @@ export class OrderEntity extends EntityRelationalHelper {
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
 
-  @Column({ name: 'table_id', nullable: true })
+  @Column({ name: 'table_id', type: 'uuid', nullable: true })
   tableId: string | null;
 
   @ManyToOne(() => TableEntity, { nullable: true })

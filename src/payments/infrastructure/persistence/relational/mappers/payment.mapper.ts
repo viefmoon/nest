@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Payment } from '../../../../domain/payment';
 import { PaymentEntity } from '../entities/payment.entity';
 import { Order } from '../../../../../orders/domain/order';
+import { OrderEntity } from '../../../../../orders/infrastructure/persistence/relational/entities/order.entity'; // Necesario para stub
 
 @Injectable()
 export class PaymentMapper {
@@ -22,11 +23,10 @@ export class PaymentMapper {
   toPersistence(domain: Payment): PaymentEntity {
     const entity = new PaymentEntity();
     entity.id = domain.id;
-    entity.orderId = domain.orderId;
+    entity.order = { id: domain.orderId } as OrderEntity;
     entity.paymentMethod = domain.paymentMethod;
     entity.amount = domain.amount;
     entity.paymentStatus = domain.paymentStatus;
-    // No necesitamos mapear la relación order aquí, ya que se carga automáticamente
     return entity;
   }
 }
