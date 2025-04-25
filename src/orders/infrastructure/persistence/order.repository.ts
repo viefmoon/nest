@@ -34,6 +34,7 @@ export abstract class OrderRepository {
     dailyOrderCounterId: Order['dailyOrderCounterId'],
   ): Promise<Order[]>;
   abstract findByDateRange(startDate: Date, endDate: Date): Promise<Order[]>;
+  abstract findOpenOrdersByDate(date: Date): Promise<Order[]>;
 
   abstract update(
     id: Order['id'],
