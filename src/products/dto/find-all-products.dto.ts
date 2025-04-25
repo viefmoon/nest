@@ -37,7 +37,7 @@ export class FindAllProductsDto {
   })
   @IsOptional()
   @IsUUID()
-  subCategoryId?: string;
+  subcategoryId?: string;
 
   @ApiProperty({
     type: Boolean,

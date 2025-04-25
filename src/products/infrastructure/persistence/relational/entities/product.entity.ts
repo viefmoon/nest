@@ -12,7 +12,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
-import { SubCategoryEntity } from '../../../../../subcategories/infrastructure/persistence/relational/entities/subcategory.entity';
+import { SubcategoryEntity } from '../../../../../subcategories/infrastructure/persistence/relational/entities/subcategory.entity';
 import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
 import { ProductVariantEntity } from '../../../../../product-variants/infrastructure/persistence/relational/entities/product-variant.entity';
 import { ModifierGroupEntity } from '../../../../../modifier-groups/infrastructure/persistence/relational/entities/modifier-group.entity';
@@ -48,14 +48,14 @@ export class ProductEntity extends EntityRelationalHelper {
   estimatedPrepTime: number;
 
   @ManyToOne(() => FileEntity, { nullable: true })
-  @JoinColumn({ name: 'photoId' })
+  @JoinColumn({ name: 'photo_id' })
   photo: FileEntity | null;
 
-  @ManyToOne(() => SubCategoryEntity, {
+  @ManyToOne(() => SubcategoryEntity, {
     nullable: false,
   })
-  @JoinColumn({ name: 'subCategoryId' })
-  subCategory: SubCategoryEntity;
+  @JoinColumn({ name: 'subcategory_id' })
+  subcategory: SubcategoryEntity;
 
   @OneToMany(() => ProductVariantEntity, (variant) => variant.product)
   variants: ProductVariantEntity[];
@@ -84,7 +84,7 @@ export class ProductEntity extends EntityRelationalHelper {
       nullable: true,
     },
   )
-  @JoinColumn({ name: 'preparationScreenId' })
+  @JoinColumn({ name: 'preparation_screen_id' })
   preparationScreen: PreparationScreenEntity;
 
   @CreateDateColumn({ type: 'timestamptz' })

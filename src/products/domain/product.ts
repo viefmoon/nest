@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { SubCategory } from '../../subcategories/domain/subcategory';
+import { Subcategory } from '../../subcategories/domain/Subcategory';
 import { FileType } from '../../files/domain/file';
 import { ProductVariant } from '../../product-variants/domain/product-variant';
 import { ModifierGroup } from '../../modifier-groups/domain/modifier-group';
@@ -43,7 +43,7 @@ export class Product {
     type: String,
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  subCategoryId: string;
+  subcategoryId: string;
 
   @ApiProperty({
     type: String,
@@ -66,10 +66,10 @@ export class Product {
   photo: FileType | null;
 
   @ApiProperty({
-    type: () => SubCategory,
+    type: () => Subcategory,
     nullable: true,
   })
-  subCategory: SubCategory | null;
+  subcategory: Subcategory | null;
 
   @ApiProperty({
     type: () => [ProductVariant],

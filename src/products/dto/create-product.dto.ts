@@ -94,7 +94,7 @@ export class CreateProductDto {
   })
   @IsUUID()
   @IsNotEmpty()
-  subCategoryId: string;
+  subcategoryId: string;
 
   @ApiProperty({
     type: String,

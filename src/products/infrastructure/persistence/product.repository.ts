@@ -5,7 +5,7 @@ export interface ProductRepository {
   findAll(options: {
     page: number;
     limit: number;
-    subCategoryId?: string;
+    subcategoryId?: string;
     hasVariants?: boolean;
     isActive?: boolean;
     search?: string;

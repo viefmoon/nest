@@ -109,7 +109,7 @@ export class UpdateProductDto {
   })
   @IsOptional()
   @IsUUID()
-  subCategoryId?: string;
+  subcategoryId?: string;
 
   @ApiProperty({
     type: String,
