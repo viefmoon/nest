@@ -28,7 +28,7 @@ export class ProductsService {
     product.price = createProductDto.price ?? null;
     product.hasVariants = createProductDto.hasVariants ?? false;
     product.isActive = createProductDto.isActive ?? true;
-    product.subCategoryId = createProductDto.subCategoryId;
+    product.subcategoryId = createProductDto.subcategoryId;
     product.estimatedPrepTime = createProductDto.estimatedPrepTime;
     // product.preparationScreenId = createProductDto.preparationScreenId ?? null; // Eliminado - Se maneja abajo
     product.photoId = createProductDto.photoId ?? null;
@@ -114,7 +114,7 @@ export class ProductsService {
     return this.productRepository.findAll({
       page: findAllProductsDto.page || 1,
       limit: findAllProductsDto.limit || 10,
-      subCategoryId: findAllProductsDto.subCategoryId,
+      subcategoryId: findAllProductsDto.subcategoryId,
       hasVariants: findAllProductsDto.hasVariants,
       isActive: findAllProductsDto.isActive,
       search: findAllProductsDto.search,
@@ -149,8 +149,8 @@ export class ProductsService {
         : (updateProductDto.price ?? product.price);
     product.hasVariants = updateProductDto.hasVariants ?? product.hasVariants;
     product.isActive = updateProductDto.isActive ?? product.isActive;
-    product.subCategoryId =
-      updateProductDto.subCategoryId ?? product.subCategoryId;
+    product.subcategoryId =
+      updateProductDto.subcategoryId ?? product.subcategoryId;
     product.estimatedPrepTime =
       updateProductDto.estimatedPrepTime ?? product.estimatedPrepTime;
     // product.preparationScreenId = ... // Eliminado - Se maneja más abajo

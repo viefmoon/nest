@@ -1,6 +1,6 @@
 import { Product } from '../../../../domain/product';
 import { ProductEntity } from '../entities/product.entity';
-import { SubCategoryMapper } from '../../../../../subcategories/infrastructure/persistence/relational/mappers/subcategory.mapper';
+import { SubcategoryMapper } from '../../../../../subcategories/infrastructure/persistence/relational/mappers/Subcategory.mapper';
 import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
 import { ProductVariantMapper } from '../../../../../product-variants/infrastructure/persistence/relational/mappers/product-variant.mapper';
 import { ModifierGroupMapper } from '../../../../../modifier-groups/infrastructure/persistence/relational/mappers/modifier-group.mapper';
@@ -14,7 +14,7 @@ export class ProductMapper {
     product.price = entity.price;
     product.hasVariants = entity.hasVariants;
     product.isActive = entity.isActive;
-    product.subCategoryId = entity.subCategoryId;
+    product.subcategoryId = entity.subCategoryId;
     product.photoId = entity.photoId;
     product.estimatedPrepTime = entity.estimatedPrepTime;
     product.createdAt = entity.createdAt;
@@ -25,8 +25,8 @@ export class ProductMapper {
       product.photo = FileMapper.toDomain(entity.photo);
     }
 
-    if (entity.subCategory) {
-      product.subCategory = SubCategoryMapper.toDomain(entity.subCategory);
+    if (entity.subcategory) {
+      product.subcategory = SubcategoryMapper.toDomain(entity.subcategory);
     }
 
     if (entity.variants) {
@@ -57,7 +57,7 @@ export class ProductMapper {
     entity.price = domain.price;
     entity.hasVariants = domain.hasVariants;
     entity.isActive = domain.isActive;
-    entity.subCategoryId = domain.subCategoryId;
+    entity.subCategoryId = domain.subcategoryId;
     entity.photoId = domain.photoId;
     entity.estimatedPrepTime = domain.estimatedPrepTime;
 

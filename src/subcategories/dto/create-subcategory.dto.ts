@@ -7,7 +7,7 @@ import {
   IsUUID,
 } from 'class-validator';
 
-export class CreateSubCategoryDto {
+export class CreateSubcategoryDto {
   @ApiProperty({
     type: String,
     example: 'Smartphones',

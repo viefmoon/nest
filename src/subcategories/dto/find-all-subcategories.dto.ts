@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsNumber, IsOptional, IsUUID } from 'class-validator';
 import { Transform } from 'class-transformer';
 
-export class FindAllSubCategoriesDto {
+export class FindAllSubcategoriesDto {
   @ApiProperty({
     type: Number,
     example: 1,

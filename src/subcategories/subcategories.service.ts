@@ -1,85 +1,85 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { SubCategoryRepository } from './infrastructure/persistence/subcategory.repository';
-import { CreateSubCategoryDto } from './dto/create-subcategory.dto';
-import { UpdateSubCategoryDto } from './dto/update-subcategory.dto';
-import { SubCategory } from './domain/subcategory';
-import { FindAllSubCategoriesDto } from './dto/find-all-subcategories.dto';
+import { SubcategoryRepository } from './infrastructure/persistence/subcategory.repository';
+import { CreateSubcategoryDto } from './dto/create-subcategory.dto';
+import { UpdateSubcategoryDto } from './dto/update-subcategory.dto';
+import { Subcategory } from './domain/subcategory';
+import { FindAllSubcategoriesDto } from './dto/find-all-subcategories.dto';
 
 @Injectable()
-export class SubCategoriesService {
+export class SubcategoriesService {
   constructor(
-    @Inject('SubCategoryRepository')
-    private readonly subCategoryRepository: SubCategoryRepository,
+    @Inject('SubcategoryRepository')
+    private readonly subcategoryRepository: SubcategoryRepository,
   ) {}
 
   async create(
-    createSubCategoryDto: CreateSubCategoryDto,
-  ): Promise<SubCategory> {
-    const subCategory = new SubCategory();
-    subCategory.name = createSubCategoryDto.name;
-    subCategory.description = createSubCategoryDto.description || null;
-    subCategory.isActive = createSubCategoryDto.isActive ?? true;
-    subCategory.categoryId = createSubCategoryDto.categoryId;
+    createSubcategoryDto: CreateSubcategoryDto,
+  ): Promise<Subcategory> {
+    const subcategory = new Subcategory();
+    subcategory.name = createSubcategoryDto.name;
+    subcategory.description = createSubcategoryDto.description || null;
+    subcategory.isActive = createSubcategoryDto.isActive ?? true;
+    subcategory.categoryId = createSubcategoryDto.categoryId;
 
-    if (createSubCategoryDto.photoId) {
-      subCategory.photo = {
-        id: createSubCategoryDto.photoId,
+    if (createSubcategoryDto.photoId) {
+      subcategory.photo = {
+        id: createSubcategoryDto.photoId,
         path: '',
       };
     }
 
-    return this.subCategoryRepository.create(subCategory);
+    return this.subcategoryRepository.create(subcategory);
   }
 
   async findAll(
-    findAllSubCategoriesDto: FindAllSubCategoriesDto,
-  ): Promise<[SubCategory[], number]> {
-    return this.subCategoryRepository.findAll({
-      page: findAllSubCategoriesDto.page,
-      limit: findAllSubCategoriesDto.limit,
-      categoryId: findAllSubCategoriesDto.categoryId,
-      isActive: findAllSubCategoriesDto.isActive,
+    findAllSubcategoriesDto: FindAllSubcategoriesDto,
+  ): Promise<[Subcategory[], number]> {
+    return this.subcategoryRepository.findAll({
+      page: findAllSubcategoriesDto.page,
+      limit: findAllSubcategoriesDto.limit,
+      categoryId: findAllSubcategoriesDto.categoryId,
+      isActive: findAllSubcategoriesDto.isActive,
     });
   }
 
-  async findOne(id: string): Promise<SubCategory> {
-    return this.subCategoryRepository.findOne(id);
+  async findOne(id: string): Promise<Subcategory> {
+    return this.subcategoryRepository.findOne(id);
   }
 
   async update(
     id: string,
-    updateSubCategoryDto: UpdateSubCategoryDto,
-  ): Promise<SubCategory> {
-    const existingSubCategory = await this.subCategoryRepository.findOne(id);
+    updateSubcategoryDto: UpdateSubcategoryDto,
+  ): Promise<Subcategory> {
+    const existingSubcategory = await this.subcategoryRepository.findOne(id);
 
-    const subCategory = new SubCategory();
-    subCategory.id = id;
-    subCategory.name = updateSubCategoryDto.name ?? existingSubCategory.name;
-    subCategory.description =
-      updateSubCategoryDto.description ?? existingSubCategory.description;
-    subCategory.isActive =
-      updateSubCategoryDto.isActive ?? existingSubCategory.isActive;
-    subCategory.categoryId =
-      updateSubCategoryDto.categoryId ?? existingSubCategory.categoryId;
+    const subcategory = new Subcategory();
+    subcategory.id = id;
+    subcategory.name = updateSubcategoryDto.name ?? existingSubcategory.name;
+    subcategory.description =
+      updateSubcategoryDto.description ?? existingSubcategory.description;
+    subcategory.isActive =
+      updateSubcategoryDto.isActive ?? existingSubcategory.isActive;
+    subcategory.categoryId =
+      updateSubcategoryDto.categoryId ?? existingSubcategory.categoryId;
 
-    if (updateSubCategoryDto.photoId !== undefined) {
-      subCategory.photo = updateSubCategoryDto.photoId
+    if (updateSubcategoryDto.photoId !== undefined) {
+      subcategory.photo = updateSubcategoryDto.photoId
         ? {
-            id: updateSubCategoryDto.photoId,
+            id: updateSubcategoryDto.photoId,
             path: '',
           }
         : null;
-    } else if (existingSubCategory.photo) {
-      subCategory.photo = {
-        id: existingSubCategory.photo.id,
+    } else if (existingSubcategory.photo) {
+      subcategory.photo = {
+        id: existingSubcategory.photo.id,
         path: '',
       };
     }
 
-    return this.subCategoryRepository.update(id, subCategory);
+    return this.subcategoryRepository.update(id, subcategory);
   }
 
   async remove(id: string): Promise<void> {
-    return this.subCategoryRepository.softDelete(id);
+    return this.subcategoryRepository.softDelete(id);
   }
 }

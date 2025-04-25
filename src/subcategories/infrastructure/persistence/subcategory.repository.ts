@@ -1,14 +1,14 @@
-import { SubCategory } from '../../domain/subcategory';
+import { Subcategory } from '../../domain/Subcategory';
 
-export interface SubCategoryRepository {
-  create(data: SubCategory): Promise<SubCategory>;
-  findOne(id: string): Promise<SubCategory>;
+export interface SubcategoryRepository {
+  create(data: Subcategory): Promise<Subcategory>;
+  findOne(id: string): Promise<Subcategory>;
   findAll(options?: {
     page?: number;
     limit?: number;
     categoryId?: string;
     isActive?: boolean;
-  }): Promise<[SubCategory[], number]>;
-  update(id: string, data: SubCategory): Promise<SubCategory>;
+  }): Promise<[Subcategory[], number]>;
+  update(id: string, data: Subcategory): Promise<Subcategory>;
   softDelete(id: string): Promise<void>;
 }

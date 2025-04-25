@@ -25,15 +25,15 @@ export class ProductRelationalRepository implements ProductRepository {
   async findAll(options: {
     page: number;
     limit: number;
-    subCategoryId?: string;
+    subcategoryId?: string;
     hasVariants?: boolean;
     isActive?: boolean;
     search?: string;
   }): Promise<[Product[], number]> {
     const where: any = {};
 
-    if (options.subCategoryId) {
-      where.subCategoryId = options.subCategoryId;
+    if (options.subcategoryId) {
+      where.subcategoryId = options.subcategoryId;
     }
 
     if (options.hasVariants !== undefined) {
@@ -52,7 +52,7 @@ export class ProductRelationalRepository implements ProductRepository {
       where,
       skip: (options.page - 1) * options.limit,
       take: options.limit,
-      relations: ['photo', 'subCategory', 'variants', 'modifierGroups'],
+      relations: ['photo', 'subcategory', 'variants', 'modifierGroups'],
     });
 
     const products = entities.map((entity) => ProductMapper.toDomain(entity));
@@ -62,7 +62,7 @@ export class ProductRelationalRepository implements ProductRepository {
   async findOne(id: string): Promise<Product> {
     const entity = await this.productRepository.findOne({
       where: { id },
-      relations: ['photo', 'subCategory', 'variants', 'modifierGroups'],
+      relations: ['photo', 'subcategory', 'variants', 'modifierGroups'],
     });
 
     if (!entity) {
@@ -79,7 +79,7 @@ export class ProductRelationalRepository implements ProductRepository {
     const entities = await this.productRepository.find({
       where: { id: In(ids) },
       // Cargar relaciones si es necesario al buscar por IDs
-      // relations: ['photo', 'subCategory', 'variants', 'modifierGroups'],
+      // relations: ['photo', 'subcategory', 'variants', 'modifierGroups'],
     });
     return entities.map(ProductMapper.toDomain);
   }
@@ -102,7 +102,7 @@ export class ProductRelationalRepository implements ProductRepository {
 
     const updatedEntity = await this.productRepository.findOne({
       where: { id },
-      relations: ['photo', 'subCategory', 'variants', 'modifierGroups'],
+      relations: ['photo', 'subcategory', 'variants', 'modifierGroups'],
     });
 
     if (!updatedEntity) {
@@ -121,7 +121,7 @@ export class ProductRelationalRepository implements ProductRepository {
     // Recargar para asegurar que todas las relaciones estén presentes después de guardar
     const reloadedEntity = await this.productRepository.findOne({
       where: { id: savedEntity.id },
-      relations: ['photo', 'subCategory', 'variants', 'modifierGroups'],
+      relations: ['photo', 'subcategory', 'variants', 'modifierGroups'],
     });
     if (!reloadedEntity) {
       // Esto no debería suceder si el save fue exitoso, pero es una verificación de seguridad

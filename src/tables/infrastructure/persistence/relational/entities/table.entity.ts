@@ -43,7 +43,7 @@ export class TableEntity extends EntityRelationalHelper {
     eager: true,
     nullable: false,
   })
-  @JoinColumn({ name: 'areaId' })
+  @JoinColumn({ name: 'area_id' })
   area: AreaEntity;
 
   @CreateDateColumn({ type: 'timestamptz' })

@@ -11,23 +11,23 @@ import {
   HttpStatus,
   HttpCode,
 } from '@nestjs/common';
-import { SubCategoriesService } from './subcategories.service';
-import { CreateSubCategoryDto } from './dto/create-subcategory.dto';
-import { UpdateSubCategoryDto } from './dto/update-subcategory.dto';
+import { SubcategoriesService } from './subcategories.service';
+import { CreateSubcategoryDto } from './dto/create-subcategory.dto';
+import { UpdateSubcategoryDto } from './dto/update-subcategory.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../roles/roles.decorator';
 import { RoleEnum } from '../roles/roles.enum';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../roles/roles.guard';
-import { FindAllSubCategoriesDto } from './dto/find-all-subcategories.dto';
+import { FindAllSubcategoriesDto } from './dto/find-all-subcategories.dto';
 
 @ApiTags('Subcategorías')
 @Controller({
   path: 'subcategories',
   version: '1',
 })
-export class SubCategoriesController {
-  constructor(private readonly subCategoriesService: SubCategoriesService) {}
+export class SubcategoriesController {
+  constructor(private readonly subcategoriesService: SubcategoriesService) {}
 
   @Post()
   @ApiOperation({
@@ -37,8 +37,8 @@ export class SubCategoriesController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createSubCategoryDto: CreateSubCategoryDto) {
-    return this.subCategoriesService.create(createSubCategoryDto);
+  create(@Body() createSubcategoryDto: CreateSubcategoryDto) {
+    return this.subcategoriesService.create(createSubcategoryDto);
   }
 
   @Get()
@@ -46,8 +46,8 @@ export class SubCategoriesController {
     summary: 'Obtener todas las subcategorías',
   })
   @HttpCode(HttpStatus.OK)
-  findAll(@Query() findAllSubCategoriesDto: FindAllSubCategoriesDto) {
-    return this.subCategoriesService.findAll(findAllSubCategoriesDto);
+  findAll(@Query() findAllSubcategoriesDto: FindAllSubcategoriesDto) {
+    return this.subcategoriesService.findAll(findAllSubcategoriesDto);
   }
 
   @Get(':id')
@@ -56,7 +56,7 @@ export class SubCategoriesController {
   })
   @HttpCode(HttpStatus.OK)
   findOne(@Param('id') id: string) {
-    return this.subCategoriesService.findOne(id);
+    return this.subcategoriesService.findOne(id);
   }
 
   @Patch(':id')
@@ -69,9 +69,9 @@ export class SubCategoriesController {
   @HttpCode(HttpStatus.OK)
   update(
     @Param('id') id: string,
-    @Body() updateSubCategoryDto: UpdateSubCategoryDto,
+    @Body() updateSubcategoryDto: UpdateSubcategoryDto,
   ) {
-    return this.subCategoriesService.update(id, updateSubCategoryDto);
+    return this.subcategoriesService.update(id, updateSubcategoryDto);
   }
 
   @Delete(':id')
@@ -83,6 +83,6 @@ export class SubCategoriesController {
   @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: string) {
-    return this.subCategoriesService.remove(id);
+    return this.subcategoriesService.remove(id);
   }
 }
