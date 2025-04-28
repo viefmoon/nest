@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Inject, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common'; // Removed Inject
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SubcategoryEntity } from '../entities/Subcategory.entity';
@@ -6,7 +6,6 @@ import { SubcategoryRepository } from '../../Subcategory.repository';
 import { Subcategory } from '../../../../domain/Subcategory';
 import { SubcategoryMapper } from '../mappers/Subcategory.mapper';
 import { Paginated } from '../../../../../common/types/paginated.type';
-import { SUBCATEGORY_MAPPER } from '../relational-persistence.module'; 
 
 @Injectable()
 export class SubcategoriesRelationalRepository
@@ -15,17 +14,16 @@ export class SubcategoriesRelationalRepository
   constructor(
     @InjectRepository(SubcategoryEntity)
     private readonly subcategoryRepository: Repository<SubcategoryEntity>,
-    @Inject(SUBCATEGORY_MAPPER) 
-    private readonly subcategoryMapper: SubcategoryMapper,
+    private readonly subcategoryMapper: SubcategoryMapper, 
   ) {}
 
   async create(data: Subcategory): Promise<Subcategory> {
-    const entity = this.subcategoryMapper.toEntity(data); 
+    const entity = this.subcategoryMapper.toEntity(data);
     if (!entity) {
       throw new InternalServerErrorException('Error creating subcategory entity');
     }
     const savedEntity = await this.subcategoryRepository.save(entity);
-    const domainResult = this.subcategoryMapper.toDomain(savedEntity); 
+    const domainResult = this.subcategoryMapper.toDomain(savedEntity);
     if (!domainResult) {
       throw new InternalServerErrorException('Error mapping saved subcategory entity to domain');
     }
@@ -38,7 +36,7 @@ export class SubcategoriesRelationalRepository
       relations: ['photo', 'category'],
     });
 
-    const domainResult = entity ? this.subcategoryMapper.toDomain(entity) : null; 
+    const domainResult = entity ? this.subcategoryMapper.toDomain(entity) : null;
     if (!domainResult) {
       throw new NotFoundException(`Subcategoría con ID ${id} no encontrada`);
     }
@@ -77,14 +75,14 @@ export class SubcategoriesRelationalRepository
     const [entities, count] = await queryBuilder.getManyAndCount();
 
     const domainResults = entities
-      .map((entity) => this.subcategoryMapper.toDomain(entity)) 
+      .map((entity) => this.subcategoryMapper.toDomain(entity))
       .filter((item): item is Subcategory => item !== null);
 
     return new Paginated(domainResults, count, page, limit);
   }
 
   async update(id: string, data: Subcategory): Promise<Subcategory> {
-    const entity = this.subcategoryMapper.toEntity(data); 
+    const entity = this.subcategoryMapper.toEntity(data);
     if (!entity) {
       throw new InternalServerErrorException(
         'Error creating subcategory entity for update',
@@ -102,7 +100,7 @@ export class SubcategoriesRelationalRepository
       throw new NotFoundException(`Subcategoría con ID ${id} no encontrada`);
     }
 
-    const domainResult = this.subcategoryMapper.toDomain(updatedEntity); 
+    const domainResult = this.subcategoryMapper.toDomain(updatedEntity);
     if (!domainResult) {
       throw new InternalServerErrorException('Error mapping updated subcategory entity to domain');
     }

@@ -4,18 +4,20 @@ import { CategoryEntity } from './entities/category.entity';
 import { CategoriesRelationalRepository } from './repositories/categories-relational.repository';
 import { CategoryMapper } from './mappers/category.mapper';
 import { CATEGORY_REPOSITORY } from '../../../../common/tokens';
-
-export const CATEGORY_MAPPER = Symbol('CATEGORY_MAPPER'); 
+import { SubcategoriesRelationalPersistenceModule } from '../../../../subcategories/infrastructure/persistence/relational/relational-persistence.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CategoryEntity])],
+  imports: [
+    TypeOrmModule.forFeature([CategoryEntity]),
+    SubcategoriesRelationalPersistenceModule,
+  ],
   providers: [
     {
       provide: CATEGORY_REPOSITORY,
       useClass: CategoriesRelationalRepository,
     },
-    { provide: CATEGORY_MAPPER, useClass: CategoryMapper }, 
+    CategoryMapper,
   ],
-  exports: [CATEGORY_REPOSITORY, CATEGORY_MAPPER],
+  exports: [CATEGORY_REPOSITORY, CategoryMapper],
 })
 export class CategoriesRelationalPersistenceModule {}

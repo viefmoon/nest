@@ -2,23 +2,32 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CustomerEntity } from './entities/customer.entity';
 import { AddressEntity } from './entities/address.entity';
-import { CustomerRepository } from '../customer.repository'; // Importar interfaz
-import { AddressRepository } from '../address.repository'; // Importar interfaz
-import { CustomerRelationalRepository } from './repositories/customer.repository'; // Importar implementación
-import { AddressRelationalRepository } from './repositories/address.repository'; // Importar implementación
+import { CustomerRepository } from '../customer.repository';
+import { AddressRepository } from '../address.repository';
+import { CustomerRelationalRepository } from './repositories/customer.repository';
+import { AddressRelationalRepository } from './repositories/address.repository';
+import { CustomerMapper } from './mappers/customer.mapper';
+import { AddressMapper } from './mappers/address.mapper';
 
 @Module({
   imports: [TypeOrmModule.forFeature([CustomerEntity, AddressEntity])],
   providers: [
     {
-      provide: CustomerRepository, // Usar la clase abstracta como token
+      provide: CustomerRepository,
       useClass: CustomerRelationalRepository,
     },
     {
-      provide: AddressRepository, // Usar la clase abstracta como token
+      provide: AddressRepository,
       useClass: AddressRelationalRepository,
     },
+    CustomerMapper,
+    AddressMapper,
   ],
-  exports: [CustomerRepository, AddressRepository], // Exportar los tokens
+  exports: [
+    CustomerRepository,
+    AddressRepository,
+    CustomerMapper,
+    AddressMapper,
+  ],
 })
 export class RelationalCustomerPersistenceModule {}

@@ -1,43 +1,47 @@
+import { Injectable } from '@nestjs/common';
 import { Customer } from '../../../../domain/customer';
 import { CustomerEntity } from '../entities/customer.entity';
-import { AddressMapper } from './address.mapper'; // Importar AddressMapper
+import { AddressMapper } from './address.mapper';
+import { BaseMapper, mapArray } from '../../../../../common/mappers/base.mapper';
+import { Address } from '../../../../domain/address';
 
-export class CustomerMapper {
-  static toDomain(entity: CustomerEntity): Customer {
-    const customer = new Customer();
-    customer.id = entity.id;
-    customer.firstName = entity.firstName;
-    customer.lastName = entity.lastName;
-    customer.phoneNumber = entity.phoneNumber;
-    customer.email = entity.email;
-    customer.createdAt = entity.createdAt;
-    customer.updatedAt = entity.updatedAt;
-    customer.deletedAt = entity.deletedAt;
-
-    // Mapear direcciones si existen y están cargadas
-    if (entity.addresses) {
-      customer.addresses = entity.addresses
-        .map((addressEntity) => AddressMapper.toDomain(addressEntity))
-        .filter(
-          (address): address is NonNullable<typeof address> => address !== null,
-        ); // Filtrar nulos si AddressMapper puede devolver null
-    } else {
-      customer.addresses = []; // Asegurar que siempre sea un array
-    }
-
-    return customer;
+@Injectable()
+export class CustomerMapper extends BaseMapper<CustomerEntity, Customer> {
+  constructor(private readonly addressMapper: AddressMapper) {
+    super();
   }
 
-  static toPersistence(domain: Customer): CustomerEntity {
+  override toDomain(entity: CustomerEntity): Customer | null {
+    if (!entity) {
+      return null;
+    }
+    const domain = new Customer();
+    domain.id = entity.id;
+    domain.firstName = entity.firstName;
+    domain.lastName = entity.lastName;
+    domain.phoneNumber = entity.phoneNumber;
+    domain.email = entity.email;
+    domain.createdAt = entity.createdAt;
+    domain.updatedAt = entity.updatedAt;
+    domain.deletedAt = entity.deletedAt;
+    domain.addresses = mapArray(entity.addresses, (addressEntity) =>
+      this.addressMapper.toDomain(addressEntity),
+    );
+
+    return domain;
+  }
+
+  override toEntity(domain: Customer): CustomerEntity | null {
+    if (!domain) {
+      return null;
+    }
     const entity = new CustomerEntity();
     entity.id = domain.id;
     entity.firstName = domain.firstName;
     entity.lastName = domain.lastName;
     entity.phoneNumber = domain.phoneNumber ?? null;
     entity.email = domain.email ?? null;
-    // No mapeamos createdAt, updatedAt, deletedAt (manejados por TypeORM)
-    // No mapeamos la relación 'addresses' aquí, TypeORM la maneja
-    // a través de la relación en AddressEntity.
+
     return entity;
   }
 }

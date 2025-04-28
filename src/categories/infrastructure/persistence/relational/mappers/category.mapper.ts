@@ -1,23 +1,19 @@
-import { Injectable, Inject } from '@nestjs/common'; 
+import { Injectable } from '@nestjs/common'; // Removed Inject
 import { Category } from '../../../../domain/category';
 import { CategoryEntity } from '../entities/category.entity';
 import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
-import { SubcategoryMapper } from '../../../../../subcategories/infrastructure/persistence/relational/mappers/subcategory.mapper'; 
-import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity'; 
+import { SubcategoryMapper } from '../../../../../subcategories/infrastructure/persistence/relational/mappers/subcategory.mapper';
+import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
 import { BaseMapper, mapArray } from '../../../../../common/mappers/base.mapper';
-import { SUBCATEGORY_MAPPER } from '../../../../../subcategories/infrastructure/persistence/relational/relational-persistence.module'; 
 
-@Injectable() 
+@Injectable()
 export class CategoryMapper extends BaseMapper<CategoryEntity, Category> {
   constructor(
-    @Inject(SUBCATEGORY_MAPPER) 
     private readonly subcategoryMapper: SubcategoryMapper,
-    
   ) {
     super();
   }
 
-  
   override toDomain(entity: CategoryEntity): Category | null {
     if (!entity) return null;
     const d = new Category();
@@ -26,8 +22,8 @@ export class CategoryMapper extends BaseMapper<CategoryEntity, Category> {
     d.description = entity.description;
     d.isActive    = entity.isActive;
     d.photoId     = entity.photoId;
-    d.photo       = entity.photo ? FileMapper.toDomain(entity.photo) : null; 
-    d.subcategories = mapArray(entity.subcategories, (sub) => this.subcategoryMapper.toDomain(sub)); 
+    d.photo       = entity.photo ? FileMapper.toDomain(entity.photo) : null;
+    d.subcategories = mapArray(entity.subcategories, (sub) => this.subcategoryMapper.toDomain(sub));
     d.createdAt   = entity.createdAt;
     d.updatedAt   = entity.updatedAt;
     d.deletedAt   = entity.deletedAt;

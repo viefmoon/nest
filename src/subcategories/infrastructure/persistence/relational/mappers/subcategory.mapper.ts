@@ -1,16 +1,23 @@
-import { Injectable } from '@nestjs/common'; 
-import { Subcategory } from '../../../../domain/subcategory'; 
-import { SubcategoryEntity } from '../entities/subcategory.entity'; 
+import { Injectable } from '@nestjs/common';
+import { Subcategory } from '../../../../domain/subcategory';
+import { SubcategoryEntity } from '../entities/subcategory.entity';
 import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
 import { CategoryMapper } from '../../../../../categories/infrastructure/persistence/relational/mappers/category.mapper';
 import { ProductMapper } from '../../../../../products/infrastructure/persistence/relational/mappers/product.mapper';
-import { CategoryEntity } from '../../../../../categories/infrastructure/persistence/relational/entities/category.entity'; 
-import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity'; 
+import { CategoryEntity } from '../../../../../categories/infrastructure/persistence/relational/entities/category.entity';
+import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
 import { BaseMapper, mapArray } from '../../../../../common/mappers/base.mapper';
 
-@Injectable() 
+@Injectable()
 export class SubcategoryMapper extends BaseMapper<SubcategoryEntity, Subcategory> {
-  
+  constructor(
+    private readonly categoryMapper: CategoryMapper,
+    private readonly fileMapper: FileMapper,
+    private readonly productMapper: ProductMapper,
+  ) {
+    super();
+  }
+
   override toDomain(entity: SubcategoryEntity): Subcategory | null {
     if (!entity) return null;
     const d = new Subcategory();
@@ -20,9 +27,9 @@ export class SubcategoryMapper extends BaseMapper<SubcategoryEntity, Subcategory
     d.isActive    = entity.isActive;
     d.categoryId  = entity.categoryId;
     d.photoId     = entity.photoId;
-    d.category    = entity.category ? CategoryMapper.toDomain(entity.category) : null;
-    d.photo       = entity.photo    ? FileMapper.toDomain(entity.photo)       : null;
-    d.products    = mapArray(entity.products, ProductMapper.toDomain);
+    d.category    = entity.category ? this.categoryMapper.toDomain(entity.category) : null;
+    d.photo       = entity.photo    ? this.fileMapper.toDomain(entity.photo)       : null;
+    d.products    = mapArray(entity.products, (p) => this.productMapper.toDomain(p));
     d.createdAt   = entity.createdAt;
     d.updatedAt   = entity.updatedAt;
     d.deletedAt   = entity.deletedAt;
