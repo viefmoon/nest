@@ -19,7 +19,7 @@ export class <%= name %>RelationalRepository implements <%= name %>Repository {
   ) {}
 
   async create(data: <%= name %>): Promise<<%= name %>> {
-    const persistenceModel = <%= name %>Mapper.toPersistence(data);
+    const persistenceModel = <%= name %>Mapper.toEntity(data);
     const newEntity = await this.<%= h.inflection.camelize(name, true) %>Repository.save(
       this.<%= h.inflection.camelize(name, true) %>Repository.create(persistenceModel),
     );
@@ -69,7 +69,7 @@ export class <%= name %>RelationalRepository implements <%= name %>Repository {
 
     const updatedEntity = await this.<%= h.inflection.camelize(name, true) %>Repository.save(
       this.<%= h.inflection.camelize(name, true) %>Repository.create(
-        <%= name %>Mapper.toPersistence({
+        <%= name %>Mapper.toEntity({
           ...<%= name %>Mapper.toDomain(entity),
           ...payload,
         }),

@@ -14,7 +14,7 @@ export class <%= name %>Mapper {
     return domainEntity;
   }
 
-  static toPersistence(domainEntity: <%= name %>): <%= name %>Entity {
+  static toEntity(domainEntity: <%= name %>): <%= name %>Entity {
     const persistenceEntity = new <%= name %>Entity();
     if (domainEntity.id) {
       persistenceEntity.id = domainEntity.id;

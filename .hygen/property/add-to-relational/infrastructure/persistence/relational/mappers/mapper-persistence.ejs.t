@@ -8,7 +8,7 @@ after: new <%= name %>Entity\(\)
 <% } else if (kind === 'reference' || kind === 'duplication') { -%>
   <% if (referenceType === 'oneToOne' || referenceType === 'manyToOne') { -%>
     if (domainEntity.<%= property %>) {
-      persistenceEntity.<%= property %> = <%= type %>Mapper.toPersistence(domainEntity.<%= property %>);
+      persistenceEntity.<%= property %> = <%= type %>Mapper.toEntity(domainEntity.<%= property %>);
     }
     <% if (isNullable) { -%>
       else if (domainEntity.<%= property %> === null) {
@@ -17,7 +17,7 @@ after: new <%= name %>Entity\(\)
     <% } -%>
   <% } else if (referenceType === 'oneToMany' || referenceType === 'manyToMany') { -%>
     if (domainEntity.<%= property %>) {
-      persistenceEntity.<%= property %> = domainEntity.<%= property %>.map((item) => <%= type %>Mapper.toPersistence(item));
+      persistenceEntity.<%= property %> = domainEntity.<%= property %>.map((item) => <%= type %>Mapper.toEntity(item));
     }
     <% if (isNullable) { -%>
       else if (domainEntity.<%= property %> === null) {
