@@ -3,10 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 import { SessionEntity } from '../entities/session.entity';
 import { NullableType } from '../../../../../utils/types/nullable.type';
-
 import { SessionRepository } from '../../session.repository';
 import { Session } from '../../../../domain/session';
-
 import { SessionMapper } from '../mappers/session.mapper';
 import { User } from '../../../../../users/domain/user';
 
@@ -15,6 +13,7 @@ export class SessionRelationalRepository implements SessionRepository {
   constructor(
     @InjectRepository(SessionEntity)
     private readonly sessionRepository: Repository<SessionEntity>,
+    private readonly sessionMapper: SessionMapper,
   ) {}
 
   async findById(id: Session['id']): Promise<NullableType<Session>> {
@@ -24,14 +23,15 @@ export class SessionRelationalRepository implements SessionRepository {
       },
     });
 
-    return entity ? SessionMapper.toDomain(entity) : null;
+    return entity ? this.sessionMapper.toDomain(entity) : null;
   }
 
   async create(data: Session): Promise<Session> {
-    const persistenceModel = SessionMapper.toPersistence(data);
-    return this.sessionRepository.save(
+    const persistenceModel = this.sessionMapper.toEntity(data);
+    const createdEntity = await this.sessionRepository.save(
       this.sessionRepository.create(persistenceModel),
     );
+    return this.sessionMapper.toDomain(createdEntity);
   }
 
   async update(
@@ -50,14 +50,14 @@ export class SessionRelationalRepository implements SessionRepository {
 
     const updatedEntity = await this.sessionRepository.save(
       this.sessionRepository.create(
-        SessionMapper.toPersistence({
-          ...SessionMapper.toDomain(entity),
+        this.sessionMapper.toEntity({
+          ...this.sessionMapper.toDomain(entity),
           ...payload,
         }),
       ),
     );
 
-    return SessionMapper.toDomain(updatedEntity);
+    return this.sessionMapper.toDomain(updatedEntity);
   }
 
   async deleteById(id: Session['id']): Promise<void> {

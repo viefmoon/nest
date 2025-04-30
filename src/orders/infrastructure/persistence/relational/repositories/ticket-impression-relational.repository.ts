@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'; // Añadir excepciones
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Repository } from 'typeorm';
 import { NullableType } from '../../../../../utils/types/nullable.type';
@@ -16,6 +16,7 @@ export class TicketImpressionRelationalRepository
   constructor(
     @InjectRepository(TicketImpressionEntity)
     private readonly repository: Repository<TicketImpressionEntity>,
+    private readonly ticketImpressionMapper: TicketImpressionMapper, // Inyectar el mapper
   ) {}
 
   async create(
@@ -24,9 +25,12 @@ export class TicketImpressionRelationalRepository
       'id' | 'createdAt' | 'deletedAt' | 'updatedAt' | 'order' | 'user'
     >,
   ): Promise<TicketImpression> {
-    const persistenceModel = TicketImpressionMapper.toPersistence(
+    const persistenceModel = this.ticketImpressionMapper.toEntity( // Usar instancia del mapper
       data as TicketImpression,
     );
+    if (!persistenceModel) {
+      throw new InternalServerErrorException('Error creating ticket impression entity');
+    }
     const newEntity = await this.repository.save(
       this.repository.create(persistenceModel),
     );
@@ -36,9 +40,14 @@ export class TicketImpressionRelationalRepository
       relations: ['order', 'user'],
     });
     if (!completeEntity) {
-      throw new Error('Failed to load created ticket impression');
+      // Usar NotFoundException o InternalServerErrorException según el caso
+      throw new InternalServerErrorException('Failed to load created ticket impression after saving');
     }
-    return TicketImpressionMapper.toDomain(completeEntity);
+    const domainResult = this.ticketImpressionMapper.toDomain(completeEntity); // Usar instancia del mapper
+    if (!domainResult) {
+      throw new InternalServerErrorException('Error mapping saved ticket impression entity to domain');
+    }
+    return domainResult;
   }
 
   async findManyWithPagination({
@@ -74,7 +83,10 @@ export class TicketImpressionRelationalRepository
       },
     });
 
-    return entities.map((entity) => TicketImpressionMapper.toDomain(entity));
+    // Mapear y filtrar nulos
+    return entities
+      .map((entity) => this.ticketImpressionMapper.toDomain(entity)) // Usar instancia del mapper
+      .filter((item): item is TicketImpression => item !== null);
   }
 
   async findById(
@@ -85,7 +97,12 @@ export class TicketImpressionRelationalRepository
       relations: ['order', 'user'],
     });
 
-    return entity ? TicketImpressionMapper.toDomain(entity) : null;
+    const domainResult = entity ? this.ticketImpressionMapper.toDomain(entity) : null; // Usar instancia del mapper
+    // Opcional: Lanzar NotFoundException si no se encuentra, similar a categorías
+    // if (!domainResult) {
+    //   throw new NotFoundException(`TicketImpression with ID ${id} not found`);
+    // }
+    return domainResult;
   }
 
   async findByOrderId(
@@ -99,6 +116,9 @@ export class TicketImpressionRelationalRepository
       },
     });
 
-    return entities.map((entity) => TicketImpressionMapper.toDomain(entity));
+    // Mapear y filtrar nulos
+    return entities
+      .map((entity) => this.ticketImpressionMapper.toDomain(entity)) // Usar instancia del mapper
+      .filter((item): item is TicketImpression => item !== null);
   }
 }

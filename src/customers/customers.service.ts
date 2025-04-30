@@ -18,13 +18,14 @@ import { ERROR_CODES } from '../common/constants/error-codes.constants';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
 import { v4 as uuidv4 } from 'uuid';
+import { ADDRESS_REPOSITORY, CUSTOMER_REPOSITORY } from '../common/tokens';
 
 @Injectable()
 export class CustomersService {
   constructor(
-    @Inject(CustomerRepository)
+    @Inject(CUSTOMER_REPOSITORY)
     private readonly customerRepository: CustomerRepository,
-    @Inject(AddressRepository)
+    @Inject(ADDRESS_REPOSITORY)
     private readonly addressRepository: AddressRepository,
   ) {}
 
@@ -186,14 +187,14 @@ export class CustomersService {
     address.id = uuidv4(); // Generar ID para la nueva dirección
     address.customerId = customerId;
     address.street = createAddressDto.street;
-    address.number = createAddressDto.number;
-    address.interiorNumber = createAddressDto.interiorNumber;
+    address.number = createAddressDto.number ?? null;
+    address.interiorNumber = createAddressDto.interiorNumber ?? null;
     address.neighborhood = createAddressDto.neighborhood;
     address.city = createAddressDto.city;
     address.state = createAddressDto.state;
     address.zipCode = createAddressDto.zipCode;
     address.country = createAddressDto.country;
-    address.references = createAddressDto.references;
+    address.references = createAddressDto.references ?? null;
     address.isDefault = createAddressDto.isDefault ?? false;
 
     return this.addressRepository.create(address);

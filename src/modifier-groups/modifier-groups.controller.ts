@@ -21,6 +21,7 @@ import { CreateModifierGroupDto } from './dto/create-modifier-group.dto';
 import { UpdateModifierGroupDto } from './dto/update-modifier-group.dto';
 import { FindAllModifierGroupsDto } from './dto/find-all-modifier-groups.dto';
 import { ModifierGroup } from './domain/modifier-group';
+import { Paginated } from '../common/types/paginated.type';
 
 @ApiTags('Grupos de Modificadores')
 @Controller({
@@ -48,7 +49,7 @@ export class ModifierGroupsController {
   @HttpCode(HttpStatus.OK)
   findAll(
     @Query() findAllModifierGroupsDto: FindAllModifierGroupsDto,
-  ): Promise<ModifierGroup[]> {
+  ): Promise<Paginated<ModifierGroup>> {
     return this.modifierGroupsService.findAll(findAllModifierGroupsDto);
   }
 

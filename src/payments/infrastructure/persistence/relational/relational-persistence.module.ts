@@ -1,18 +1,21 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PaymentEntity } from './entities/payment.entity';
 import { PaymentMapper } from './mappers/payment.mapper';
-import { RelationalPaymentRepository } from './repositories/relational-payment.repository';
+import { RelationalPaymentRepository } from './repositories/payment.repository';
+import { PAYMENT_REPOSITORY } from '../../../../common/tokens';
+import { RelationalOrderPersistenceModule } from '../../../../orders/infrastructure/persistence/relational/relational-persistence.module'; // Importar el módulo de Orders
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PaymentEntity])],
+  imports: [TypeOrmModule.forFeature([PaymentEntity]), 
+  forwardRef(() => RelationalOrderPersistenceModule)],
   providers: [
-    PaymentMapper,
     {
-      provide: 'PaymentRepository',
+      provide: PAYMENT_REPOSITORY,
       useClass: RelationalPaymentRepository,
     },
+    PaymentMapper,
   ],
-  exports: ['PaymentRepository'],
+  exports: [PAYMENT_REPOSITORY, PaymentMapper],
 })
-export class RelationalPersistenceModule {}
+export class RelationalPaymentPersistenceModule {}

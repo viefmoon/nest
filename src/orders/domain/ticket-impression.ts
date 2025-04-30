@@ -1,6 +1,6 @@
-import { Order } from './order'; // Importar la entidad Order
-import { User } from '../../users/domain/user'; // Importar la entidad User
-import { TicketType } from './enums/ticket-type.enum'; // Importar el enum TicketType
+import { Order } from './order';
+import { User } from '../../users/domain/user';
+import { TicketType } from './enums/ticket-type.enum';
 
 export class TicketImpression {
   id: string;
@@ -13,7 +13,7 @@ export class TicketImpression {
 
   impressionTime: Date;
 
-  order: Order; 
+  order: Order;
 
   user: User;
 

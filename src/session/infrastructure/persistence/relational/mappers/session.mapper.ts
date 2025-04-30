@@ -1,37 +1,36 @@
+import { BaseMapper } from '../../../../../common/mappers/base.mapper';
 import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
 import { UserMapper } from '../../../../../users/infrastructure/persistence/relational/mappers/user.mapper';
 import { Session } from '../../../../domain/session';
 import { SessionEntity } from '../entities/session.entity';
 
-export class SessionMapper {
-  static toDomain(raw: SessionEntity): Session {
-    const domainEntity = new Session();
-    domainEntity.id = raw.id;
-    if (raw.user) {
-      domainEntity.user = UserMapper.toDomain(raw.user);
-    }
-    domainEntity.hash = raw.hash;
-    domainEntity.createdAt = raw.createdAt;
-    domainEntity.updatedAt = raw.updatedAt;
-    domainEntity.deletedAt = raw.deletedAt;
-    return domainEntity;
+export class SessionMapper extends BaseMapper<SessionEntity, Session> {
+  constructor(
+    private readonly userMapper: UserMapper,
+  ) {
+    super();
   }
 
-  static toPersistence(domainEntity: Session): SessionEntity {
+  override toDomain(raw: SessionEntity): Session {
+    const domain = new Session();
+    domain.id = raw.id;
+    domain.user = this.userMapper.toDomain(raw.user!)!;
+    domain.hash = raw.hash;
+    domain.createdAt = raw.createdAt;
+    domain.updatedAt = raw.updatedAt;
+    domain.deletedAt = raw.deletedAt;
+    return domain;
+  }
+
+  override toEntity(domain: Session): SessionEntity {
     const user = new UserEntity();
-    // Asignar directamente el ID (string/uuid) del usuario del dominio
-    user.id = domainEntity.user.id;
+    user.id = domain.user.id;
 
-    const persistenceEntity = new SessionEntity();
-    if (domainEntity.id && typeof domainEntity.id === 'number') {
-      persistenceEntity.id = domainEntity.id;
-    }
-    persistenceEntity.hash = domainEntity.hash;
-    persistenceEntity.user = user;
-    persistenceEntity.createdAt = domainEntity.createdAt;
-    persistenceEntity.updatedAt = domainEntity.updatedAt;
-    persistenceEntity.deletedAt = domainEntity.deletedAt;
+    const entity = new SessionEntity();
+    entity.id = Number(domain.id);
+    entity.hash = domain.hash;
+    entity.user = user;
 
-    return persistenceEntity;
+    return entity;
   }
 }

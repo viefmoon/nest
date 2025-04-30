@@ -87,13 +87,11 @@ export class ThermalPrintersController {
       page,
       limit,
     };
-    // Llamar a findAll y pasar query como filterOptions
     const [data] = await this.thermalPrintersService.findAll(
       query,
       paginationOptions,
     );
 
-    // Usar paginationOptions aquí también
     return infinityPagination(data, paginationOptions);
   }
 
@@ -104,7 +102,6 @@ export class ThermalPrintersController {
   @ApiOperation({
     summary: 'Descubrir impresoras térmicas en la red (TCP Scan + ARP)',
   })
-  // Eliminar ApiQuery para mDNS y SNMP
   @ApiQuery({
     name: 'scanTimeout',
     required: false,
@@ -138,7 +135,6 @@ export class ThermalPrintersController {
     type: [DiscoveredPrinterDto],
   })
   async discoverPrinters(
-    // Eliminar parámetros mDNS y SNMP
     @Query('scanTimeout', new DefaultValuePipe(500), ParseIntPipe)
     scanTimeout?: number,
     @Query('maxConcurrency', new DefaultValuePipe(100), ParseIntPipe)
@@ -180,7 +176,7 @@ export class ThermalPrintersController {
 
   @Get(':id/ping')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt')) // Opcional, dependiendo si quieres proteger este endpoint
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Verificar conexión con una impresora térmica (ping)',

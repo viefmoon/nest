@@ -7,9 +7,9 @@ import {
 } from '@nestjs/common';
 import { OrdersService } from '../orders/orders.service';
 import { PrintOrderDto } from './dto/print-order.dto';
-import { ThermalPrintersService } from './thermal-printers.service'; // Importar servicio
-import { PrinterTypes, ThermalPrinter } from 'node-thermal-printer'; // Importar librería
-import { PrinterConnectionType } from './domain/thermal-printer'; // Importar enum
+import { ThermalPrintersService } from './thermal-printers.service';
+import { PrinterTypes, ThermalPrinter } from 'node-thermal-printer';
+import { PrinterConnectionType } from './domain/thermal-printer';
 
 @Injectable()
 export class PrintingService {
@@ -18,19 +18,16 @@ export class PrintingService {
   constructor(
     @Inject(OrdersService)
     private readonly ordersService: OrdersService,
-    @Inject(ThermalPrintersService) // Inyectar ThermalPrintersService
+    @Inject(ThermalPrintersService)
     private readonly thermalPrintersService: ThermalPrintersService,
   ) {}
 
   async printKitchenTicket(printOrderDto: PrintOrderDto): Promise<void> {
-    // Renombrar función
     const { orderId, printerId } = printOrderDto;
 
-    // 1. Obtener detalles de la orden
-    const order = await this.ordersService.findOne(orderId); // findOne ya lanza error si no existe
+    const order = await this.ordersService.findOne(orderId);
     this.logger.log(`Orden ${orderId} encontrada.`);
 
-    // 2. Obtener detalles de la impresora (si se proporcionó ID)
     if (!printerId) {
       this.logger.error('No se proporcionó ID de impresora para la impresión.');
       throw new BadRequestException('Se requiere el ID de la impresora.');
@@ -43,7 +40,6 @@ export class PrintingService {
       );
     }
 
-    // Validar que sea impresora de red (Ethernet)
     if (
       printerDetails.connectionType !== PrinterConnectionType.NETWORK ||
       !printerDetails.ipAddress ||
@@ -58,13 +54,9 @@ export class PrintingService {
       `Usando impresora: ${printerDetails.name} (${printerDetails.ipAddress}:${printerDetails.port})`,
     );
 
-    // 3. Configurar e imprimir usando node-thermal-printer
     const printer = new ThermalPrinter({
-      type: PrinterTypes.EPSON, // Ajustar según el tipo de impresora real (EPSON es común)
+      type: PrinterTypes.EPSON,
       interface: `tcp://${printerDetails.ipAddress}:${printerDetails.port}`,
-      // options: { // Opciones adicionales si son necesarias
-      //   timeout: 3000
-      // }
     });
 
     try {
@@ -82,7 +74,6 @@ export class PrintingService {
         `Conectado a la impresora ${printerDetails.name}. Imprimiendo ticket de cocina...`,
       );
 
-      // --- Contenido del Ticket de Cocina ---
       printer.alignCenter();
       printer.bold(true);
       printer.println('*** TICKET DE COCINA ***');
@@ -91,16 +82,11 @@ export class PrintingService {
 
       printer.alignLeft();
       printer.println(`Orden ID: ${order.id}`);
-      printer.println(`Folio del día: ${order.dailyNumber}`); // Usar dailyNumber
+      printer.println(`Folio del día: ${order.dailyNumber}`);
 
-      // Aquí añadirías más detalles de la orden si fuera necesario (items, notas, etc.)
-      // Por ahora, solo ID y Folio como solicitado.
+      printer.cut();
 
-      printer.cut(); // Cortar papel
-
-      // --- Fin Contenido ---
-
-      await printer.execute(); // Enviar comandos a la impresora
+      await printer.execute();
       this.logger.log(
         `Ticket de cocina para orden ${orderId} enviado a ${printerDetails.name} exitosamente.`,
       );

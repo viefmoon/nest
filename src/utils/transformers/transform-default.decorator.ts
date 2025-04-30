@@ -6,10 +6,9 @@ import { Transform, TransformFnParams } from 'class-transformer';
  */
 export function TransformDefault(defaultValue: any): PropertyDecorator {
   return Transform(({ value }: TransformFnParams) => {
-    // Check if the value is explicitly null or any other value besides undefined
     if (value !== undefined) {
-      return value; // Return the original value (could be false, null, etc.)
+      return value;
     }
-    return defaultValue; // Return the default value only if undefined
+    return defaultValue;
   });
 }

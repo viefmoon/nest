@@ -5,10 +5,15 @@ import { FindAllTablesDto } from './dto/find-all-tables.dto';
 import { UpdateTableDto } from './dto/update-table.dto';
 import { TableRepository } from './infrastructure/persistence/table.repository';
 import { IPaginationOptions } from '../utils/types/pagination-options';
+import { TABLE_REPOSITORY } from '../common/tokens';
+import { Inject } from '@nestjs/common';
+
 
 @Injectable()
 export class TablesService {
-  constructor(private readonly tableRepository: TableRepository) {}
+  constructor(
+    @Inject(TABLE_REPOSITORY)
+    private readonly tableRepository: TableRepository) {}
 
   async create(createTableDto: CreateTableDto): Promise<Table> {
     const table = new Table();

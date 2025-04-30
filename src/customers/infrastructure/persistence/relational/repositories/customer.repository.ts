@@ -5,15 +5,13 @@ import {
   ILike,
   Repository,
   DeepPartial as TypeOrmDeepPartial,
-} from 'typeorm'; // Importar y renombrar DeepPartial
+} from 'typeorm';
 import { CustomerEntity } from '../entities/customer.entity';
 import { CustomerRepository } from '../../customer.repository';
 import { Customer } from '../../../../domain/customer';
 import { CustomerMapper } from '../mappers/customer.mapper';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
 import { NullableType } from '../../../../../utils/types/nullable.type';
-// Eliminar importación de DeepPartial personalizado
-// import { DeepPartial } from '../../../../../utils/types/deep-partial.type';
 import { FindAllCustomersDto } from '../../../../dto/find-all-customers.dto';
 
 @Injectable()
@@ -21,6 +19,7 @@ export class CustomerRelationalRepository implements CustomerRepository {
   constructor(
     @InjectRepository(CustomerEntity)
     private readonly customerRepository: Repository<CustomerEntity>,
+    private readonly customerMapper: CustomerMapper, // Injected directly
   ) {}
 
   async create(
@@ -29,33 +28,38 @@ export class CustomerRelationalRepository implements CustomerRepository {
       'id' | 'createdAt' | 'deletedAt' | 'updatedAt' | 'addresses'
     >,
   ): Promise<Customer> {
-    const persistenceModel = CustomerMapper.toPersistence(data as Customer);
+    const persistenceModel = this.customerMapper.toEntity(data as Customer);
+    if (!persistenceModel) {
+       throw new Error('Could not map customer domain to entity');
+    }
     const newEntity = await this.customerRepository.save(
       this.customerRepository.create(persistenceModel),
     );
-    // Recargar para obtener relaciones (aunque no hay directas aquí, es buena práctica)
     const completeEntity = await this.customerRepository.findOne({
       where: { id: newEntity.id },
-      relations: ['addresses'], // Cargar direcciones al devolver
+      relations: ['addresses'],
     });
     if (!completeEntity) {
       throw new Error(
         `Failed to load created customer with ID ${newEntity.id}`,
       );
     }
-    return CustomerMapper.toDomain(completeEntity);
+    const domainEntity = this.customerMapper.toDomain(completeEntity);
+     if (!domainEntity) {
+       throw new Error('Could not map customer entity back to domain');
+    }
+    return domainEntity;
   }
 
   async findManyWithPagination({
-    filterOptions, // Usar filterOptions
+    filterOptions,
     paginationOptions,
   }: {
-    filterOptions?: FindAllCustomersDto | null; // Usar el DTO
+    filterOptions?: FindAllCustomersDto | null;
     paginationOptions: IPaginationOptions;
   }): Promise<[Customer[], number]> {
     const where: FindOptionsWhere<CustomerEntity> = {};
 
-    // Implementar lógica de filtro
     if (filterOptions?.firstName) {
       where.firstName = ILike(`%${filterOptions.firstName}%`);
     }
@@ -73,19 +77,23 @@ export class CustomerRelationalRepository implements CustomerRepository {
       skip: (paginationOptions.page - 1) * paginationOptions.limit,
       take: paginationOptions.limit,
       where: where,
-      relations: ['addresses'], // Cargar direcciones
-      order: { lastName: 'ASC', firstName: 'ASC' }, // Ordenar por apellido y nombre
+      relations: ['addresses'],
+      order: { lastName: 'ASC', firstName: 'ASC' },
     });
 
-    return [entities.map((entity) => CustomerMapper.toDomain(entity)), count];
+    const domainEntities = entities
+        .map(entity => this.customerMapper.toDomain(entity))
+        .filter((item): item is Customer => item !== null);
+
+    return [domainEntities, count];
   }
 
   async findById(id: Customer['id']): Promise<NullableType<Customer>> {
     const entity = await this.customerRepository.findOne({
       where: { id },
-      relations: ['addresses'], // Cargar direcciones
+      relations: ['addresses'],
     });
-    return entity ? CustomerMapper.toDomain(entity) : null;
+    return entity ? this.customerMapper.toDomain(entity) : null;
   }
 
   async findByEmail(email: Customer['email']): Promise<NullableType<Customer>> {
@@ -94,7 +102,7 @@ export class CustomerRelationalRepository implements CustomerRepository {
       where: { email },
       relations: ['addresses'],
     });
-    return entity ? CustomerMapper.toDomain(entity) : null;
+    return entity ? this.customerMapper.toDomain(entity) : null;
   }
 
   async findByPhone(
@@ -105,25 +113,23 @@ export class CustomerRelationalRepository implements CustomerRepository {
       where: { phoneNumber: phone },
       relations: ['addresses'],
     });
-    return entity ? CustomerMapper.toDomain(entity) : null;
+    return entity ? this.customerMapper.toDomain(entity) : null;
   }
 
   async update(
     id: Customer['id'],
-    payload: TypeOrmDeepPartial<Customer>, // Usar TypeOrmDeepPartial
+    payload: TypeOrmDeepPartial<Customer>,
   ): Promise<Customer | null> {
-    // El método save maneja la actualización y relaciones, usarlo en su lugar
-    // para consistencia con la interfaz y manejo de relaciones.
-    // Este método update básico de TypeORM no maneja relaciones fácilmente.
-    // Considerar eliminar este método de la interfaz si 'save' es suficiente.
     const entity = await this.customerRepository.findOne({ where: { id } });
     if (!entity) {
       return null;
     }
+    // Note: Using merge and save like this might not update relations correctly.
+    // The 'save' method below is generally preferred for handling updates with relations.
     const updatedEntity = await this.customerRepository.save(
       this.customerRepository.merge(
         entity,
-        payload as TypeOrmDeepPartial<CustomerEntity>, // Usar TypeOrmDeepPartial
+        payload as TypeOrmDeepPartial<CustomerEntity>,
       ),
     );
     const completeEntity = await this.customerRepository.findOne({
@@ -135,15 +141,19 @@ export class CustomerRelationalRepository implements CustomerRepository {
         `Failed to load updated customer with ID ${updatedEntity.id}`,
       );
     }
-    return CustomerMapper.toDomain(completeEntity);
+     const domainEntity = this.customerMapper.toDomain(completeEntity);
+     if (!domainEntity) {
+       throw new Error('Could not map updated customer entity back to domain');
+    }
+    return domainEntity;
   }
 
   async save(customer: Customer): Promise<Customer> {
-    const entity = CustomerMapper.toPersistence(customer);
-    // Asegurarse de que las direcciones también se mapeen si es necesario gestionarlas aquí
-    // (Aunque normalmente se gestionan a través del repositorio de Address)
+    const entity = this.customerMapper.toEntity(customer);
+     if (!entity) {
+       throw new Error('Could not map customer domain to entity for saving');
+    }
     const savedEntity = await this.customerRepository.save(entity);
-    // Recargar para obtener el estado final con relaciones
     const completeEntity = await this.customerRepository.findOne({
       where: { id: savedEntity.id },
       relations: ['addresses'],
@@ -153,7 +163,11 @@ export class CustomerRelationalRepository implements CustomerRepository {
         `Failed to load saved customer with ID ${savedEntity.id}`,
       );
     }
-    return CustomerMapper.toDomain(completeEntity);
+    const domainEntity = this.customerMapper.toDomain(completeEntity);
+    if (!domainEntity) {
+       throw new Error('Could not map saved customer entity back to domain');
+    }
+    return domainEntity;
   }
 
   async remove(id: Customer['id']): Promise<void> {

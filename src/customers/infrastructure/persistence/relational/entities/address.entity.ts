@@ -11,7 +11,7 @@ import {
   RelationId,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
-import { CustomerEntity } from './customer.entity'; // Importar CustomerEntity
+import { CustomerEntity } from './customer.entity';
 
 @Entity({
   name: 'address', // Nombre de la tabla

@@ -1,11 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, In, Repository } from 'typeorm'; // Añadir 'In'
+import { ILike, In, Repository } from 'typeorm';
 import { ProductEntity } from '../entities/product.entity';
 import { ProductRepository } from '../../product.repository';
 import { Product } from '../../../../domain/product';
 import { ProductMapper } from '../mappers/product.mapper';
 import { ModifierGroupEntity } from '../../../../../modifier-groups/infrastructure/persistence/relational/entities/modifier-group.entity';
+import { Paginated } from '../../../../../common/types/paginated.type';
 
 @Injectable()
 export class ProductRelationalRepository implements ProductRepository {
@@ -14,12 +15,20 @@ export class ProductRelationalRepository implements ProductRepository {
     private readonly productRepository: Repository<ProductEntity>,
     @InjectRepository(ModifierGroupEntity)
     private readonly modifierGroupRepository: Repository<ModifierGroupEntity>,
+    private readonly productMapper: ProductMapper,
   ) {}
 
   async create(product: Product): Promise<Product> {
-    const entity = ProductMapper.toPersistence(product);
+    const entity = this.productMapper.toEntity(product);
+    if (!entity) {
+      throw new InternalServerErrorException('Error creating product entity');
+    }
     const savedEntity = await this.productRepository.save(entity);
-    return ProductMapper.toDomain(savedEntity);
+    const domainResult = this.productMapper.toDomain(savedEntity);
+     if (!domainResult) {
+      throw new InternalServerErrorException('Error mapping saved product entity to domain');
+    }
+    return domainResult;
   }
 
   async findAll(options: {
@@ -29,7 +38,7 @@ export class ProductRelationalRepository implements ProductRepository {
     hasVariants?: boolean;
     isActive?: boolean;
     search?: string;
-  }): Promise<[Product[], number]> {
+  }): Promise<Paginated<Product>> {
     const where: any = {};
 
     if (options.subcategoryId) {
@@ -52,24 +61,31 @@ export class ProductRelationalRepository implements ProductRepository {
       where,
       skip: (options.page - 1) * options.limit,
       take: options.limit,
-      relations: ['photo', 'subcategory', 'variants', 'modifierGroups'],
+      relations: ['photo', 'subcategory', 'variants', 'modifierGroups', 'preparationScreen'],
     });
 
-    const products = entities.map((entity) => ProductMapper.toDomain(entity));
-    return [products, count];
+    const products = entities
+      .map((entity) => this.productMapper.toDomain(entity))
+      .filter((item): item is Product => item !== null);
+
+    return new Paginated(products, count, options.page, options.limit);
   }
 
   async findOne(id: string): Promise<Product> {
     const entity = await this.productRepository.findOne({
       where: { id },
-      relations: ['photo', 'subcategory', 'variants', 'modifierGroups'],
+      relations: ['photo', 'subcategory', 'variants', 'modifierGroups', 'preparationScreen'],
     });
 
     if (!entity) {
       throw new NotFoundException(`Producto con ID ${id} no encontrado`);
     }
 
-    return ProductMapper.toDomain(entity);
+    const domainResult = this.productMapper.toDomain(entity);
+     if (!domainResult) {
+      throw new InternalServerErrorException('Error mapping found product entity to domain');
+    }
+    return domainResult;
   }
 
   async findByIds(ids: string[]): Promise<Product[]> {
@@ -78,58 +94,64 @@ export class ProductRelationalRepository implements ProductRepository {
     }
     const entities = await this.productRepository.find({
       where: { id: In(ids) },
-      // Cargar relaciones si es necesario al buscar por IDs
-      // relations: ['photo', 'subcategory', 'variants', 'modifierGroups'],
     });
-    return entities.map(ProductMapper.toDomain);
+    return entities
+      .map((entity) => this.productMapper.toDomain(entity))
+      .filter((item): item is Product => item !== null);
   }
 
-  // Ajustar el tipo de retorno para que coincida con la interfaz (puede ser null)
   async update(
     id: string,
     productUpdatePayload: Partial<Product>,
   ): Promise<Product | null> {
-    // No mapear a entidad completa, TypeORM update acepta un objeto parcial
-    const updateResult = await this.productRepository.update(
-      id,
-      productUpdatePayload as any,
-    ); // Usar 'as any' o un tipo más específico si es necesario
+    const entity = this.productMapper.toEntity(productUpdatePayload as Product);
+     if (!entity) {
+      throw new InternalServerErrorException('Error creating product entity for update');
+    }
 
-    // Verificar si la actualización afectó alguna fila
+    const updateResult = await this.productRepository.update(id, entity);
+
     if (updateResult.affected === 0) {
-      return null; // No se encontró o no se actualizó
+      return null;
     }
 
     const updatedEntity = await this.productRepository.findOne({
       where: { id },
-      relations: ['photo', 'subcategory', 'variants', 'modifierGroups'],
+      relations: ['photo', 'subcategory', 'variants', 'modifierGroups', 'preparationScreen'],
     });
 
     if (!updatedEntity) {
-      throw new NotFoundException(`Producto con ID ${id} no encontrado`);
+      throw new NotFoundException(`Producto con ID ${id} no encontrado después de actualizar`);
     }
 
-    return ProductMapper.toDomain(updatedEntity);
+    const domainResult = this.productMapper.toDomain(updatedEntity);
+     if (!domainResult) {
+      throw new InternalServerErrorException('Error mapping updated product entity to domain');
+    }
+    return domainResult;
   }
 
   async save(product: Product): Promise<Product> {
-    const entity = ProductMapper.toPersistence(product);
-    // Asegurarse de que las relaciones (como modifierGroups) estén mapeadas correctamente si es necesario
-    // En este caso, el mapeador podría necesitar lógica adicional si el dominio no tiene las entidades TypeORM
-    // Pero como el servicio ya está manejando las entidades ModifierGroup, debería funcionar.
+    const entity = this.productMapper.toEntity(product);
+     if (!entity) {
+      throw new InternalServerErrorException('Error creating product entity for save');
+    }
     const savedEntity = await this.productRepository.save(entity);
-    // Recargar para asegurar que todas las relaciones estén presentes después de guardar
+
     const reloadedEntity = await this.productRepository.findOne({
       where: { id: savedEntity.id },
-      relations: ['photo', 'subcategory', 'variants', 'modifierGroups'],
+      relations: ['photo', 'subcategory', 'variants', 'modifierGroups', 'preparationScreen'],
     });
     if (!reloadedEntity) {
-      // Esto no debería suceder si el save fue exitoso, pero es una verificación de seguridad
       throw new NotFoundException(
         `Producto con ID ${savedEntity.id} no encontrado después de guardar`,
       );
     }
-    return ProductMapper.toDomain(reloadedEntity);
+    const domainResult = this.productMapper.toDomain(reloadedEntity);
+     if (!domainResult) {
+      throw new InternalServerErrorException('Error mapping reloaded product entity to domain');
+    }
+    return domainResult;
   }
 
   async softDelete(id: string): Promise<void> {
@@ -139,7 +161,4 @@ export class ProductRelationalRepository implements ProductRepository {
       throw new NotFoundException(`Producto con ID ${id} no encontrado`);
     }
   }
-
-  // Los métodos assign/get/removeModifierGroups se eliminan de la implementación
-  // ya que la lógica principal está en el servicio usando 'save'.
 }

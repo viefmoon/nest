@@ -1,5 +1,6 @@
 import {
   HttpStatus,
+  Inject,
   Injectable,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -9,26 +10,20 @@ import { FilterUserDto, SortUserDto } from './dto/query-user.dto';
 import { UserRepository } from './infrastructure/persistence/user.repository';
 import { User } from './domain/user';
 import bcrypt from 'bcryptjs';
-import { FilesService } from '../files/files.service';
 import { RoleEnum } from '../roles/roles.enum';
-import { StatusEnum } from '../statuses/statuses.enum';
+import { USER_REPOSITORY } from '../common/tokens';
 import { IPaginationOptions } from '../utils/types/pagination-options';
-import { FileType } from '../files/domain/file';
 import { Role } from '../roles/domain/role';
-import { Status } from '../statuses/domain/status';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ERROR_CODES } from '../common/constants/error-codes.constants'; // Importar códigos
+import { ERROR_CODES } from '../common/constants/error-codes.constants';
 
 @Injectable()
 export class UsersService {
   constructor(
-    private readonly usersRepository: UserRepository,
-    private readonly filesService: FilesService,
+    @Inject(USER_REPOSITORY) private readonly usersRepository: UserRepository,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    // Do not remove comment below.
-    // <creating-property />
 
     let password: string | undefined = undefined;
 
@@ -53,7 +48,6 @@ export class UsersService {
       email = createUserDto.email;
     }
 
-    // Validar que el username sea único
     const userByUsername = await this.usersRepository.findByUsername(
       createUserDto.username,
     );
@@ -65,66 +59,24 @@ export class UsersService {
       });
     }
 
-    let photo: FileType | null | undefined = undefined;
+    const roleExists = Object.values(RoleEnum)
+      .map(String)
+      .includes(String(createUserDto.role.id));
 
-    if (createUserDto.photo?.id) {
-      const fileObject = await this.filesService.findById(
-        createUserDto.photo.id,
-      );
-      if (!fileObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            photo: 'imageNotExists',
-          },
-        });
-      }
-      photo = fileObject;
-    } else if (createUserDto.photo === null) {
-      photo = null;
+    if (!roleExists) {
+      throw new UnprocessableEntityException({
+        status: HttpStatus.UNPROCESSABLE_ENTITY,
+        errors: {
+          role: 'roleNotExists',
+        },
+      });
     }
 
-    let role: Role | undefined = undefined;
+    const role: Role = {
+      id: createUserDto.role.id,
+      name: null,
+    };
 
-    if (createUserDto.role?.id) {
-      const roleObject = Object.values(RoleEnum)
-        .map(String)
-        .includes(String(createUserDto.role.id));
-      if (!roleObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            role: 'roleNotExists',
-          },
-        });
-      }
-
-      role = {
-        id: createUserDto.role.id,
-      };
-    }
-
-    let status: Status | undefined = undefined;
-
-    if (createUserDto.status?.id) {
-      const statusObject = Object.values(StatusEnum)
-        .map(String)
-        .includes(String(createUserDto.status.id));
-      if (!statusObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            status: 'statusNotExists',
-          },
-        });
-      }
-
-      status = {
-        id: createUserDto.status.id,
-      };
-    }
-
-    // Convertir birthDate de string a Date si existe
     let birthDate: Date | null = null;
     if (createUserDto.birthDate) {
       birthDate = new Date(createUserDto.birthDate);
@@ -138,9 +90,7 @@ export class UsersService {
       email: email,
       username: createUserDto.username,
       password: password,
-      photo: photo,
       role: role,
-      status: status,
       birthDate: birthDate,
       gender: createUserDto.gender || null,
       phoneNumber: createUserDto.phoneNumber || null,
@@ -150,6 +100,7 @@ export class UsersService {
       country: createUserDto.country || null,
       zipCode: createUserDto.zipCode || null,
       emergencyContact: createUserDto.emergencyContact || null,
+      isActive: true,
     });
   }
 
@@ -241,26 +192,7 @@ export class UsersService {
       username = updateUserDto.username;
     }
 
-    let photo: FileType | null | undefined = undefined;
-
-    if (updateUserDto.photo?.id) {
-      const fileObject = await this.filesService.findById(
-        updateUserDto.photo.id,
-      );
-      if (!fileObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            photo: 'imageNotExists',
-          },
-        });
-      }
-      photo = fileObject;
-    } else if (updateUserDto.photo === null) {
-      photo = null;
-    }
-
-    let role: Role | null | undefined = undefined;
+    let role: Role | undefined = undefined;
 
     if (updateUserDto.role?.id) {
       const roleObject = Object.values(RoleEnum)
@@ -277,40 +209,18 @@ export class UsersService {
 
       role = {
         id: updateUserDto.role.id,
-      };
-    } else if (updateUserDto.role === null) {
-      role = null;
-    }
-
-    let status: Status | undefined = undefined;
-
-    if (updateUserDto.status?.id) {
-      const statusObject = Object.values(StatusEnum)
-        .map(String)
-        .includes(String(updateUserDto.status.id));
-      if (!statusObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            status: 'statusNotExists',
-          },
-        });
-      }
-
-      status = {
-        id: updateUserDto.status.id,
+        name: null,
       };
     }
 
-    // Convertir birthDate de string a Date si existe
     let birthDate: Date | null | undefined = undefined;
     if (updateUserDto.birthDate) {
-      birthDate = new Date(updateUserDto.birthDate);
+      birthDate = updateUserDto.birthDate;
     } else if (updateUserDto.birthDate === null) {
       birthDate = null;
     }
 
-    const updatedUser = await this.usersRepository.update(id, {
+    const updatePayload: Partial<User> = {
       // Do not remove comment below.
       // <updating-property-payload />
       firstName: updateUserDto.firstName,
@@ -318,9 +228,7 @@ export class UsersService {
       email: email,
       username: username,
       password: password,
-      photo: photo,
       role: role,
-      status: status,
       birthDate: birthDate,
       gender: updateUserDto.gender,
       phoneNumber: updateUserDto.phoneNumber,
@@ -330,7 +238,20 @@ export class UsersService {
       country: updateUserDto.country,
       zipCode: updateUserDto.zipCode,
       emergencyContact: updateUserDto.emergencyContact,
-    });
+      ...(updateUserDto.isActive !== undefined && { isActive: updateUserDto.isActive }),
+    };
+
+    const filteredPayload: Partial<User> = {};
+    for (const key in updatePayload) {
+      if (Object.prototype.hasOwnProperty.call(updatePayload, key)) {
+        const value = updatePayload[key as keyof Partial<User>];
+        if (value !== undefined) {
+          filteredPayload[key as keyof Partial<User>] = value as any;
+        }
+      }
+    }
+
+    const updatedUser = await this.usersRepository.update(id, filteredPayload);
 
     return updatedUser;
   }

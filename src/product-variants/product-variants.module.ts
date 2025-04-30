@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ProductVariantsService } from './product-variants.service';
 import { ProductVariantsController } from './product-variants.controller';
-import { ProductVariantRelationalPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
+import { RelationalProductVariantPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
 
 @Module({
-  imports: [ProductVariantRelationalPersistenceModule],
+  imports: [RelationalProductVariantPersistenceModule],
   controllers: [ProductVariantsController],
   providers: [ProductVariantsService],
-  exports: [ProductVariantsService],
+  exports: [ProductVariantsService, RelationalProductVariantPersistenceModule], // Export persistence module
 })
 export class ProductVariantsModule {}

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common'; // Removed Inject
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CategoryEntity } from '../entities/category.entity';
@@ -109,35 +109,30 @@ export class CategoriesRelationalRepository implements CategoryRepository {
   async findFullMenu(): Promise<Category[]> {
     const queryBuilder = this.categoryRepository
       .createQueryBuilder('category')
-
       .leftJoinAndSelect(
         'category.subcategories',
         'subcategory',
         'subcategory.isActive = :isActive',
         { isActive: true },
       )
-
       .leftJoinAndSelect(
         'subcategory.products',
         'product',
         'product.isActive = :isActive',
         { isActive: true },
       )
-
       .leftJoinAndSelect(
         'product.variants',
         'productVariant',
         'productVariant.isActive = :isActive',
         { isActive: true },
       )
-
       .leftJoinAndSelect(
         'product.modifierGroups',
         'modifierGroup',
         'modifierGroup.isActive = :isActive',
         { isActive: true },
       )
-
       .leftJoinAndSelect(
         'modifierGroup.productModifiers',
         'modifier',

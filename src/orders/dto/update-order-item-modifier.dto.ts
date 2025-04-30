@@ -1,5 +1,5 @@
 import { IsNumber, IsOptional, IsUUID, Min } from 'class-validator';
-import { ApiPropertyOptional } from '@nestjs/swagger'; // Usar ApiPropertyOptional para campos opcionales
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateOrderItemModifierDto {
   @ApiPropertyOptional({
@@ -8,7 +8,7 @@ export class UpdateOrderItemModifierDto {
   })
   @IsOptional()
   @IsUUID()
-  productModifierId?: string; // Renombrado y mantenido opcional
+  productModifierId?: string;
 
   @ApiPropertyOptional({
     description: 'Cantidad del modificador',
@@ -23,11 +23,11 @@ export class UpdateOrderItemModifierDto {
   @ApiPropertyOptional({
     description: 'Precio del modificador (opcional)',
     example: 2.5,
-    nullable: true, // Permitir null explícitamente en Swagger
+    nullable: true,
     minimum: 0,
   })
   @IsOptional()
   @IsNumber()
   @Min(0)
-  price?: number | null; // Permitir null en el tipo
+  price?: number | null;
 }

@@ -78,15 +78,18 @@ export class ProductEntity extends EntityRelationalHelper {
   })
   modifierGroups: ModifierGroupEntity[];
 
+  @RelationId((product: ProductEntity) => product.preparationScreen)
+  preparationScreenId: string | null;
+
   @ManyToOne(
     () => PreparationScreenEntity,
     (preparationScreen) => preparationScreen.products,
     {
-      nullable: true,
+      nullable: true, // La relación ya permite nulos en la BD
     },
   )
   @JoinColumn({ name: 'preparation_screen_id' })
-  preparationScreen: PreparationScreenEntity;
+  preparationScreen: PreparationScreenEntity | null; // Permitir null en el tipo
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

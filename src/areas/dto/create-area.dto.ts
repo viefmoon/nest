@@ -24,9 +24,9 @@ export class CreateAreaDto {
     type: Boolean,
     example: true,
     required: false,
-    default: true, // Keep for Swagger documentation clarity
+    default: true,
   })
-  @TransformDefault(true) // Apply default value if undefined
+  @TransformDefault(true)
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

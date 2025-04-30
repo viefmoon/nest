@@ -1,17 +1,25 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ModifierGroupRepository } from '../modifier-group.repository';
 import { ModifierGroupEntity } from './entities/modifier-group.entity';
 import { ModifierGroupsRelationalRepository } from './repositories/modifier-group.repository';
+import { ModifierGroupMapper } from './mappers/modifier-group.mapper';
+import { MODIFIER_GROUP_REPOSITORY } from '../../../../common/tokens';
+import { RelationalProductModifierPersistenceModule } from '../../../../product-modifiers/infrastructure/persistence/relational/relational-persistence.module';
+import { RelationalProductPersistenceModule } from '../../../../products/infrastructure/persistence/relational/relational-persistence.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ModifierGroupEntity])],
+  imports: [
+    TypeOrmModule.forFeature([ModifierGroupEntity]),
+    RelationalProductModifierPersistenceModule,
+    forwardRef(() => RelationalProductPersistenceModule),
+  ],
   providers: [
     {
-      provide: ModifierGroupRepository,
+      provide: MODIFIER_GROUP_REPOSITORY,
       useClass: ModifierGroupsRelationalRepository,
     },
+    ModifierGroupMapper,
   ],
-  exports: [ModifierGroupRepository],
+  exports: [MODIFIER_GROUP_REPOSITORY, ModifierGroupMapper],
 })
 export class RelationalModifierGroupPersistenceModule {}

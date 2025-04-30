@@ -13,13 +13,13 @@ export class FileRelationalRepository implements FileRepository {
   constructor(
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
+    private readonly fileMapper: FileMapper,
   ) {}
 
-  async create(data: FileType): Promise<FileType> {
-    const persistenceModel = FileMapper.toPersistence(data);
-    return this.fileRepository.save(
-      this.fileRepository.create(persistenceModel),
-    );
+  async create(data: Omit<FileType, 'id'>): Promise<FileType> {
+    const entity = this.fileRepository.create({ path: data.path });
+    const saved = await this.fileRepository.save(entity);
+    return this.fileMapper.toDomain(saved)!;
   }
 
   async findById(id: FileType['id']): Promise<NullableType<FileType>> {
@@ -29,7 +29,7 @@ export class FileRelationalRepository implements FileRepository {
       },
     });
 
-    return entity ? FileMapper.toDomain(entity) : null;
+    return entity ? this.fileMapper.toDomain(entity) : null;
   }
 
   async findByIds(ids: FileType['id'][]): Promise<FileType[]> {
@@ -38,7 +38,6 @@ export class FileRelationalRepository implements FileRepository {
         id: In(ids),
       },
     });
-
-    return entities.map((entity) => FileMapper.toDomain(entity));
+    return entities.map((entity) => this.fileMapper.toDomain(entity)!);
   }
 }

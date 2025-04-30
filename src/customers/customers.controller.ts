@@ -47,8 +47,6 @@ import { infinityPagination } from '../utils/infinity-pagination';
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 
-  // --- Customer Endpoints ---
-
   @Post()
   @ApiBearerAuth()
   @Roles(RoleEnum.admin) // Asumiendo que solo admin puede crear clientes directamente
@@ -130,8 +128,6 @@ export class CustomersController {
   remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.customersService.remove(id);
   }
-
-  // --- Address Endpoints ---
 
   @Post(':customerId/addresses')
   @ApiBearerAuth()

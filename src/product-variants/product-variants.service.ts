@@ -4,11 +4,12 @@ import { CreateProductVariantDto } from './dto/create-product-variant.dto';
 import { UpdateProductVariantDto } from './dto/update-product-variant.dto';
 import { ProductVariant } from './domain/product-variant';
 import { FindAllProductVariantsDto } from './dto/find-all-product-variants.dto';
+import { PRODUCT_VARIANT_REPOSITORY } from '../common/tokens';
 
 @Injectable()
 export class ProductVariantsService {
   constructor(
-    @Inject('ProductVariantRepository')
+    @Inject(PRODUCT_VARIANT_REPOSITORY)
     private readonly productVariantRepository: ProductVariantRepository,
   ) {}
 

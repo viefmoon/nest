@@ -2,7 +2,7 @@ import { DeepPartial } from '../../../utils/types/deep-partial.type';
 import { NullableType } from '../../../utils/types/nullable.type';
 import { IPaginationOptions } from '../../../utils/types/pagination-options';
 import { Customer } from '../../domain/customer';
-import { FindAllCustomersDto } from '../../dto/find-all-customers.dto'; // Importar DTO de filtro
+import { FindAllCustomersDto } from '../../dto/find-all-customers.dto';
 
 export abstract class CustomerRepository {
   abstract create(

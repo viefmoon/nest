@@ -4,6 +4,7 @@ import { UsersController } from './users.controller';
 
 import { UsersService } from './users.service';
 import { RelationalUserPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
+import { UserMapper } from './infrastructure/persistence/relational/mappers/user.mapper';
 
 const infrastructurePersistenceModule = RelationalUserPersistenceModule;
 
@@ -12,7 +13,7 @@ const infrastructurePersistenceModule = RelationalUserPersistenceModule;
     infrastructurePersistenceModule,
   ],
   controllers: [UsersController],
-  providers: [UsersService],
+  providers: [UsersService, UserMapper],
   exports: [UsersService, infrastructurePersistenceModule],
 })
 export class UsersModule {}

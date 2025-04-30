@@ -1,15 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ProductModifier } from './domain/product-modifier';
 import { CreateProductModifierDto } from './dto/create-product-modifier.dto';
 import { FindAllProductModifiersDto } from './dto/find-all-product-modifiers.dto';
 import { UpdateProductModifierDto } from './dto/update-product-modifier.dto';
-import { ProductModifierRepository } from './infrastructure/persistence/product-modifier.repository';
+import { IProductModifierRepository } from './infrastructure/persistence/product-modifier.repository';
 import { IPaginationOptions } from '../utils/types/pagination-options';
+import { PRODUCT_MODIFIER_REPOSITORY } from '../common/tokens';
+import { Paginated } from '../common/types/paginated.type';
 
 @Injectable()
 export class ProductModifiersService {
   constructor(
-    private readonly productModifierRepository: ProductModifierRepository,
+    @Inject(PRODUCT_MODIFIER_REPOSITORY)
+    private readonly productModifierRepository: IProductModifierRepository,
   ) {}
 
   async create(
@@ -45,7 +48,7 @@ export class ProductModifiersService {
   async findAll(
     filterOptions: FindAllProductModifiersDto,
     paginationOptions: IPaginationOptions,
-  ): Promise<ProductModifier[]> {
+  ): Promise<Paginated<ProductModifier>> {
     return this.productModifierRepository.findManyWithPagination({
       filterOptions,
       paginationOptions,
@@ -56,7 +59,7 @@ export class ProductModifiersService {
     const productModifier = await this.productModifierRepository.findById(id);
 
     if (!productModifier) {
-      throw new Error('Product modifier not found');
+      throw new NotFoundException(`Product modifier with ID ${id} not found`);
     }
 
     return productModifier;
@@ -76,13 +79,13 @@ export class ProductModifiersService {
     );
 
     if (!updatedProductModifier) {
-      throw new Error('Product modifier not found');
+       throw new NotFoundException(`Product modifier with ID ${id} not found`);
     }
 
     return updatedProductModifier;
   }
 
   async remove(id: string): Promise<void> {
-    return this.productModifierRepository.remove(id);
+    await this.productModifierRepository.remove(id);
   }
 }

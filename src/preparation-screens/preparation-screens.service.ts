@@ -4,11 +4,13 @@ import { CreatePreparationScreenDto } from './dto/create-preparation-screen.dto'
 import { FindAllPreparationScreensDto } from './dto/find-all-preparation-screens.dto';
 import { UpdatePreparationScreenDto } from './dto/update-preparation-screen.dto';
 import { PreparationScreenRepository } from './infrastructure/persistence/preparation-screen.repository';
+import { PREPARATION_SCREEN_REPOSITORY } from '../common/tokens';
+import { Paginated } from '../common/types/paginated.type';
 
 @Injectable()
 export class PreparationScreensService {
   constructor(
-    @Inject('PreparationScreenRepository')
+    @Inject(PREPARATION_SCREEN_REPOSITORY)
     private readonly preparationScreenRepository: PreparationScreenRepository,
   ) {}
 
@@ -25,7 +27,7 @@ export class PreparationScreensService {
 
   async findAll(
     findAllPreparationScreensDto: FindAllPreparationScreensDto,
-  ): Promise<[PreparationScreen[], number]> {
+  ): Promise<Paginated<PreparationScreen>> {
     return this.preparationScreenRepository.findAll({
       page: findAllPreparationScreensDto.page,
       limit: findAllPreparationScreensDto.limit,

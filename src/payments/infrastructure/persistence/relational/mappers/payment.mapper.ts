@@ -1,28 +1,38 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Payment } from '../../../../domain/payment';
 import { PaymentEntity } from '../entities/payment.entity';
-import { Order } from '../../../../../orders/domain/order';
-import { OrderEntity } from '../../../../../orders/infrastructure/persistence/relational/entities/order.entity'; // Necesario para stub
+import { OrderEntity } from '../../../../../orders/infrastructure/persistence/relational/entities/order.entity';
+import { BaseMapper } from '../../../../../common/mappers/base.mapper';
+import { OrderMapper } from '../../../../../orders/infrastructure/persistence/relational/mappers/order.mapper';
 
 @Injectable()
-export class PaymentMapper {
-  toDomain(entity: PaymentEntity): Payment {
-    const payment = new Payment();
-    payment.id = entity.id;
-    payment.orderId = entity.orderId;
-    payment.paymentMethod = entity.paymentMethod;
-    payment.amount = entity.amount;
-    payment.paymentStatus = entity.paymentStatus;
-    payment.order = entity.order ? (entity.order as unknown as Order) : null;
-    payment.createdAt = entity.createdAt;
-    payment.updatedAt = entity.updatedAt;
-    payment.deletedAt = entity.deletedAt;
-    return payment;
+export class PaymentMapper extends BaseMapper<PaymentEntity, Payment> {
+  constructor(
+    @Inject(forwardRef(() => OrderMapper))
+    private readonly orderMapper: OrderMapper,
+  ) {
+    super();
   }
 
-  toPersistence(domain: Payment): PaymentEntity {
+  override toDomain(entity: PaymentEntity): Payment | null {
+    if (!entity) return null;
+    const domain = new Payment();
+    domain.id = entity.id;
+    domain.orderId = entity.orderId;
+    domain.paymentMethod = entity.paymentMethod;
+    domain.amount = entity.amount;
+    domain.paymentStatus = entity.paymentStatus;
+    domain.order = this.orderMapper.toDomain(entity.order!)!;
+    domain.createdAt = entity.createdAt;
+    domain.updatedAt = entity.updatedAt;
+    domain.deletedAt = entity.deletedAt;
+    return domain;
+  }
+
+  override toEntity(domain: Payment): PaymentEntity | null {
+    if (!domain) return null;
     const entity = new PaymentEntity();
-    entity.id = domain.id;
+    if (domain.id) entity.id = domain.id;
     entity.order = { id: domain.orderId } as OrderEntity;
     entity.paymentMethod = domain.paymentMethod;
     entity.amount = domain.amount;

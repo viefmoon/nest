@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NullableType } from '../../../../../utils/types/nullable.type';
@@ -14,6 +14,7 @@ export class DailyOrderCounterRelationalRepository
   constructor(
     @InjectRepository(DailyOrderCounterEntity)
     private readonly dailyOrderCounterRepository: Repository<DailyOrderCounterEntity>,
+    private readonly dailyOrderCounterMapper: DailyOrderCounterMapper,
   ) {}
 
   async create(
@@ -22,9 +23,12 @@ export class DailyOrderCounterRelationalRepository
       'id' | 'createdAt' | 'deletedAt' | 'updatedAt' | 'orders'
     >,
   ): Promise<DailyOrderCounter> {
-    const persistenceModel = DailyOrderCounterMapper.toPersistence(
+    const persistenceModel = this.dailyOrderCounterMapper.toEntity(
       data as DailyOrderCounter,
     );
+    if (!persistenceModel) {
+      throw new Error('Failed to map daily order counter domain to entity');
+    }
     const newEntity = await this.dailyOrderCounterRepository.save(
       this.dailyOrderCounterRepository.create(persistenceModel),
     );
@@ -40,7 +44,11 @@ export class DailyOrderCounterRelationalRepository
       );
     }
 
-    return DailyOrderCounterMapper.toDomain(completeEntity);
+    const domainResult = this.dailyOrderCounterMapper.toDomain(completeEntity);
+    if (!domainResult) {
+      throw new Error('Failed to map complete daily order counter entity to domain');
+    }
+    return domainResult;
   }
 
   async findById(
@@ -51,11 +59,10 @@ export class DailyOrderCounterRelationalRepository
       relations: ['orders'],
     });
 
-    return entity ? DailyOrderCounterMapper.toDomain(entity) : null;
+    return entity ? this.dailyOrderCounterMapper.toDomain(entity) : null;
   }
 
   async findByDate(date: Date): Promise<NullableType<DailyOrderCounter>> {
-    // Normalizamos la fecha para buscar solo por día
     const searchDate = new Date(date);
     searchDate.setHours(0, 0, 0, 0);
 
@@ -66,18 +73,16 @@ export class DailyOrderCounterRelationalRepository
       relations: ['orders'],
     });
 
-    return entity ? DailyOrderCounterMapper.toDomain(entity) : null;
+    return entity ? this.dailyOrderCounterMapper.toDomain(entity) : null;
   }
 
   async findOrCreateByDate(date: Date): Promise<DailyOrderCounter> {
-    // Normalizamos la fecha para buscar solo por día
     const searchDate = new Date(date);
     searchDate.setHours(0, 0, 0, 0);
 
     let counter = await this.findByDate(searchDate);
 
     if (!counter) {
-      // Si no existe el contador para esta fecha, lo creamos
       const newCounter = new DailyOrderCounter();
       newCounter.date = searchDate;
       newCounter.currentNumber = 0;
@@ -90,13 +95,11 @@ export class DailyOrderCounterRelationalRepository
   async incrementCounter(
     id: DailyOrderCounter['id'],
   ): Promise<DailyOrderCounter> {
-    // Incrementamos el contador de forma atómica utilizando una consulta SQL
     await this.dailyOrderCounterRepository.query(
       `UPDATE daily_order_counter SET "current_number" = "current_number" + 1 WHERE id = $1`,
       [id],
     );
 
-    // Obtener el contador actualizado
     const updatedCounter = await this.findById(id);
     if (!updatedCounter) {
       throw new Error(
@@ -113,23 +116,31 @@ export class DailyOrderCounterRelationalRepository
   ): Promise<DailyOrderCounter> {
     const entity = await this.dailyOrderCounterRepository.findOne({
       where: { id },
-      relations: ['orders'],
     });
 
     if (!entity) {
-      throw new Error('Daily order counter not found');
+      throw new NotFoundException('Daily order counter not found');
+    }
+
+    const existingDomain = this.dailyOrderCounterMapper.toDomain(entity);
+    if (!existingDomain) {
+      throw new Error('Failed to map existing daily order counter entity to domain');
+    }
+
+    const updatedDomain = {
+      ...existingDomain,
+      ...payload,
+    };
+
+    const persistenceModel = this.dailyOrderCounterMapper.toEntity(updatedDomain);
+    if (!persistenceModel) {
+      throw new Error('Failed to map updated daily order counter domain to entity');
     }
 
     const updatedEntity = await this.dailyOrderCounterRepository.save(
-      this.dailyOrderCounterRepository.create({
-        ...DailyOrderCounterMapper.toPersistence({
-          ...DailyOrderCounterMapper.toDomain(entity),
-          ...payload,
-        }),
-      }),
+      this.dailyOrderCounterRepository.create(persistenceModel),
     );
 
-    // Cargar la entidad actualizada con todas las relaciones
     const completeEntity = await this.dailyOrderCounterRepository.findOne({
       where: { id: updatedEntity.id },
       relations: ['orders'],
@@ -141,7 +152,11 @@ export class DailyOrderCounterRelationalRepository
       );
     }
 
-    return DailyOrderCounterMapper.toDomain(completeEntity);
+    const finalDomainResult = this.dailyOrderCounterMapper.toDomain(completeEntity);
+    if (!finalDomainResult) {
+      throw new Error('Failed to map final updated daily order counter entity to domain');
+    }
+    return finalDomainResult;
   }
 
   async remove(id: DailyOrderCounter['id']): Promise<void> {

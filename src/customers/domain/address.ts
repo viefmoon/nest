@@ -1,4 +1,4 @@
-import { Customer } from './customer'; // Importar Customer
+import { Customer } from './customer';
 
 export class Address {
   id: string;

@@ -22,13 +22,12 @@ export class ThermalPrintersRelationalRepository
   async create(
     data: Omit<ThermalPrinter, 'id' | 'createdAt' | 'deletedAt' | 'updatedAt'>,
   ): Promise<ThermalPrinter> {
-    const persistenceModel = ThermalPrinterMapper.toPersistence(
+    const persistenceModel = ThermalPrinterMapper.toEntity(
       data as ThermalPrinter,
     );
     const newEntity = await this.printersRepository.save(
       this.printersRepository.create(persistenceModel),
     );
-    // Reload to ensure all default values are loaded
     const completeEntity = await this.printersRepository.findOne({
       where: { id: newEntity.id },
     });
@@ -96,7 +95,7 @@ export class ThermalPrintersRelationalRepository
     ipAddress: ThermalPrinter['ipAddress'],
   ): Promise<NullableType<ThermalPrinter>> {
     if (!ipAddress) {
-      return null; // No buscar si la IP es nula
+      return null;
     }
     const entity = await this.printersRepository.findOne({
       where: { ipAddress },
@@ -109,7 +108,6 @@ export class ThermalPrintersRelationalRepository
     id: ThermalPrinter['id'],
     payload: DeepPartial<ThermalPrinter>,
   ): Promise<ThermalPrinter | null> {
-    // Fetch, merge, and save to handle potential partial updates and ensure hooks run
     const entity = await this.printersRepository.findOne({ where: { id } });
 
     if (!entity) {
@@ -120,7 +118,6 @@ export class ThermalPrintersRelationalRepository
 
     const savedEntity = await this.printersRepository.save(updatedEntityData);
 
-    // Reload to get the final state after potential triggers or default value updates
     const reloadedEntity = await this.printersRepository.findOne({
       where: { id: savedEntity.id },
     });

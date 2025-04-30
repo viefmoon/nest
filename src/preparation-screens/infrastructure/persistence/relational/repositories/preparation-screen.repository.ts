@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PreparationScreenEntity } from '../entities/preparation-screen.entity';
 import { PreparationScreenRepository } from '../../preparation-screen.repository';
 import { PreparationScreen } from '../../../../domain/preparation-screen';
 import { PreparationScreenMapper } from '../mappers/preparation-screen.mapper';
+import { Paginated } from '../../../../../common/types/paginated.type';
 
 @Injectable()
 export class PreparationScreensRelationalRepository
@@ -13,17 +14,18 @@ export class PreparationScreensRelationalRepository
   constructor(
     @InjectRepository(PreparationScreenEntity)
     private readonly preparationScreenRepository: Repository<PreparationScreenEntity>,
+    private readonly preparationScreenMapper: PreparationScreenMapper,
   ) {}
 
   async create(data: PreparationScreen): Promise<PreparationScreen> {
-    const entity = PreparationScreenMapper.toPersistence(data);
+    const entity = this.preparationScreenMapper.toEntity(data);
     if (!entity) {
-      throw new Error('No se pudo crear la entidad de pantalla de preparación');
+      throw new InternalServerErrorException('Error creating preparation screen entity');
     }
     const savedEntity = await this.preparationScreenRepository.save(entity);
-    const domainResult = PreparationScreenMapper.toDomain(savedEntity);
+    const domainResult = this.preparationScreenMapper.toDomain(savedEntity);
     if (!domainResult) {
-      throw new Error('No se pudo mapear la entidad guardada a dominio');
+      throw new InternalServerErrorException('Error mapping saved preparation screen entity to domain');
     }
     return domainResult;
   }
@@ -34,15 +36,9 @@ export class PreparationScreensRelationalRepository
       relations: ['products'],
     });
 
-    if (!entity) {
-      throw new NotFoundException(
-        `Pantalla de preparación con ID ${id} no encontrada`,
-      );
-    }
-    const domainResult = PreparationScreenMapper.toDomain(entity);
+    const domainResult = entity ? this.preparationScreenMapper.toDomain(entity) : null;
     if (!domainResult) {
-      // Esto no debería ocurrir si la entidad existe y el mapper es correcto
-      throw new Error(`Error al mapear la entidad con ID ${id} a dominio.`);
+      throw new NotFoundException(`Preparation screen with ID ${id} not found`);
     }
     return domainResult;
   }
@@ -51,7 +47,7 @@ export class PreparationScreensRelationalRepository
     page?: number;
     limit?: number;
     isActive?: boolean;
-  }): Promise<[PreparationScreen[], number]> {
+  }): Promise<Paginated<PreparationScreen>> {
     const page = options?.page || 1;
     const limit = options?.limit || 10;
     const skip = (page - 1) * limit;
@@ -72,20 +68,20 @@ export class PreparationScreensRelationalRepository
     const [entities, count] = await queryBuilder.getManyAndCount();
 
     const domainResults = entities
-      .map(PreparationScreenMapper.toDomain)
+      .map((entity) => this.preparationScreenMapper.toDomain(entity))
       .filter((item): item is PreparationScreen => item !== null);
 
-    return [domainResults, count];
+    return new Paginated(domainResults, count, page, limit);
   }
 
   async update(
     id: string,
     data: PreparationScreen,
   ): Promise<PreparationScreen> {
-    const entity = PreparationScreenMapper.toPersistence(data);
+    const entity = this.preparationScreenMapper.toEntity(data);
     if (!entity) {
-      throw new Error(
-        'No se pudo crear la entidad de pantalla de preparación para actualizar',
+      throw new InternalServerErrorException(
+        'Error creating preparation screen entity for update',
       );
     }
 
@@ -97,14 +93,12 @@ export class PreparationScreensRelationalRepository
     });
 
     if (!updatedEntity) {
-      throw new NotFoundException(
-        `Pantalla de preparación con ID ${id} no encontrada`,
-      );
+      throw new NotFoundException(`Preparation screen with ID ${id} not found`);
     }
 
-    const domainResult = PreparationScreenMapper.toDomain(updatedEntity);
+    const domainResult = this.preparationScreenMapper.toDomain(updatedEntity);
     if (!domainResult) {
-      throw new Error('No se pudo mapear la entidad actualizada a dominio');
+      throw new InternalServerErrorException('Error mapping updated preparation screen entity to domain');
     }
 
     return domainResult;
@@ -113,9 +107,7 @@ export class PreparationScreensRelationalRepository
   async softDelete(id: string): Promise<void> {
     const result = await this.preparationScreenRepository.softDelete(id);
     if (result.affected === 0) {
-      throw new NotFoundException(
-        `Pantalla de preparación con ID ${id} no encontrada`,
-      );
+      throw new NotFoundException(`Preparation screen with ID ${id} not found`);
     }
   }
 }

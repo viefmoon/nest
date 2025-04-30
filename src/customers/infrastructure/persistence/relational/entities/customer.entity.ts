@@ -9,7 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
-import { AddressEntity } from './address.entity'; // Importar AddressEntity
+import { AddressEntity } from './address.entity';
 
 @Entity({
   name: 'customer',

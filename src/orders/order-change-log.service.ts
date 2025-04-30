@@ -2,6 +2,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { OrderHistoryRepository } from './infrastructure/persistence/order-history.repository';
 import { UsersService } from '../users/users.service'; // Importar UsersService
+import { ORDER_HISTORY_REPOSITORY } from '../common/tokens'; // Importar el token
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { OrderHistoryEntity } from './infrastructure/persistence/relational/entities/order-history.entity';
 import { User } from '../users/domain/user'; // Importar User domain
@@ -17,7 +18,7 @@ export class EnrichedOrderHistoryDto extends OrderHistoryEntity {
 @Injectable()
 export class OrderChangeLogService {
   constructor(
-    @Inject('OrderHistoryRepository') // Usar el token de inyección
+    @Inject(ORDER_HISTORY_REPOSITORY) // Usar el token Symbol
     private readonly historyRepository: OrderHistoryRepository,
     private readonly usersService: UsersService, // Inyectar UsersService
   ) {}

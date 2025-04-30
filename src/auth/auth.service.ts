@@ -23,7 +23,6 @@ import { MailService } from '../mail/mail.service';
 import { RoleEnum } from '../roles/roles.enum';
 import { Session } from '../session/domain/session';
 import { SessionService } from '../session/session.service';
-import { StatusEnum } from '../statuses/statuses.enum';
 import { User } from '../users/domain/user';
 import { ERROR_CODES } from '../common/constants/error-codes.constants';
 
@@ -40,12 +39,10 @@ export class AuthService {
   async validateLogin(loginDto: AuthEmailLoginDto): Promise<LoginResponseDto> {
     let user: NullableType<User> = null;
 
-    // Si se proporciona username, buscamos por username
     if (loginDto.username) {
       user = await this.usersService.findByUsername(loginDto.username);
     }
 
-    // Si no se encontró por username y se proporcionó email, buscamos por email
     if (!user && loginDto.email) {
       user = await this.usersService.findByEmail(loginDto.email);
     }
@@ -58,8 +55,6 @@ export class AuthService {
     }
 
     if (!user.password) {
-      // Podría ser un error interno si se espera que siempre haya contraseña
-      // O un error específico si es un estado válido pero no permite login
       throw new UnprocessableEntityException({
         code: ERROR_CODES.AUTH_ACCOUNT_INACTIVE,
         message: 'La cuenta no tiene una contraseña configurada.',
@@ -104,42 +99,37 @@ export class AuthService {
   }
 
   async register(dto: AuthRegisterLoginDto): Promise<void> {
+    const requiresConfirmation = !!dto.email;
+    const initialIsActive = !requiresConfirmation;
+
     const user = await this.usersService.create({
       ...dto,
       email: dto.email,
       role: {
         id: RoleEnum.user,
       },
-      status: {
-        id: StatusEnum.inactive,
-      },
+      isActive: initialIsActive,
     });
 
-    const hash = await this.jwtService.signAsync(
-      {
-        confirmEmailUserId: user.id,
-      },
-      {
-        secret: this.configService.get('auth.confirmEmailSecret', {
-          infer: true,
-        }),
-        expiresIn: this.configService.get('auth.confirmEmailExpires', {
-          infer: true,
-        }),
-      },
-    );
+    if (requiresConfirmation) {
+      const hash = await this.jwtService.signAsync(
+        {
+          confirmEmailUserId: user.id,
+        },
+        {
+          secret: this.configService.get('auth.confirmEmailSecret', {
+            infer: true,
+          }),
+          expiresIn: this.configService.get('auth.confirmEmailExpires', {
+            infer: true,
+          }),
+        },
+      );
 
-    if (dto.email) {
       await this.mailService.userSignUp({
-        to: dto.email,
+        to: dto.email!,
         data: {
           hash,
-        },
-      });
-    } else {
-      await this.usersService.update(user.id, {
-        status: {
-          id: StatusEnum.active,
         },
       });
     }
@@ -167,22 +157,18 @@ export class AuthService {
 
     const user = await this.usersService.findById(userId);
 
-    // Considerar si el estado diferente a inactivo debe ser otro error (ej. AUTH_EMAIL_ALREADY_CONFIRMED)
-    if (
-      !user ||
-      user?.status?.id?.toString() !== StatusEnum.inactive.toString()
-    ) {
+    if (!user) {
       throw new NotFoundException({
-        code: ERROR_CODES.USER_NOT_FOUND, // O un código más específico como AUTH_CONFIRMATION_LINK_INVALID
-        message: 'Usuario no encontrado o el enlace ya no es válido.',
+        code: ERROR_CODES.USER_NOT_FOUND,
+        message: 'Usuario no encontrado.',
       });
     }
 
-    user.status = {
-      id: StatusEnum.active,
-    };
+    if (user.isActive) {
+      return;
+    }
 
-    await this.usersService.update(user.id, user);
+    await this.usersService.update(user.id, { isActive: true });
   }
 
   async confirmNewEmail(hash: string): Promise<void> {
@@ -218,20 +204,13 @@ export class AuthService {
       });
     }
 
-    user.email = newEmail;
-    user.status = {
-      id: StatusEnum.active,
-    };
-
-    await this.usersService.update(user.id, user);
+    await this.usersService.update(user.id, { email: newEmail, isActive: true });
   }
 
   async forgotPassword(email: string): Promise<void> {
     const user = await this.usersService.findByEmail(email);
 
     if (!user) {
-      // Aunque el usuario no exista, por seguridad, podríamos no revelarlo explícitamente.
-      // Pero para seguir el patrón, lanzamos el error.
       throw new NotFoundException({
         code: ERROR_CODES.USER_NOT_FOUND,
         message: 'No se encontró un usuario con ese correo electrónico.',
@@ -315,7 +294,6 @@ export class AuthService {
     const currentUser = await this.usersService.findById(userJwtPayload.id);
 
     if (!currentUser) {
-      // Esto no debería ocurrir si el token es válido, pero por si acaso.
       throw new NotFoundException({
         code: ERROR_CODES.USER_NOT_FOUND,
         message: 'Usuario actual no encontrado.',
@@ -331,10 +309,9 @@ export class AuthService {
     if (userDto.email !== undefined) userToUpdate.email = userDto.email;
     if (userDto.password !== undefined)
       userToUpdate.password = userDto.password;
-    if (userDto.photo !== undefined) userToUpdate.photo = userDto.photo;
     if (userDto.birthDate !== undefined)
       userToUpdate.birthDate = userDto.birthDate
-        ? new Date(userDto.birthDate)
+        ? userDto.birthDate
         : null;
     if (userDto.gender !== undefined) userToUpdate.gender = userDto.gender;
     if (userDto.phoneNumber !== undefined)
@@ -358,7 +335,6 @@ export class AuthService {
       }
 
       if (!currentUser.password) {
-        // Caso raro: el usuario no tiene contraseña pero intenta cambiarla.
         throw new UnprocessableEntityException({
           code: ERROR_CODES.AUTH_INCORRECT_OLD_PASSWORD,
           message: 'La cuenta actual no tiene una contraseña configurada.',
@@ -418,16 +394,13 @@ export class AuthService {
         },
       });
 
-      // No actualizamos el email aquí, se actualizará cuando el usuario confirme el email
       userToUpdate.email = currentUser.email;
     }
 
-    // Creamos un objeto con solo las propiedades que queremos actualizar
     const updateData: Partial<User> = {
       firstName: userToUpdate.firstName,
       lastName: userToUpdate.lastName,
       password: userToUpdate.password,
-      photo: userToUpdate.photo,
       birthDate: userToUpdate.birthDate,
       gender: userToUpdate.gender,
       phoneNumber: userToUpdate.phoneNumber,
@@ -456,8 +429,7 @@ export class AuthService {
     }
 
     if (session.hash !== data.hash) {
-      // Podría indicar un intento de reutilización de refresh token o manipulación
-      await this.sessionService.deleteById(session.id); // Invalidar la sesión comprometida
+      await this.sessionService.deleteById(session.id);
       throw new UnauthorizedException({
         code: ERROR_CODES.AUTH_SESSION_EXPIRED_OR_INVALID,
         message: 'Token de refresco inválido.',
@@ -472,8 +444,7 @@ export class AuthService {
     const user = await this.usersService.findById(session.user.id);
 
     if (!user?.role) {
-      // El usuario asociado a la sesión ya no existe o no tiene rol
-      await this.sessionService.deleteById(session.id); // Limpiar sesión huérfana
+      await this.sessionService.deleteById(session.id);
       throw new UnauthorizedException({
         code: ERROR_CODES.AUTH_UNAUTHORIZED,
         message: 'Usuario asociado a la sesión no válido.',
@@ -486,9 +457,7 @@ export class AuthService {
 
     const { token, refreshToken, tokenExpires } = await this.getTokensData({
       id: session.user.id,
-      role: {
-        id: user.role.id,
-      },
+      role: user.role,
       sessionId: session.id,
       hash,
     });

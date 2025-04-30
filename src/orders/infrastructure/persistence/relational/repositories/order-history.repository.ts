@@ -1,4 +1,3 @@
-// src/orders/infrastructure/persistence/relational/repositories/order-history.repository.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -24,7 +23,7 @@ export class OrderHistoryRelationalRepository
 
     return this.historyRepository.findAndCount({
       where: { orderId },
-      order: { changedAt: 'DESC' }, // Más reciente primero
+      order: { changedAt: 'DESC' },
       skip: skip,
       take: limit,
     });

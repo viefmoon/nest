@@ -2,30 +2,30 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CustomerEntity } from './entities/customer.entity';
 import { AddressEntity } from './entities/address.entity';
-import { CustomerRepository } from '../customer.repository';
-import { AddressRepository } from '../address.repository';
 import { CustomerRelationalRepository } from './repositories/customer.repository';
 import { AddressRelationalRepository } from './repositories/address.repository';
 import { CustomerMapper } from './mappers/customer.mapper';
 import { AddressMapper } from './mappers/address.mapper';
+import { CUSTOMER_REPOSITORY } from '../../../../common/tokens';
+import { ADDRESS_REPOSITORY } from '../../../../common/tokens';
 
 @Module({
   imports: [TypeOrmModule.forFeature([CustomerEntity, AddressEntity])],
   providers: [
     {
-      provide: CustomerRepository,
+      provide: CUSTOMER_REPOSITORY,
       useClass: CustomerRelationalRepository,
     },
     {
-      provide: AddressRepository,
+      provide: ADDRESS_REPOSITORY,
       useClass: AddressRelationalRepository,
     },
     CustomerMapper,
     AddressMapper,
   ],
   exports: [
-    CustomerRepository,
-    AddressRepository,
+    CUSTOMER_REPOSITORY,
+    ADDRESS_REPOSITORY,
     CustomerMapper,
     AddressMapper,
   ],

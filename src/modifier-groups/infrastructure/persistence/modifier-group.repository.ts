@@ -3,6 +3,7 @@ import { NullableType } from '../../../utils/types/nullable.type';
 import { IPaginationOptions } from '../../../utils/types/pagination-options';
 import { ModifierGroup } from '../../domain/modifier-group';
 import { FindAllModifierGroupsDto } from '../../dto/find-all-modifier-groups.dto';
+import { Paginated } from '../../../common/types/paginated.type';
 
 export abstract class ModifierGroupRepository {
   abstract create(
@@ -15,7 +16,7 @@ export abstract class ModifierGroupRepository {
   }: {
     filterOptions?: FindAllModifierGroupsDto | null;
     paginationOptions: IPaginationOptions;
-  }): Promise<ModifierGroup[]>;
+  }): Promise<Paginated<ModifierGroup>>;
 
   abstract findById(
     id: ModifierGroup['id'],

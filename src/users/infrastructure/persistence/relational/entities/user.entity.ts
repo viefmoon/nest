@@ -18,7 +18,7 @@ import { EntityRelationalHelper } from '../../../../../utils/relational-entity-h
 })
 export class UserEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
-  id: string; 
+  id: string;
 
   @Column({ type: String, unique: true, nullable: true })
   email: string | null;
@@ -67,8 +67,9 @@ export class UserEntity extends EntityRelationalHelper {
 
   @ManyToOne(() => RoleEntity, {
     eager: true,
+    nullable: false,
   })
-  role?: RoleEntity | null;
+  role: RoleEntity;
 
 
   @Column({ type: 'boolean', default: true })

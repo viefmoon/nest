@@ -1,4 +1,5 @@
 import { Product } from '../../domain/product';
+import { Paginated } from '../../../common/types/paginated.type';
 
 export interface ProductRepository {
   create(product: Product): Promise<Product>;
@@ -9,13 +10,10 @@ export interface ProductRepository {
     hasVariants?: boolean;
     isActive?: boolean;
     search?: string;
-  }): Promise<[Product[], number]>;
-  findOne(id: string): Promise<Product | null>; // findOne puede retornar null
-  findByIds(ids: string[]): Promise<Product[]>; // Añadir findByIds
-  update(id: string, product: Partial<Product>): Promise<Product | null>; // update puede retornar null si no se encuentra
-  save(product: Product): Promise<Product>; // Añadir método save para actualizaciones completas con relaciones
+  }): Promise<Paginated<Product>>;
+  findOne(id: string): Promise<Product | null>;
+  findByIds(ids: string[]): Promise<Product[]>;
+  update(id: string, product: Partial<Product>): Promise<Product | null>;
+  save(product: Product): Promise<Product>;
   softDelete(id: string): Promise<void>;
-
-  // Los métodos específicos para grupos de modificadores se eliminan de la interfaz
-  // ya que la lógica principal está en el servicio usando 'save'.
 }

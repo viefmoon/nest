@@ -30,10 +30,4 @@ export abstract class TicketImpressionRepository {
     orderId: TicketImpression['orderId'],
   ): Promise<TicketImpression[]>;
 
-  // No se necesita update o remove por ahora según el requerimiento inicial
-  // abstract update(
-  //   id: TicketImpression['id'],
-  //   payload: Partial<TicketImpression>,
-  // ): Promise<TicketImpression | null>;
-  // abstract remove(id: TicketImpression['id']): Promise<void>;
 }

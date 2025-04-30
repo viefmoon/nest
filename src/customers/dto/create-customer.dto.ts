@@ -10,7 +10,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { CreateAddressDto } from './create-address.dto'; // Importaremos este DTO
+import { CreateAddressDto } from './create-address.dto';
 
 export class CreateCustomerDto {
   @ApiProperty({

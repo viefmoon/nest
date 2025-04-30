@@ -3,10 +3,10 @@ import { ThermalPrintersController } from './thermal-printers.controller';
 import { ThermalPrintersService } from './thermal-printers.service';
 import { RelationalThermalPrinterPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
 import { AuthModule } from '../auth/auth.module';
-import { PrintingController } from './printing.controller'; // Añadido
-import { PrintingService } from './printing.service'; // Añadido
-import { OrdersModule } from '../orders/orders.module'; // Añadido
-import { DiscoveryService } from './discovery.service'; // Añadido
+import { PrintingController } from './printing.controller';
+import { PrintingService } from './printing.service';
+import { OrdersModule } from '../orders/orders.module';
+import { DiscoveryService } from './discovery.service';
 
 const infrastructurePersistenceModule =
   RelationalThermalPrinterPersistenceModule;
@@ -15,10 +15,10 @@ const infrastructurePersistenceModule =
   imports: [
     infrastructurePersistenceModule,
     AuthModule,
-    OrdersModule, // Añadido para que PrintingService pueda usar OrdersService
+    OrdersModule,
   ],
-  controllers: [ThermalPrintersController, PrintingController], // Añadido PrintingController
-  providers: [ThermalPrintersService, PrintingService, DiscoveryService], // Corregido: DiscoveryService añadido aquí
-  exports: [ThermalPrintersService, infrastructurePersistenceModule], // No exportamos PrintingService por ahora
+  controllers: [ThermalPrintersController, PrintingController],
+  providers: [ThermalPrintersService, PrintingService, DiscoveryService],
+  exports: [ThermalPrintersService, infrastructurePersistenceModule],
 })
 export class ThermalPrintersModule {}

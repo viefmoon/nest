@@ -3,7 +3,7 @@ import { Customer } from '../../../../domain/customer';
 import { CustomerEntity } from '../entities/customer.entity';
 import { AddressMapper } from './address.mapper';
 import { BaseMapper, mapArray } from '../../../../../common/mappers/base.mapper';
-import { Address } from '../../../../domain/address';
+// Address import removed as it was unused
 
 @Injectable()
 export class CustomerMapper extends BaseMapper<CustomerEntity, Customer> {

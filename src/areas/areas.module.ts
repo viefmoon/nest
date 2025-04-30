@@ -4,12 +4,10 @@ import { AreasService } from './areas.service';
 import { RelationalAreaPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
 import { AuthModule } from '../auth/auth.module';
 
-const infrastructurePersistenceModule = RelationalAreaPersistenceModule;
-
 @Module({
-  imports: [infrastructurePersistenceModule, AuthModule],
+  imports: [RelationalAreaPersistenceModule, AuthModule],
   controllers: [AreasController],
   providers: [AreasService],
-  exports: [AreasService, infrastructurePersistenceModule],
+  exports: [AreasService, RelationalAreaPersistenceModule],
 })
 export class AreasModule {}

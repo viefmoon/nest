@@ -4,7 +4,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import bcrypt from 'bcryptjs';
 import { RoleEnum } from '../../../../roles/roles.enum';
-import { StatusEnum } from '../../../../statuses/statuses.enum';
 import { UserEntity } from '../../../../users/infrastructure/persistence/relational/entities/user.entity';
 
 @Injectable()
@@ -38,10 +37,7 @@ export class UserSeedService {
             id: RoleEnum.admin,
             name: 'Admin',
           },
-          status: {
-            id: StatusEnum.active,
-            name: 'Active',
-          },
+          isActive: true,
         }),
       );
     }
@@ -69,10 +65,7 @@ export class UserSeedService {
             id: RoleEnum.user,
             name: 'Admin',
           },
-          status: {
-            id: StatusEnum.active,
-            name: 'Active',
-          },
+          isActive: true,
         }),
       );
     }

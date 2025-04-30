@@ -1,44 +1,44 @@
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { PreparationScreen } from '../../../../domain/preparation-screen';
 import { PreparationScreenEntity } from '../entities/preparation-screen.entity';
 import { ProductMapper } from '../../../../../products/infrastructure/persistence/relational/mappers/product.mapper';
+import { BaseMapper, mapArray } from '../../../../../common/mappers/base.mapper';
+import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity';
 
-export class PreparationScreenMapper {
-  static toDomain(entity: PreparationScreenEntity): PreparationScreen {
-    const preparationScreen = new PreparationScreen();
-    preparationScreen.id = entity.id;
-    preparationScreen.name = entity.name;
-    preparationScreen.description = entity.description;
-    preparationScreen.isActive = entity.isActive;
-    preparationScreen.createdAt = entity.createdAt;
-    preparationScreen.updatedAt = entity.updatedAt;
-    preparationScreen.deletedAt = entity.deletedAt;
-
-    // Mapear productos si existen en la entidad (cargados con la relación)
-    if (entity.products) {
-      preparationScreen.products = entity.products.map((productEntity) =>
-        ProductMapper.toDomain(productEntity),
-      );
-    }
-
-    return preparationScreen;
+@Injectable()
+export class PreparationScreenMapper extends BaseMapper<PreparationScreenEntity, PreparationScreen> {
+  constructor(
+    @Inject(forwardRef(() => ProductMapper))
+    private readonly productMapper: ProductMapper,
+  ) {
+    super();
   }
 
-  static toPersistence(domain: PreparationScreen): PreparationScreenEntity {
+  override toDomain(entity: PreparationScreenEntity): PreparationScreen | null {
+    if (!entity) return null;
+    const domain = new PreparationScreen();
+    domain.id = entity.id;
+    domain.name = entity.name;
+    domain.description = entity.description;
+    domain.isActive = entity.isActive;
+    domain.products = mapArray(entity.products, (p) => this.productMapper.toDomain(p));
+    domain.createdAt = entity.createdAt;
+    domain.updatedAt = entity.updatedAt;
+    domain.deletedAt = entity.deletedAt;
+    return domain;
+  }
+
+  override toEntity(domain: PreparationScreen): PreparationScreenEntity | null {
+    if (!domain) return null;
     const entity = new PreparationScreenEntity();
-    entity.id = domain.id;
+    if (domain.id) entity.id = domain.id;
     entity.name = domain.name;
     entity.description = domain.description;
     entity.isActive = domain.isActive;
-    entity.createdAt = domain.createdAt;
-    entity.updatedAt = domain.updatedAt;
-    entity.deletedAt = domain.deletedAt;
 
-    // Mapear productos si existen en el dominio
-    // Nota: Generalmente no mapeamos relaciones inversas a la persistencia
-    // a menos que sea necesario para crear/actualizar la relación desde este lado.
-    // Para ManyToMany, TypeORM maneja la tabla intermedia basado en la entidad principal.
-    // Si necesitamos asignar productos al crear/actualizar la pantalla,
-    // la lógica estará en el servicio usando los IDs.
+    if (domain.products) {
+      entity.products = mapArray(domain.products, (p) => this.productMapper.toEntity(p) as ProductEntity);
+    }
 
     return entity;
   }

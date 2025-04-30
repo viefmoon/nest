@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { CategoryRepository } from './infrastructure/persistence/category.repository'; // Keep type for interface
+import { CategoryRepository } from './infrastructure/persistence/category.repository';
 import { CATEGORY_REPOSITORY } from '../common/tokens';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';

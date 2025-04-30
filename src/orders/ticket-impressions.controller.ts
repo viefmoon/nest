@@ -5,7 +5,7 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
-  UseGuards, // Importar UseGuards si se requiere autenticación/autorización
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiOperation,
@@ -13,26 +13,26 @@ import {
   ApiTags,
   ApiParam,
   ApiBearerAuth,
-} from '@nestjs/swagger'; // Importar ApiBearerAuth
+} from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { TicketImpression } from './domain/ticket-impression';
-import { AuthGuard } from '@nestjs/passport'; // Importar AuthGuard
-import { RolesGuard } from '../roles/roles.guard'; // Importar RolesGuard
-import { Roles } from '../roles/roles.decorator'; // Importar Roles
-import { RoleEnum } from '../roles/roles.enum'; // Importar RoleEnum
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../roles/roles.guard';
+import { Roles } from '../roles/roles.decorator';
+import { RoleEnum } from '../roles/roles.enum';
 
-@ApiTags('Order Ticket Impressions') // Etiqueta para Swagger
+@ApiTags('Order Ticket Impressions')
 @Controller({
-  path: 'orders/:orderId/ticket-impressions', // Ruta anidada bajo orders
+  path: 'orders/:orderId/ticket-impressions',
   version: '1',
 })
 export class TicketImpressionsController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Get()
-  @ApiBearerAuth() // Añadir si se requiere autenticación
-  @UseGuards(AuthGuard('jwt'), RolesGuard) // Añadir guardias
-  @Roles(RoleEnum.admin, RoleEnum.user) // Definir roles permitidos (ajustar según necesidad)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(RoleEnum.admin, RoleEnum.user)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary:
@@ -51,9 +51,7 @@ export class TicketImpressionsController {
   findAllByOrderId(
     @Param('orderId', ParseUUIDPipe) orderId: string,
   ): Promise<TicketImpression[]> {
-    // Se necesita un método en OrdersService para esto
     return this.ordersService.findImpressionsByOrderId(orderId);
   }
 
-  // Aquí se podrían añadir más endpoints si fueran necesarios (ej. GET /ticket-impressions/:impressionId)
 }

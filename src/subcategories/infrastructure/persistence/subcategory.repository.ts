@@ -1,5 +1,5 @@
 import { Paginated } from '../../../common/types/paginated.type';
-import { Subcategory } from '../../domain/Subcategory';
+import { Subcategory } from '../../domain/subcategory';
 
 export interface SubcategoryRepository {
   create(data: Subcategory): Promise<Subcategory>;

@@ -1,15 +1,17 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CategoryEntity } from './entities/category.entity';
-import { CategoriesRelationalRepository } from './repositories/categories-relational.repository';
+import { CategoriesRelationalRepository } from './repositories/categories.repository';
 import { CategoryMapper } from './mappers/category.mapper';
 import { CATEGORY_REPOSITORY } from '../../../../common/tokens';
-import { SubcategoriesRelationalPersistenceModule } from '../../../../subcategories/infrastructure/persistence/relational/relational-persistence.module';
+import { RelationalSubcategoryPersistenceModule } from '../../../../subcategories/infrastructure/persistence/relational/relational-persistence.module';
+import { RelationalFilePersistenceModule } from '../../../../files/infrastructure/persistence/relational/relational-persistence.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([CategoryEntity]),
-    SubcategoriesRelationalPersistenceModule,
+    forwardRef(() => RelationalSubcategoryPersistenceModule), // Usar forwardRef aquí
+    RelationalFilePersistenceModule,
   ],
   providers: [
     {

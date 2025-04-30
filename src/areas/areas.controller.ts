@@ -28,6 +28,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../roles/roles.decorator';
 import { RoleEnum } from '../roles/roles.enum';
 import { RolesGuard } from '../roles/roles.guard';
+import { Paginated } from '../common/types/paginated.type';
 
 @ApiTags('Areas')
 @Controller({
@@ -62,7 +63,7 @@ export class AreasController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'List of areas',
-    type: [Area],
+    type: Paginated<Area>,
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
@@ -70,7 +71,7 @@ export class AreasController {
     @Query() filterOptions: FindAllAreasDto,
     @Query('page') page = 1,
     @Query('limit') limit = 10,
-  ): Promise<Area[]> {
+  ): Promise<Paginated<Area>> {
     return this.areasService.findAll(filterOptions, {
       page,
       limit,

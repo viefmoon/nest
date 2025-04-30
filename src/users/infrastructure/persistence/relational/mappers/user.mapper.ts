@@ -1,73 +1,69 @@
-import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
-import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
+import { Injectable } from '@nestjs/common';
 import { RoleEntity } from '../../../../../roles/infrastructure/persistence/relational/entities/role.entity';
-import { StatusEntity } from '../../../../../statuses/infrastructure/persistence/relational/entities/status.entity';
 import { User } from '../../../../domain/user';
 import { UserEntity } from '../entities/user.entity';
+import { BaseMapper } from '../../../../../common/mappers/base.mapper';
 
-export class UserMapper {
-  static toDomain(raw: UserEntity): User {
-    const domainEntity = new User();
-    domainEntity.id = raw.id;
-    domainEntity.email = raw.email;
-    domainEntity.username = raw.username;
-    domainEntity.password = raw.password;
-    domainEntity.firstName = raw.firstName;
-    domainEntity.lastName = raw.lastName;
-    if (raw.photo) {
-      domainEntity.photo = FileMapper.toDomain(raw.photo);
-    }
-    // Eliminar la línea siguiente, ya que User.photo contiene el objeto FileType, no solo el ID
-    // domainEntity.photoId = raw.photo?.id ?? null;
-    domainEntity.role = raw.role;
-    domainEntity.status = raw.status;
-    domainEntity.createdAt = raw.createdAt;
-    domainEntity.updatedAt = raw.updatedAt;
-    domainEntity.deletedAt = raw.deletedAt;
-    return domainEntity;
+@Injectable()
+export class UserMapper extends BaseMapper<UserEntity, User> {
+  override toDomain(entity: UserEntity): User | null {
+    if (!entity) return null;
+    const domain = new User();
+    domain.id = entity.id;
+    domain.email = entity.email;
+    domain.username = entity.username;
+    domain.password = entity.password;
+    domain.firstName = entity.firstName;
+    domain.lastName = entity.lastName;
+    domain.role = {
+      id: entity.role.id,
+      name: entity.role.name ?? null,
+    };
+    domain.isActive = entity.isActive;
+    domain.createdAt = entity.createdAt;
+    domain.updatedAt = entity.updatedAt;
+    domain.deletedAt = entity.deletedAt;
+    domain.birthDate = entity.birthDate;
+    domain.gender = entity.gender;
+    domain.phoneNumber = entity.phoneNumber;
+    domain.address = entity.address;
+    domain.city = entity.city;
+    domain.state = entity.state;
+    domain.country = entity.country;
+    domain.zipCode = entity.zipCode;
+    domain.emergencyContact = entity.emergencyContact;
+    return domain;
   }
 
-  static toPersistence(domainEntity: User): UserEntity {
-    let role: RoleEntity | undefined = undefined;
-
-    if (domainEntity.role) {
-      role = new RoleEntity();
-      role.id = Number(domainEntity.role.id);
+  override toEntity(domain: User): UserEntity | null {
+    if (!domain) return null;
+    if (!domain.role) {
+      throw new Error('User domain entity must have a role to be mapped to persistence.');
     }
 
-    let photo: FileEntity | undefined | null = undefined;
+    const role = new RoleEntity();
+    role.id = Number(domain.role.id);
 
-    if (domainEntity.photo) {
-      photo = new FileEntity();
-      photo.id = domainEntity.photo.id;
-      photo.path = domainEntity.photo.path;
-    } else if (domainEntity.photo === null) {
-      photo = null;
+    const entity = new UserEntity();
+    if (domain.id) {
+      entity.id = domain.id;
     }
-
-    let status: StatusEntity | undefined = undefined;
-
-    if (domainEntity.status) {
-      status = new StatusEntity();
-      status.id = Number(domainEntity.status.id);
-    }
-
-    const persistenceEntity = new UserEntity();
-    // Asignar directamente el ID (string/uuid) si existe
-    if (domainEntity.id) {
-      persistenceEntity.id = domainEntity.id;
-    }
-    persistenceEntity.email = domainEntity.email;
-    persistenceEntity.username = domainEntity.username;
-    persistenceEntity.password = domainEntity.password;
-    persistenceEntity.firstName = domainEntity.firstName;
-    persistenceEntity.lastName = domainEntity.lastName;
-    persistenceEntity.photo = photo;
-    persistenceEntity.role = role;
-    persistenceEntity.status = status;
-    persistenceEntity.createdAt = domainEntity.createdAt;
-    persistenceEntity.updatedAt = domainEntity.updatedAt;
-    persistenceEntity.deletedAt = domainEntity.deletedAt;
-    return persistenceEntity;
+    entity.email = domain.email;
+    entity.username = domain.username;
+    entity.password = domain.password;
+    entity.firstName = domain.firstName;
+    entity.lastName = domain.lastName;
+    entity.role = role;
+    entity.isActive = domain.isActive;
+    entity.birthDate = domain.birthDate;
+    entity.gender = domain.gender;
+    entity.phoneNumber = domain.phoneNumber;
+    entity.address = domain.address;
+    entity.city = domain.city;
+    entity.state = domain.state;
+    entity.country = domain.country;
+    entity.zipCode = domain.zipCode;
+    entity.emergencyContact = domain.emergencyContact;
+    return entity;
   }
 }

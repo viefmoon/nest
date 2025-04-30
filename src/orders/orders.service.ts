@@ -6,7 +6,6 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { FindAllOrdersDto } from './dto/find-all-orders.dto';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { OrderStatus } from './domain/enums/order-status.enum';
-import { DailyOrderCounterRepository } from './infrastructure/persistence/daily-order-counter.repository';
 import { OrderItemModifierRepository } from './infrastructure/persistence/order-item-modifier.repository';
 import { OrderItemModifier } from './domain/order-item-modifier';
 import { OrderItemRepository } from './infrastructure/persistence/order-item.repository';
@@ -19,26 +18,24 @@ import { v4 as uuidv4 } from 'uuid';
 import { TicketImpressionRepository } from './infrastructure/persistence/ticket-impression.repository';
 import { TicketType } from './domain/enums/ticket-type.enum';
 import { TicketImpression } from './domain/ticket-impression';
-// Importar ProductModifierRepository si se implementa la lógica de precio por defecto
-// import { ProductModifierRepository } from '../product-modifiers/infrastructure/persistence/product-modifier.repository';
-
+import {
+  ORDER_REPOSITORY,
+  ORDER_ITEM_REPOSITORY,
+  ORDER_ITEM_MODIFIER_REPOSITORY,
+  TICKET_IMPRESSION_REPOSITORY,
+} from '../common/tokens'; 
 @Injectable()
 export class OrdersService {
   constructor(
-    @Inject('OrderRepository')
+    @Inject(ORDER_REPOSITORY) 
     private readonly orderRepository: OrderRepository,
-    @Inject('DailyOrderCounterRepository')
-    private readonly dailyOrderCounterRepository: DailyOrderCounterRepository,
-    @Inject('OrderItemModifierRepository')
+    @Inject(ORDER_ITEM_MODIFIER_REPOSITORY) 
     private readonly orderItemModifierRepository: OrderItemModifierRepository,
-    @Inject('OrderItemRepository')
+    @Inject(ORDER_ITEM_REPOSITORY)
     private readonly orderItemRepository: OrderItemRepository,
-    @Inject('TicketImpressionRepository')
+    @Inject(TICKET_IMPRESSION_REPOSITORY) 
     private readonly ticketImpressionRepository: TicketImpressionRepository,
-    // Inyectar ProductModifierRepository si es necesario para precios por defecto
-    // @Inject('ProductModifierRepository')
-    // private readonly productModifierRepository: ProductModifierRepository,
-  ) {}
+) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
     const order = await this.orderRepository.create({
@@ -96,18 +93,17 @@ export class OrdersService {
   ): Promise<OrderItem> {
     await this.findOne(createOrderItemDto.orderId); // Verificar orden
 
-    const orderItem = OrderItem.create(
-      uuidv4(),
-      createOrderItemDto.orderId,
-      createOrderItemDto.productId,
-      createOrderItemDto.productVariantId || null,
-      createOrderItemDto.quantity,
-      createOrderItemDto.basePrice,
-      createOrderItemDto.finalPrice,
-      PreparationStatus.PENDING,
-      new Date(),
-      createOrderItemDto.preparationNotes || null,
-    );
+    const orderItem = new OrderItem();
+    orderItem.id = uuidv4();
+    orderItem.orderId = createOrderItemDto.orderId;
+    orderItem.productId = createOrderItemDto.productId;
+    orderItem.productVariantId = createOrderItemDto.productVariantId || null;
+    orderItem.quantity = createOrderItemDto.quantity;
+    orderItem.basePrice = createOrderItemDto.basePrice;
+    orderItem.finalPrice = createOrderItemDto.finalPrice;
+    orderItem.preparationStatus = PreparationStatus.PENDING;
+    orderItem.statusChangedAt = new Date();
+    orderItem.preparationNotes = createOrderItemDto.preparationNotes || null;
     return this.orderItemRepository.save(orderItem);
   }
 
@@ -229,27 +225,26 @@ export class OrdersService {
           : existingOrderItem.preparationNotes,
     };
 
-    // Usar el método estático create para asegurar la lógica de dominio si existe
-    const updatedOrderItem = OrderItem.create(
-      updatedData.id,
-      updatedData.orderId,
-      updatedData.productId,
-      updatedData.productVariantId,
-      updatedData.quantity,
-      updatedData.basePrice,
-      updatedData.finalPrice,
-      updatedData.preparationStatus,
-      updatedData.statusChangedAt,
-      updatedData.preparationNotes,
-      // Pasar otras propiedades si son necesarias para create
-      existingOrderItem.order,
-      existingOrderItem.product,
-      existingOrderItem.productVariant,
-      existingOrderItem.modifiers,
-      existingOrderItem.createdAt,
-      existingOrderItem.updatedAt, // Esto será sobrescrito por TypeORM
-      existingOrderItem.deletedAt,
-    );
+    // Crear instancia y asignar propiedades
+    const updatedOrderItem = new OrderItem();
+    updatedOrderItem.id = updatedData.id;
+    updatedOrderItem.orderId = updatedData.orderId;
+    updatedOrderItem.productId = updatedData.productId;
+    updatedOrderItem.productVariantId = updatedData.productVariantId;
+    updatedOrderItem.quantity = updatedData.quantity;
+    updatedOrderItem.basePrice = updatedData.basePrice;
+    updatedOrderItem.finalPrice = updatedData.finalPrice;
+    updatedOrderItem.preparationStatus = updatedData.preparationStatus;
+    updatedOrderItem.statusChangedAt = updatedData.statusChangedAt;
+    updatedOrderItem.preparationNotes = updatedData.preparationNotes;
+    // Asignar relaciones y timestamps existentes si es necesario para el repositorio
+    updatedOrderItem.order = existingOrderItem.order;
+    updatedOrderItem.product = existingOrderItem.product;
+    updatedOrderItem.productVariant = existingOrderItem.productVariant;
+    updatedOrderItem.modifiers = existingOrderItem.modifiers;
+    updatedOrderItem.createdAt = existingOrderItem.createdAt;
+    // updatedAt y deletedAt serán manejados por TypeORM o el repositorio
+    updatedOrderItem.deletedAt = existingOrderItem.deletedAt;
 
     return this.orderItemRepository.update(updatedOrderItem);
   }
@@ -280,14 +275,13 @@ export class OrdersService {
     // const productModifier = await this.productModifierRepository.findById(data.productModifierId);
     // const finalPrice = data.price ?? productModifier?.price ?? 0;
 
-    const orderItemModifier = OrderItemModifier.create(
-      uuidv4(),
-      data.orderItemId,
-      data.productModifierId, // Usar productModifierId
-      null, // modifierOptionId ya no se usa aquí
-      data.quantity ?? 1, // Usar default si no se provee
-      data.price ?? 0, // Usar default 0 si es null/undefined (o precio de catálogo)
-    );
+    const orderItemModifier = new OrderItemModifier();
+    orderItemModifier.id = uuidv4();
+    orderItemModifier.orderItemId = data.orderItemId;
+    orderItemModifier.modifierId = data.productModifierId; // Asignar a modifierId
+    orderItemModifier.modifierOptionId = null; // Mantener como null
+    orderItemModifier.quantity = data.quantity ?? 1;
+    orderItemModifier.price = data.price ?? 0;
 
     return this.orderItemModifierRepository.save(orderItemModifier);
   }
@@ -331,19 +325,19 @@ export class OrdersService {
           : existingModifier.price, // Permite null
     };
 
-    // Usar el método estático create para la lógica de dominio
-    const updatedModifier = OrderItemModifier.create(
-      updatedData.id,
-      updatedData.orderItemId,
-      updatedData.modifierId,
-      updatedData.modifierOptionId,
-      updatedData.quantity,
-      updatedData.price ?? 0, // CORRECCIÓN: Asegurar que sea number (usar 0 si es null)
-      existingModifier.orderItem, // Pasar relaciones si son necesarias
-      existingModifier.createdAt,
-      existingModifier.updatedAt, // Será sobrescrito
-      existingModifier.deletedAt,
-    );
+    // Crear instancia y asignar propiedades
+    const updatedModifier = new OrderItemModifier();
+    updatedModifier.id = updatedData.id;
+    updatedModifier.orderItemId = updatedData.orderItemId;
+    updatedModifier.modifierId = updatedData.modifierId;
+    updatedModifier.modifierOptionId = updatedData.modifierOptionId;
+    updatedModifier.quantity = updatedData.quantity;
+    updatedModifier.price = updatedData.price ?? 0; // Asegurar que sea number
+    // Asignar relaciones y timestamps existentes si es necesario para el repositorio
+    updatedModifier.orderItem = existingModifier.orderItem;
+    updatedModifier.createdAt = existingModifier.createdAt;
+    // updatedAt y deletedAt serán manejados por TypeORM o el repositorio
+    updatedModifier.deletedAt = existingModifier.deletedAt;
 
     // Pasar el objeto creado con lógica de dominio
     return this.orderItemModifierRepository.update(updatedModifier);

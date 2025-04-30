@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'; // Añadir InternalServerErrorException
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OrderEntity } from '../entities/order.entity'; // Importar OrderEntity
-import { NotFoundException } from '@nestjs/common'; // Importar NotFoundException
 
 import { OrderItem } from '../../../../domain/order-item';
 import { OrderItemRepository } from '../../order-item.repository';
@@ -10,12 +9,13 @@ import { OrderItemEntity } from '../entities/order-item.entity';
 import { OrderItemMapper } from '../mappers/order-item.mapper';
 
 @Injectable()
-export class OrderItemRepositoryImpl implements OrderItemRepository {
+export class OrderItemRelationalRepository implements OrderItemRepository {
   constructor(
     @InjectRepository(OrderItemEntity)
     private readonly orderItemRepository: Repository<OrderItemEntity>,
     @InjectRepository(OrderEntity) // Inyectar OrderRepository
     private readonly orderRepository: Repository<OrderEntity>,
+    private readonly orderItemMapper: OrderItemMapper, // Inyectar el mapper
   ) {}
 
   async findById(id: string): Promise<OrderItem | null> {
@@ -28,7 +28,7 @@ export class OrderItemRepositoryImpl implements OrderItemRepository {
       return null;
     }
 
-    return OrderItemMapper.toDomain(orderItemEntity);
+    return this.orderItemMapper.toDomain(orderItemEntity); // Usar instancia
   }
 
   async findByOrderId(orderId: string): Promise<OrderItem[]> {
@@ -37,7 +37,10 @@ export class OrderItemRepositoryImpl implements OrderItemRepository {
       relations: ['order', 'modifiers'],
     });
 
-    return orderItemEntities.map(OrderItemMapper.toDomain);
+    // Usar instancia y filtrar nulos
+    return orderItemEntities
+      .map((entity) => this.orderItemMapper.toDomain(entity))
+      .filter((item): item is OrderItem => item !== null);
   }
 
   async save(orderItem: OrderItem): Promise<OrderItem> {
@@ -51,10 +54,12 @@ export class OrderItemRepositoryImpl implements OrderItemRepository {
       );
     }
 
-    const orderItemEntity = OrderItemMapper.toPersistence(orderItem);
-    // Ya no asignar explícitamente a orderId (es @RelationId y de solo lectura)
-    // Asignar la relación completa es suficiente. El mapper ya asigna el stub { id: ... } también.
-    orderItemEntity.order = orderEntity; // Asignar la relación completa
+    const orderItemEntity = this.orderItemMapper.toEntity(orderItem); // Usar instancia
+    if (!orderItemEntity) {
+      throw new InternalServerErrorException('Error mapping OrderItem domain to entity for save');
+    }
+    // No es necesario asignar orderEntity manually si el mapper lo hace correctamente
+    // orderItemEntity.order = orderEntity;
 
     const savedEntity = await this.orderItemRepository.save(orderItemEntity);
 
@@ -65,36 +70,36 @@ export class OrderItemRepositoryImpl implements OrderItemRepository {
     });
 
     if (!reloadedEntity) {
-      throw new NotFoundException(
+      throw new InternalServerErrorException( // Usar InternalServerErrorException
         `OrderItem with ID ${savedEntity.id} not found after saving.`,
       );
     }
 
-    return OrderItemMapper.toDomain(reloadedEntity);
+    const domainResult = this.orderItemMapper.toDomain(reloadedEntity); // Usar instancia
+    if (!domainResult) {
+      throw new InternalServerErrorException('Error mapping reloaded OrderItem entity to domain');
+    }
+    return domainResult;
   }
 
   async update(orderItem: OrderItem): Promise<OrderItem> {
     // Similar a save, asegurar que la relación 'order' esté presente si es necesario
     // aunque 'update' generalmente no cambia las relaciones principales.
     // Por simplicidad y dado que el error es en INSERT, dejamos update como está por ahora,
-    // pero podría necesitar lógica similar a 'save' si se actualiza 'orderId'.
-    const existingEntity = await this.orderItemRepository.findOneBy({
-      id: orderItem.id,
-    });
-    if (!existingEntity) {
-      throw new NotFoundException(
-        `OrderItem with ID ${orderItem.id} not found for update.`,
-      );
+    // Usar save para actualizar, ya que maneja inserción o actualización basada en ID
+    const entityToUpdate = this.orderItemMapper.toEntity(orderItem); // Usar instancia
+    if (!entityToUpdate || !entityToUpdate.id) { // Verificar entidad e ID
+        throw new InternalServerErrorException('Error mapping OrderItem domain to entity for update or ID missing');
     }
 
-    // Mapear los datos actualizados a una entidad parcial
-    const partialEntity = OrderItemMapper.toPersistence(orderItem);
+    // Verificar si la entidad existe antes de intentar guardarla (opcional pero bueno)
+    const exists = await this.orderItemRepository.existsBy({ id: entityToUpdate.id });
+    if (!exists) {
+        throw new NotFoundException(`OrderItem with ID ${entityToUpdate.id} not found for update.`);
+    }
 
-    // Fusionar los cambios en la entidad existente
-    this.orderItemRepository.merge(existingEntity, partialEntity);
-
-    // Guardar la entidad fusionada
-    const updatedEntity = await this.orderItemRepository.save(existingEntity);
+    // Guardar la entidad mapeada (save actualizará si el ID existe)
+    const updatedEntity = await this.orderItemRepository.save(entityToUpdate);
 
     // Recargar para obtener el estado final con relaciones
     const reloadedEntity = await this.orderItemRepository.findOne({
@@ -103,12 +108,16 @@ export class OrderItemRepositoryImpl implements OrderItemRepository {
     });
 
     if (!reloadedEntity) {
-      throw new NotFoundException(
+      throw new InternalServerErrorException( // Usar InternalServerErrorException
         `OrderItem with ID ${updatedEntity.id} not found after updating.`,
       );
     }
 
-    return OrderItemMapper.toDomain(reloadedEntity);
+    const domainResult = this.orderItemMapper.toDomain(reloadedEntity); // Usar instancia
+    if (!domainResult) {
+        throw new InternalServerErrorException('Error mapping reloaded OrderItem entity to domain after update');
+    }
+    return domainResult;
   }
 
   async delete(id: string): Promise<void> {

@@ -1,11 +1,9 @@
 import {
-  // decorators here
   Transform,
   Type,
 } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  // decorators here
   IsEmail,
   IsNotEmpty,
   IsOptional,
@@ -14,6 +12,7 @@ import {
   IsISO8601,
   IsString,
   IsObject,
+  IsBoolean,
 } from 'class-validator';
 import { RoleDto } from '../../roles/dto/role.dto';
 import { lowerCaseTransformer } from '../../utils/transformers/lower-case.transformer';
@@ -93,10 +92,13 @@ export class CreateUserDto {
   @IsObject()
   emergencyContact?: Record<string, any>;
 
-
-  @ApiPropertyOptional({ type: RoleDto })
-  @IsOptional()
+  @ApiProperty({ type: RoleDto })
+  @IsNotEmpty({ message: 'El rol es obligatorio' })
   @Type(() => RoleDto)
-  role?: RoleDto | null;
+  role: RoleDto;
 
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }

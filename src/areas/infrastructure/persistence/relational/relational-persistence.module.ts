@@ -3,9 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AREA_REPOSITORY } from '../../../../common/tokens';
 import { AreaEntity } from './entities/area.entity';
 import { AreasRelationalRepository } from './repositories/area.repository';
-import { AreaMapper } from './mappers/area.mapper'; 
-
-export const AREA_MAPPER = Symbol('AREA_MAPPER'); 
+import { AreaMapper } from './mappers/area.mapper';
 
 @Module({
   imports: [TypeOrmModule.forFeature([AreaEntity])],
@@ -14,8 +12,8 @@ export const AREA_MAPPER = Symbol('AREA_MAPPER');
       provide: AREA_REPOSITORY,
       useClass: AreasRelationalRepository,
     },
-    { provide: AREA_MAPPER, useClass: AreaMapper }, 
+    AreaMapper,
   ],
-  exports: [AREA_REPOSITORY, AREA_MAPPER],
+  exports: [AREA_REPOSITORY, AreaMapper],
 })
 export class RelationalAreaPersistenceModule {}

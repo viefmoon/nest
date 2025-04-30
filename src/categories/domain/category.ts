@@ -7,11 +7,8 @@ export class Category {
   description: string | null;
   isActive: boolean;
   photoId: string | null;
-
   photo: FileType | null;
-
   subcategories: Subcategory[] | null;
-
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

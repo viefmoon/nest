@@ -1,11 +1,9 @@
 import { Exclude, Expose } from 'class-transformer';
 import { Role } from '../../roles/domain/role';
-// Eliminada la importación de Status
 import { GenderEnum } from '../enums/gender.enum';
-// Eliminada la importación de FileType
 
 export class User {
-  id: string; // Cambiado a string para reflejar el tipo UUID
+  id: string;
 
   @Expose({ groups: ['me', 'admin'] })
   email: string | null;
@@ -39,7 +37,7 @@ export class User {
   emergencyContact: Record<string, any> | null;
 
 
-  role: Role | null;
+  role: Role
 
   isActive: boolean;
 

@@ -1,4 +1,4 @@
-import { Address } from './address'; // Importaremos Address más adelante
+import { Address } from './address';
 
 export class Customer {
   id: string;

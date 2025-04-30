@@ -4,7 +4,6 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  // IsUUID, // Eliminar esta línea
   MaxLength,
 } from 'class-validator';
 

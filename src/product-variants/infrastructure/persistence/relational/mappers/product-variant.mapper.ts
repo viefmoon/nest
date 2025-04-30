@@ -1,28 +1,36 @@
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { ProductVariant } from '../../../../domain/product-variant';
 import { ProductVariantEntity } from '../entities/product-variant.entity';
 import { ProductMapper } from '../../../../../products/infrastructure/persistence/relational/mappers/product.mapper';
-import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity'; // Necesario para stub
+import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity';
+import { BaseMapper } from '../../../../../common/mappers/base.mapper';
 
-export class ProductVariantMapper {
-  static toDomain(entity: ProductVariantEntity): ProductVariant {
-    const productVariant = new ProductVariant();
-    productVariant.id = entity.id;
-    productVariant.productId = entity.product?.id;
-    productVariant.name = entity.name;
-    productVariant.price = entity.price;
-    productVariant.isActive = entity.isActive;
-    productVariant.createdAt = entity.createdAt;
-    productVariant.updatedAt = entity.updatedAt;
-    productVariant.deletedAt = entity.deletedAt;
-
-    if (entity.product) {
-      productVariant.product = ProductMapper.toDomain(entity.product);
-    }
-
-    return productVariant;
+@Injectable()
+export class ProductVariantMapper extends BaseMapper<ProductVariantEntity, ProductVariant> {
+  constructor(
+    @Inject(forwardRef(() => ProductMapper))
+    private readonly productMapper: ProductMapper
+  ) {
+    super();
   }
 
-  static toPersistence(domain: ProductVariant): ProductVariantEntity {
+  override toDomain(entity: ProductVariantEntity): ProductVariant | null {
+    if (!entity) return null;
+    const domain = new ProductVariant();
+    domain.id = entity.id;
+    domain.productId = entity.product!.id;
+    domain.name = entity.name;
+    domain.price = entity.price;
+    domain.isActive = entity.isActive;
+    domain.createdAt = entity.createdAt;
+    domain.updatedAt = entity.updatedAt;
+    domain.deletedAt = entity.deletedAt;
+    domain.product = this.productMapper.toDomain(entity.product!)!;
+    return domain;
+  }
+
+  override toEntity(domain: ProductVariant): ProductVariantEntity | null {
+    if (!domain) return null;
     const entity = new ProductVariantEntity();
     entity.id = domain.id;
     entity.product = { id: domain.productId } as ProductEntity;

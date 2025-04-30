@@ -1,19 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository, DeepPartial as TypeOrmDeepPartial } from 'typeorm'; // Importar DeepPartial de typeorm y renombrar
+import { In, Repository, DeepPartial as TypeOrmDeepPartial } from 'typeorm';
 import { AddressEntity } from '../entities/address.entity';
 import { AddressRepository } from '../../address.repository';
 import { Address } from '../../../../domain/address';
 import { AddressMapper } from '../mappers/address.mapper';
 import { NullableType } from '../../../../../utils/types/nullable.type';
-// Eliminar la importación del DeepPartial personalizado
-// import { DeepPartial } from '../../../../../utils/types/deep-partial.type';
 
 @Injectable()
 export class AddressRelationalRepository implements AddressRepository {
   constructor(
     @InjectRepository(AddressEntity)
     private readonly addressRepository: Repository<AddressEntity>,
+    private readonly addressMapper: AddressMapper, // Injected directly
   ) {}
 
   async create(
@@ -22,11 +21,13 @@ export class AddressRelationalRepository implements AddressRepository {
       'id' | 'createdAt' | 'deletedAt' | 'updatedAt' | 'customer'
     >,
   ): Promise<Address> {
-    const persistenceModel = AddressMapper.toPersistence(data as Address);
+    const persistenceModel = this.addressMapper.toEntity(data as Address);
+    if (!persistenceModel) {
+      throw new InternalServerErrorException('Could not map address domain to entity');
+    }
     const newEntity = await this.addressRepository.save(
       this.addressRepository.create(persistenceModel),
     );
-    // Recargar para obtener relaciones (customer)
     const completeEntity = await this.addressRepository.findOne({
       where: { id: newEntity.id },
       relations: ['customer'],
@@ -34,9 +35,9 @@ export class AddressRelationalRepository implements AddressRepository {
     if (!completeEntity) {
       throw new Error(`Failed to load created address with ID ${newEntity.id}`);
     }
-    const domainEntity = AddressMapper.toDomain(completeEntity);
+    const domainEntity = this.addressMapper.toDomain(completeEntity);
     if (!domainEntity) {
-      throw new Error(
+      throw new InternalServerErrorException(
         `Failed to map created address with ID ${newEntity.id} to domain`,
       );
     }
@@ -48,7 +49,7 @@ export class AddressRelationalRepository implements AddressRepository {
       where: { id },
       relations: ['customer'],
     });
-    return entity ? AddressMapper.toDomain(entity) : null;
+    return entity ? this.addressMapper.toDomain(entity) : null;
   }
 
   async findByCustomerId(
@@ -56,17 +57,17 @@ export class AddressRelationalRepository implements AddressRepository {
   ): Promise<Address[]> {
     const entities = await this.addressRepository.find({
       where: { customerId },
-      relations: ['customer'], // Opcional cargar el cliente aquí
-      order: { isDefault: 'DESC', createdAt: 'ASC' }, // Predeterminada primero, luego por fecha
+      relations: ['customer'],
+      order: { isDefault: 'DESC', createdAt: 'ASC' },
     });
     return entities
-      .map((entity) => AddressMapper.toDomain(entity))
+      .map((entity) => this.addressMapper.toDomain(entity))
       .filter((address): address is Address => address !== null);
   }
 
   async update(
     id: Address['id'],
-    payload: TypeOrmDeepPartial<Address>, // Usar el DeepPartial de TypeORM aquí
+    payload: TypeOrmDeepPartial<Address>,
   ): Promise<Address | null> {
     const entity = await this.addressRepository.findOne({ where: { id } });
     if (!entity) {
@@ -75,10 +76,9 @@ export class AddressRelationalRepository implements AddressRepository {
     const updatedEntity = await this.addressRepository.save(
       this.addressRepository.merge(
         entity,
-        payload as TypeOrmDeepPartial<AddressEntity>, // Usar el DeepPartial de TypeORM aquí también
+        payload as TypeOrmDeepPartial<AddressEntity>,
       ),
     );
-    // Recargar para obtener relaciones actualizadas
     const completeEntity = await this.addressRepository.findOne({
       where: { id: updatedEntity.id },
       relations: ['customer'],
@@ -88,9 +88,9 @@ export class AddressRelationalRepository implements AddressRepository {
         `Failed to load updated address with ID ${updatedEntity.id}`,
       );
     }
-    const domainEntity = AddressMapper.toDomain(completeEntity);
+    const domainEntity = this.addressMapper.toDomain(completeEntity);
     if (!domainEntity) {
-      throw new Error(
+      throw new InternalServerErrorException(
         `Failed to map updated address with ID ${updatedEntity.id} to domain`,
       );
     }
@@ -98,9 +98,11 @@ export class AddressRelationalRepository implements AddressRepository {
   }
 
   async save(address: Address): Promise<Address> {
-    const entity = AddressMapper.toPersistence(address);
+    const entity = this.addressMapper.toEntity(address);
+     if (!entity) {
+      throw new InternalServerErrorException('Could not map address domain to entity for saving');
+    }
     const savedEntity = await this.addressRepository.save(entity);
-    // Recargar para obtener relaciones
     const completeEntity = await this.addressRepository.findOne({
       where: { id: savedEntity.id },
       relations: ['customer'],
@@ -108,9 +110,9 @@ export class AddressRelationalRepository implements AddressRepository {
     if (!completeEntity) {
       throw new Error(`Failed to load saved address with ID ${savedEntity.id}`);
     }
-    const domainEntity = AddressMapper.toDomain(completeEntity);
+    const domainEntity = this.addressMapper.toDomain(completeEntity);
     if (!domainEntity) {
-      throw new Error(
+      throw new InternalServerErrorException(
         `Failed to map saved address with ID ${savedEntity.id} to domain`,
       );
     }

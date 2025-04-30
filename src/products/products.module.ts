@@ -1,16 +1,16 @@
-import { Module, forwardRef } from '@nestjs/common'; // Import forwardRef
+import { Module } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductsController } from './products.controller';
-import { ProductRelationalPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
+import { RelationalProductPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
 import { ProductVariantsModule } from '../product-variants/product-variants.module';
-import { ModifierGroupsModule } from '../modifier-groups/modifier-groups.module'; // Importar ModifierGroupsModule
-import { PreparationScreensModule } from '../preparation-screens/preparation-screens.module'; // Añadido
+import { ModifierGroupsModule } from '../modifier-groups/modifier-groups.module';
+import { RelationalPreparationScreenPersistenceModule } from '../preparation-screens/infrastructure/persistence/relational/relational-persistence.module'; // Importar el módulo faltante
 @Module({
   imports: [
-    ProductRelationalPersistenceModule,
+    RelationalProductPersistenceModule,
     ProductVariantsModule,
-    ModifierGroupsModule, // Añadir ModifierGroupsModule a los imports
-    forwardRef(() => PreparationScreensModule), // Use forwardRef here
+    ModifierGroupsModule,
+    RelationalPreparationScreenPersistenceModule,
   ],
   controllers: [ProductsController],
   providers: [ProductsService],

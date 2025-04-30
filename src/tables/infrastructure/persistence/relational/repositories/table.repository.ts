@@ -14,15 +14,18 @@ export class TablesRelationalRepository implements TableRepository {
   constructor(
     @InjectRepository(TableEntity)
     private readonly tablesRepository: Repository<TableEntity>,
+    private readonly tableMapper: TableMapper,
   ) {}
 
   async create(data: Table): Promise<Table> {
-    const persistenceModel = TableMapper.toPersistence(data);
+    const persistenceModel = this.tableMapper.toEntity(data);
+    if (!persistenceModel) {
+      throw new Error('Error creating table entity');
+    }
     const newEntity = await this.tablesRepository.save(
       this.tablesRepository.create(persistenceModel),
     );
 
-    // Cargar la entidad completa con el área
     const completeEntity = await this.tablesRepository.findOne({
       where: { id: newEntity.id },
       relations: ['area'],
@@ -34,7 +37,11 @@ export class TablesRelationalRepository implements TableRepository {
       );
     }
 
-    return TableMapper.toDomain(completeEntity);
+    const domainResult = this.tableMapper.toDomain(completeEntity);
+    if (!domainResult) {
+      throw new Error('Error mapping created table entity to domain');
+    }
+    return domainResult;
   }
 
   async findManyWithPagination({
@@ -77,7 +84,9 @@ export class TablesRelationalRepository implements TableRepository {
       relations: ['area'],
     });
 
-    return entities.map((table) => TableMapper.toDomain(table));
+    return entities
+      .map((table) => this.tableMapper.toDomain(table))
+      .filter((item): item is Table => item !== null);
   }
 
   async findById(id: Table['id']): Promise<NullableType<Table>> {
@@ -86,7 +95,7 @@ export class TablesRelationalRepository implements TableRepository {
       relations: ['area'],
     });
 
-    return entity ? TableMapper.toDomain(entity) : null;
+    return entity ? this.tableMapper.toDomain(entity) : null;
   }
 
   async findByName(name: Table['name']): Promise<NullableType<Table>> {
@@ -95,7 +104,7 @@ export class TablesRelationalRepository implements TableRepository {
       relations: ['area'],
     });
 
-    return entity ? TableMapper.toDomain(entity) : null;
+    return entity ? this.tableMapper.toDomain(entity) : null;
   }
 
   async findByAreaId(areaId: Table['areaId']): Promise<Table[]> {
@@ -104,7 +113,9 @@ export class TablesRelationalRepository implements TableRepository {
       relations: ['area'],
     });
 
-    return entities.map((table) => TableMapper.toDomain(table));
+    return entities
+      .map((table) => this.tableMapper.toDomain(table))
+      .filter((item): item is Table => item !== null);
   }
 
   async update(id: Table['id'], payload: Partial<Table>): Promise<Table> {
@@ -117,16 +128,22 @@ export class TablesRelationalRepository implements TableRepository {
       throw new Error('Table not found');
     }
 
+    const domainEntity = this.tableMapper.toDomain(entity);
+    if (!domainEntity) {
+      throw new Error('Error mapping existing table entity to domain');
+    }
+
+    const updatedDomain = { ...domainEntity, ...payload };
+    const persistenceModel = this.tableMapper.toEntity(updatedDomain);
+
+    if (!persistenceModel) {
+      throw new Error('Error creating table entity for update');
+    }
+
     const updatedEntity = await this.tablesRepository.save(
-      this.tablesRepository.create(
-        TableMapper.toPersistence({
-          ...TableMapper.toDomain(entity),
-          ...payload,
-        }),
-      ),
+      this.tablesRepository.create(persistenceModel),
     );
 
-    // Cargar la entidad actualizada con el área
     const completeEntity = await this.tablesRepository.findOne({
       where: { id: updatedEntity.id },
       relations: ['area'],
@@ -138,7 +155,11 @@ export class TablesRelationalRepository implements TableRepository {
       );
     }
 
-    return TableMapper.toDomain(completeEntity);
+    const domainResult = this.tableMapper.toDomain(completeEntity);
+    if (!domainResult) {
+      throw new Error('Error mapping updated table entity to domain');
+    }
+    return domainResult;
   }
 
   async remove(id: Table['id']): Promise<void> {

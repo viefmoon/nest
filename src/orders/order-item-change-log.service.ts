@@ -1,12 +1,11 @@
-// src/orders/order-item-change-log.service.ts
 import { Injectable, Inject } from '@nestjs/common';
 import { OrderItemHistoryRepository } from './infrastructure/persistence/order-item-history.repository';
 import { UsersService } from '../users/users.service';
+import { ORDER_ITEM_HISTORY_REPOSITORY } from '../common/tokens';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { OrderItemHistoryEntity } from './infrastructure/persistence/relational/entities/order-item-history.entity';
 import { User } from '../users/domain/user';
 
-// DTO para la respuesta enriquecida
 export class EnrichedOrderItemHistoryDto extends OrderItemHistoryEntity {
   changedByUser?: Pick<
     User,
@@ -17,7 +16,7 @@ export class EnrichedOrderItemHistoryDto extends OrderItemHistoryEntity {
 @Injectable()
 export class OrderItemChangeLogService {
   constructor(
-    @Inject('OrderItemHistoryRepository') // Usar el token de inyección
+    @Inject(ORDER_ITEM_HISTORY_REPOSITORY)
     private readonly historyRepository: OrderItemHistoryRepository,
     private readonly usersService: UsersService,
   ) {}

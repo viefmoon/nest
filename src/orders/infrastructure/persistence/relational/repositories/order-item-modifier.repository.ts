@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OrderItemModifierRepository } from '../../order-item-modifier.repository';
@@ -13,6 +13,7 @@ export class OrderItemModifierRelationalRepository
   constructor(
     @InjectRepository(OrderItemModifierEntity)
     private readonly orderItemModifierRepository: Repository<OrderItemModifierEntity>,
+    private readonly orderItemModifierMapper: OrderItemModifierMapper,
   ) {}
 
   async findById(id: string): Promise<OrderItemModifier | null> {
@@ -25,36 +26,70 @@ export class OrderItemModifierRelationalRepository
       return null;
     }
 
-    return OrderItemModifierMapper.toDomain(entity);
+    const domainResult = this.orderItemModifierMapper.toDomain(entity);
+    return domainResult;
   }
 
   async findByOrderItemId(orderItemId: string): Promise<OrderItemModifier[]> {
-    // Usar QueryBuilder para filtrar por el ID de la relación orderItem
     const queryBuilder = this.orderItemModifierRepository
-      .createQueryBuilder('oim') // Alias para OrderItemModifierEntity
-      .leftJoinAndSelect('oim.orderItem', 'oi') // Unir y seleccionar la relación orderItem (alias 'oi')
-      .leftJoinAndSelect('oim.modifier', 'pm') // Unir y seleccionar la relación modifier (alias 'pm', equivalente a relations: ['productModifier'])
-      .where('oi.id = :orderItemId', { orderItemId }); // Filtrar por el ID del orderItem relacionado
+      .createQueryBuilder('oim')
+      .leftJoinAndSelect('oim.orderItem', 'oi')
+      .leftJoinAndSelect('oim.modifier', 'pm')
+      .where('oi.id = :orderItemId', { orderItemId });
 
-    const entities = await queryBuilder.getMany(); // Ejecutar la consulta
+    const entities = await queryBuilder.getMany();
 
-    return entities.map((entity) => OrderItemModifierMapper.toDomain(entity));
+    return entities
+      .map((entity) => this.orderItemModifierMapper.toDomain(entity))
+      .filter((item): item is OrderItemModifier => item !== null);
   }
 
   async save(orderItemModifier: OrderItemModifier): Promise<OrderItemModifier> {
-    const entity = OrderItemModifierMapper.toPersistence(orderItemModifier);
+    const entity = this.orderItemModifierMapper.toEntity(orderItemModifier);
+    if (!entity) {
+      throw new InternalServerErrorException('Error mapping OrderItemModifier domain to entity for save');
+    }
     const savedEntity = await this.orderItemModifierRepository.save(entity);
 
-    return this.findById(savedEntity.id) as Promise<OrderItemModifier>;
+    const reloadedEntity = await this.orderItemModifierRepository.findOne({
+      where: { id: savedEntity.id },
+      relations: ['orderItem', 'modifier'],
+    });
+
+    if (!reloadedEntity) {
+      throw new InternalServerErrorException(`Failed to reload OrderItemModifier with ID ${savedEntity.id} after saving.`);
+    }
+
+    const domainResult = this.orderItemModifierMapper.toDomain(reloadedEntity);
+    if (!domainResult) {
+        throw new InternalServerErrorException('Error mapping reloaded OrderItemModifier entity to domain');
+    }
+    return domainResult;
   }
 
   async update(
     orderItemModifier: OrderItemModifier,
   ): Promise<OrderItemModifier> {
-    const entity = OrderItemModifierMapper.toPersistence(orderItemModifier);
-    await this.orderItemModifierRepository.update(entity.id, entity);
+    const entity = this.orderItemModifierMapper.toEntity(orderItemModifier);
+    if (!entity || !entity.id) {
+        throw new InternalServerErrorException('Error mapping OrderItemModifier domain to entity for update or ID missing');
+    }
+    const updatedEntity = await this.orderItemModifierRepository.save(entity);
 
-    return this.findById(entity.id) as Promise<OrderItemModifier>;
+    const reloadedEntity = await this.orderItemModifierRepository.findOne({
+        where: { id: updatedEntity.id },
+        relations: ['orderItem', 'modifier'],
+    });
+
+    if (!reloadedEntity) {
+        throw new InternalServerErrorException(`Failed to reload OrderItemModifier with ID ${updatedEntity.id} after updating.`);
+    }
+
+    const domainResult = this.orderItemModifierMapper.toDomain(reloadedEntity);
+    if (!domainResult) {
+        throw new InternalServerErrorException('Error mapping reloaded OrderItemModifier entity to domain after update');
+    }
+    return domainResult;
   }
 
   async delete(id: string): Promise<void> {

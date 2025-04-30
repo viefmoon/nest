@@ -1,37 +1,44 @@
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { ModifierGroup } from '../../../../domain/modifier-group';
 import { ModifierGroupEntity } from '../entities/modifier-group.entity';
 import { ProductModifierMapper } from '../../../../../product-modifiers/infrastructure/persistence/relational/mappers/product-modifier.mapper';
+import { BaseMapper, mapArray } from '../../../../../common/mappers/base.mapper';
+import { ProductMapper } from '../../../../../products/infrastructure/persistence/relational/mappers/product.mapper';
+import { ProductEntity } from '../../../../../products/infrastructure/persistence/relational/entities/product.entity';
 
-export class ModifierGroupMapper {
-  static toDomain(entity: ModifierGroupEntity): ModifierGroup {
-    const group = new ModifierGroup();
-    group.id = entity.id;
-    group.name = entity.name;
-    group.description = entity.description;
-    group.minSelections = entity.minSelections;
-    group.maxSelections = entity.maxSelections;
-    group.isRequired = entity.isRequired;
-    group.allowMultipleSelections = entity.allowMultipleSelections;
-    group.isActive = entity.isActive;
-    group.createdAt = entity.createdAt;
-    group.updatedAt = entity.updatedAt;
-    group.deletedAt = entity.deletedAt;
-
-    if (entity.productModifiers) {
-      group.productModifiers = entity.productModifiers.map((modifier) =>
-        ProductModifierMapper.toDomain(modifier),
-      );
-    } else {
-      group.productModifiers = [];
-    }
-
-
-    return group;
+@Injectable()
+export class ModifierGroupMapper extends BaseMapper<ModifierGroupEntity, ModifierGroup> {
+  constructor(
+    private readonly productModifierMapper: ProductModifierMapper,
+    @Inject(forwardRef(() => ProductMapper))
+    private readonly productMapper: ProductMapper,
+  ) {
+    super();
   }
 
-  static toPersistence(domain: ModifierGroup): ModifierGroupEntity {
+  override toDomain(entity: ModifierGroupEntity): ModifierGroup | null {
+    if (!entity) return null;
+    const domain = new ModifierGroup();
+    domain.id = entity.id;
+    domain.name = entity.name;
+    domain.description = entity.description;
+    domain.minSelections = entity.minSelections;
+    domain.maxSelections = entity.maxSelections;
+    domain.isRequired = entity.isRequired;
+    domain.allowMultipleSelections = entity.allowMultipleSelections;
+    domain.isActive = entity.isActive;
+    domain.createdAt = entity.createdAt;
+    domain.updatedAt = entity.updatedAt;
+    domain.deletedAt = entity.deletedAt;
+    domain.productModifiers = mapArray(entity.productModifiers, (modifier) => this.productModifierMapper.toDomain(modifier));
+    domain.products = mapArray(entity.products, (product) => this.productMapper.toEntity(product));
+    return domain;
+  }
+
+  override toEntity(domain: ModifierGroup): ModifierGroupEntity | null {
+    if (!domain) return null;
     const entity = new ModifierGroupEntity();
-    entity.id = domain.id;
+    if (domain.id) entity.id = domain.id;
     entity.name = domain.name;
     entity.description = domain.description;
     entity.minSelections = domain.minSelections;
@@ -39,7 +46,7 @@ export class ModifierGroupMapper {
     entity.isRequired = domain.isRequired;
     entity.allowMultipleSelections = domain.allowMultipleSelections;
     entity.isActive = domain.isActive;
-    // No mapear relaciones inversas ni timestamps generados automáticamente
+    entity.products = mapArray(domain.products, (product) => this.productMapper.toEntity(product)) as ProductEntity[];
     return entity;
   }
 }

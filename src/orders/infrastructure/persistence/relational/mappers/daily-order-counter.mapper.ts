@@ -1,9 +1,19 @@
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { DailyOrderCounter } from '../../../../domain/daily-order-counter';
 import { DailyOrderCounterEntity } from '../entities/daily-order-counter.entity';
 import { OrderMapper } from './order.mapper';
+import { BaseMapper, mapArray } from '../../../../../common/mappers/base.mapper';
 
-export class DailyOrderCounterMapper {
-  static toDomain(entity: DailyOrderCounterEntity): DailyOrderCounter {
+@Injectable()
+export class DailyOrderCounterMapper extends BaseMapper<DailyOrderCounterEntity, DailyOrderCounter> {
+  constructor(
+    @Inject(forwardRef(() => OrderMapper)) 
+    private readonly orderMapper: OrderMapper) {
+    super();
+  }
+
+  override toDomain(entity: DailyOrderCounterEntity): DailyOrderCounter | null {
+    if (!entity) return null;
     const domain = new DailyOrderCounter();
     domain.id = entity.id;
     domain.date = entity.date;
@@ -11,22 +21,16 @@ export class DailyOrderCounterMapper {
     domain.createdAt = entity.createdAt;
     domain.updatedAt = entity.updatedAt;
     domain.deletedAt = entity.deletedAt;
-
-    if (entity.orders) {
-      domain.orders = entity.orders.map(OrderMapper.toDomain);
-    }
-
+    domain.orders = mapArray(entity.orders, (order) => this.orderMapper.toDomain(order));
     return domain;
   }
 
-  static toPersistence(domain: DailyOrderCounter): DailyOrderCounterEntity {
+  override toEntity(domain: DailyOrderCounter): DailyOrderCounterEntity | null {
+    if (!domain) return null;
     const entity = new DailyOrderCounterEntity();
-    entity.id = domain.id;
+    if (domain.id) entity.id = domain.id;
     entity.date = domain.date;
     entity.currentNumber = domain.currentNumber;
-    entity.createdAt = domain.createdAt;
-    entity.updatedAt = domain.updatedAt;
-    entity.deletedAt = domain.deletedAt;
 
     return entity;
   }

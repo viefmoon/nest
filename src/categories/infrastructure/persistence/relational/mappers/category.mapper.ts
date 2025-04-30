@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'; // Removed Inject
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { Category } from '../../../../domain/category';
 import { CategoryEntity } from '../entities/category.entity';
 import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
@@ -9,35 +9,37 @@ import { BaseMapper, mapArray } from '../../../../../common/mappers/base.mapper'
 @Injectable()
 export class CategoryMapper extends BaseMapper<CategoryEntity, Category> {
   constructor(
+    @Inject(forwardRef(() => SubcategoryMapper))
     private readonly subcategoryMapper: SubcategoryMapper,
+    private readonly fileMapper: FileMapper,
   ) {
     super();
   }
 
   override toDomain(entity: CategoryEntity): Category | null {
     if (!entity) return null;
-    const d = new Category();
-    d.id          = entity.id;
-    d.name        = entity.name;
-    d.description = entity.description;
-    d.isActive    = entity.isActive;
-    d.photoId     = entity.photoId;
-    d.photo       = entity.photo ? FileMapper.toDomain(entity.photo) : null;
-    d.subcategories = mapArray(entity.subcategories, (sub) => this.subcategoryMapper.toDomain(sub));
-    d.createdAt   = entity.createdAt;
-    d.updatedAt   = entity.updatedAt;
-    d.deletedAt   = entity.deletedAt;
-    return d;
+    const domain = new Category();
+    domain.id = entity.id;
+    domain.name = entity.name;
+    domain.description = entity.description;
+    domain.isActive = entity.isActive;
+    domain.photoId = entity.photoId;
+    domain.photo = entity.photo ? this.fileMapper.toDomain(entity.photo) : null;
+    domain.subcategories = mapArray(entity.subcategories, (sub) => this.subcategoryMapper.toDomain(sub));
+    domain.createdAt = entity.createdAt;
+    domain.updatedAt = entity.updatedAt;
+    domain.deletedAt = entity.deletedAt;
+    return domain;
   }
 
   override toEntity(domain: Category): CategoryEntity | null {
     if (!domain) return null;
-    const e = new CategoryEntity();
-    if (domain.id) e.id = domain.id;
-    e.name        = domain.name;
-    e.description = domain.description;
-    e.isActive    = domain.isActive;
-    e.photo       = domain.photoId ? ({ id: domain.photoId } as FileEntity) : null;
-    return e;
+    const entity = new CategoryEntity();
+    if (domain.id) entity.id = domain.id;
+    entity.name = domain.name;
+    entity.description = domain.description;
+    entity.isActive = domain.isActive;
+    entity.photo = domain.photoId ? ({ id: domain.photoId } as FileEntity) : null;
+    return entity;
   }
 }

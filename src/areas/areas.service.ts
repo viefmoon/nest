@@ -3,7 +3,7 @@ import { Area } from './domain/area';
 import { CreateAreaDto } from './dto/create-area.dto';
 import { FindAllAreasDto } from './dto/find-all-areas.dto';
 import { UpdateAreaDto } from './dto/update-area.dto';
-import { AreaRepository } from './infrastructure/persistence/area.repository'; // Keep type for interface
+import { AreaRepository } from './infrastructure/persistence/area.repository';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { AREA_REPOSITORY } from '../common/tokens';
 import { Paginated } from '../common/types/paginated.type';
@@ -15,7 +15,6 @@ export class AreasService {
   ) {}
 
   async create(createAreaDto: CreateAreaDto): Promise<Area> {
-    
     const existingArea = await this.areaRepository.findByName(
       createAreaDto.name,
     );
@@ -55,7 +54,6 @@ export class AreasService {
   }
 
   async update(id: string, updateAreaDto: UpdateAreaDto): Promise<Area> {
-    
     if (updateAreaDto.name) {
       const existingArea = await this.areaRepository.findByName(
         updateAreaDto.name,

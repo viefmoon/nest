@@ -1,18 +1,23 @@
+import { Injectable } from '@nestjs/common';
 import { FileType } from '../../../../domain/file';
 import { FileEntity } from '../entities/file.entity';
+import { BaseMapper } from '../../../../../common/mappers/base.mapper';
 
-export class FileMapper {
-  static toDomain(raw: FileEntity): FileType {
-    const domainEntity = new FileType();
-    domainEntity.id = raw.id;
-    domainEntity.path = raw.path;
-    return domainEntity;
+@Injectable()
+export class FileMapper extends BaseMapper<FileEntity, FileType> {
+  override toDomain(entity: FileEntity): FileType | null {
+    if (!entity) return null;
+    const domain = new FileType();
+    domain.id = entity.id;
+    domain.path = entity.path;
+    return domain;
   }
 
-  static toPersistence(domainEntity: FileType): FileEntity {
-    const persistenceEntity = new FileEntity();
-    persistenceEntity.id = domainEntity.id;
-    persistenceEntity.path = domainEntity.path;
-    return persistenceEntity;
+  override toEntity(domain: FileType): FileEntity | null {
+    if (!domain) return null;
+    const entity = new FileEntity();
+    entity.id = domain.id;
+    entity.path = domain.path;
+    return entity;
   }
 }

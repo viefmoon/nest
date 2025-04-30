@@ -15,14 +15,23 @@ export class UsersRelationalRepository implements UserRepository {
   constructor(
     @InjectRepository(UserEntity)
     private readonly usersRepository: Repository<UserEntity>,
+    private readonly userMapper: UserMapper,
   ) {}
 
   async create(data: User): Promise<User> {
-    const persistenceModel = UserMapper.toPersistence(data);
+    const persistenceModel = this.userMapper.toEntity(data);
+    if (!persistenceModel) {
+      throw new Error('Failed to map user domain to entity');
+    }
+
     const newEntity = await this.usersRepository.save(
       this.usersRepository.create(persistenceModel),
     );
-    return UserMapper.toDomain(newEntity);
+    const domainResult = this.userMapper.toDomain(newEntity);
+    if (!domainResult) {
+      throw new Error('Failed to map new user entity to domain');
+    }
+    return domainResult;
   }
 
   async findManyWithPagination({
@@ -54,15 +63,17 @@ export class UsersRelationalRepository implements UserRepository {
       ),
     });
 
-    return entities.map((user) => UserMapper.toDomain(user));
+    return entities
+      .map((user) => this.userMapper.toDomain(user))
+      .filter((user): user is User => user !== null);
   }
 
   async findById(id: User['id']): Promise<NullableType<User>> {
     const entity = await this.usersRepository.findOne({
-      where: { id: id }, // ID es string (UUID)
+      where: { id: id },
     });
 
-    return entity ? UserMapper.toDomain(entity) : null;
+    return entity ? this.userMapper.toDomain(entity) : null;
   }
 
   async findByIds(ids: User['id'][]): Promise<User[]> {
@@ -70,7 +81,9 @@ export class UsersRelationalRepository implements UserRepository {
       where: { id: In(ids) },
     });
 
-    return entities.map((user) => UserMapper.toDomain(user));
+    return entities
+      .map((user) => this.userMapper.toDomain(user))
+      .filter((user): user is User => user !== null);
   }
 
   async findByEmail(email: User['email']): Promise<NullableType<User>> {
@@ -80,7 +93,7 @@ export class UsersRelationalRepository implements UserRepository {
       where: { email },
     });
 
-    return entity ? UserMapper.toDomain(entity) : null;
+    return entity ? this.userMapper.toDomain(entity) : null;
   }
 
   async findByUsername(
@@ -92,28 +105,41 @@ export class UsersRelationalRepository implements UserRepository {
       where: { username },
     });
 
-    return entity ? UserMapper.toDomain(entity) : null;
+    return entity ? this.userMapper.toDomain(entity) : null;
   }
 
   async update(id: User['id'], payload: Partial<User>): Promise<User> {
     const entity = await this.usersRepository.findOne({
-      where: { id: id }, // ID es string (UUID)
+      where: { id: id },
     });
 
     if (!entity) {
       throw new Error('User not found');
     }
 
+    const existingDomain = this.userMapper.toDomain(entity);
+    if (!existingDomain) {
+      throw new Error('Failed to map existing user entity to domain');
+    }
+
+    const persistenceModel = this.userMapper.toEntity({
+      ...existingDomain,
+      ...payload,
+    });
+
+    if (!persistenceModel) {
+      throw new Error('Failed to map updated user domain to entity');
+    }
+
     const updatedEntity = await this.usersRepository.save(
-      this.usersRepository.create(
-        UserMapper.toPersistence({
-          ...UserMapper.toDomain(entity),
-          ...payload,
-        }),
-      ),
+      this.usersRepository.create(persistenceModel),
     );
 
-    return UserMapper.toDomain(updatedEntity);
+    const domainResult = this.userMapper.toDomain(updatedEntity);
+    if (!domainResult) {
+      throw new Error('Failed to map updated user entity to domain');
+    }
+    return domainResult;
   }
 
   async remove(id: User['id']): Promise<void> {

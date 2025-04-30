@@ -17,6 +17,7 @@ import { CreateProductModifierDto } from './dto/create-product-modifier.dto';
 import { UpdateProductModifierDto } from './dto/update-product-modifier.dto';
 import { FindAllProductModifiersDto } from './dto/find-all-product-modifiers.dto';
 import { ProductModifier } from './domain/product-modifier';
+import { Paginated } from '../common/types/paginated.type';
 
 @ApiTags('Product Modifiers')
 @Controller({ path: 'product-modifiers', version: '1' })
@@ -42,14 +43,15 @@ export class ProductModifiersController {
   @ApiOperation({ summary: 'Get all product modifiers with pagination' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Return all product modifiers with pagination',
-    type: [ProductModifier],
+    description: 'Return a paginated list of product modifiers',
+    // TODO: Define a specific ApiOkResponse decorator with a Paginated<ProductModifier> type/schema for Swagger
+    // type: [ProductModifier], // Original incorrect type
   })
   findAll(
     @Query() filterDto: FindAllProductModifiersDto,
     @Query('page') page = 1,
     @Query('limit') limit = 10,
-  ): Promise<ProductModifier[]> {
+  ): Promise<Paginated<ProductModifier>> {
     return this.productModifiersService.findAll(filterDto, {
       page,
       limit,

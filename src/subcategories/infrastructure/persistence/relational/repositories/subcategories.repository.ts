@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common'; // Removed Inject
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { SubcategoryEntity } from '../entities/Subcategory.entity';
-import { SubcategoryRepository } from '../../Subcategory.repository';
-import { Subcategory } from '../../../../domain/Subcategory';
-import { SubcategoryMapper } from '../mappers/Subcategory.mapper';
+import { SubcategoryEntity } from '../entities/subcategory.entity';
+import { SubcategoryRepository } from '../../subcategory.repository';
+import { Subcategory } from '../../../../domain/subcategory';
+import { SubcategoryMapper } from '../mappers/subcategory.mapper';
 import { Paginated } from '../../../../../common/types/paginated.type';
 
 @Injectable()

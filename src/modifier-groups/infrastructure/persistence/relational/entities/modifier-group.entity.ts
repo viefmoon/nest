@@ -40,7 +40,6 @@ export class ModifierGroupEntity extends EntityRelationalHelper {
   @Column({ default: true })
   isActive: boolean;
 
-  // Relación con ProductModifier
   @OneToMany(
     () => ProductModifierEntity,
     (productModifier) => productModifier.group,

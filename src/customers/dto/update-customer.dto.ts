@@ -9,7 +9,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { UpdateAddressDto } from './update-address.dto'; // Importar DTO de actualización
+import { UpdateAddressDto } from './update-address.dto';
 
 export class UpdateCustomerDto {
   @ApiPropertyOptional({

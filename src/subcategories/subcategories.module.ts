@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { SubcategoriesService } from './subcategories.service';
 import { SubcategoriesController } from './subcategories.controller';
-import { SubcategoriesRelationalPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
+import { RelationalSubcategoryPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
 
 @Module({
-  imports: [SubcategoriesRelationalPersistenceModule],
+  imports: [RelationalSubcategoryPersistenceModule],
   controllers: [SubcategoriesController],
   providers: [SubcategoriesService],
   exports: [SubcategoriesService],

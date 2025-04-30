@@ -19,7 +19,7 @@ export class ThermalPrinterMapper {
     return domain;
   }
 
-  static toPersistence(domain: ThermalPrinter): ThermalPrinterEntity {
+  static toEntity(domain: ThermalPrinter): ThermalPrinterEntity {
     const entity = new ThermalPrinterEntity();
     entity.id = domain.id;
     entity.name = domain.name;

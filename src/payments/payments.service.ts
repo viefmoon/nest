@@ -6,11 +6,12 @@ import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { FindAllPaymentsDto } from './dto/find-all-payments.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { PaymentStatus } from './domain/enums/payment-status.enum';
+import { PAYMENT_REPOSITORY } from '../common/tokens';
 
 @Injectable()
 export class PaymentsService {
   constructor(
-    @Inject('PaymentRepository')
+    @Inject(PAYMENT_REPOSITORY)
     private readonly paymentRepository: PaymentRepository,
   ) {}
 
@@ -26,9 +27,10 @@ export class PaymentsService {
   }
 
   async findAll(findAllPaymentsDto: FindAllPaymentsDto): Promise<Payment[]> {
+
     const payments = await this.paymentRepository.findAll();
 
-    // Filtrar por orderId si se proporciona
+
     let filteredPayments = payments;
     if (findAllPaymentsDto.orderId) {
       filteredPayments = filteredPayments.filter(
@@ -36,14 +38,14 @@ export class PaymentsService {
       );
     }
 
-    // Filtrar por paymentMethod si se proporciona
+
     if (findAllPaymentsDto.paymentMethod) {
       filteredPayments = filteredPayments.filter(
         (payment) => payment.paymentMethod === findAllPaymentsDto.paymentMethod,
       );
     }
 
-    // Filtrar por paymentStatus si se proporciona
+
     if (findAllPaymentsDto.paymentStatus) {
       filteredPayments = filteredPayments.filter(
         (payment) => payment.paymentStatus === findAllPaymentsDto.paymentStatus,
@@ -69,26 +71,29 @@ export class PaymentsService {
     id: string,
     updatePaymentDto: UpdatePaymentDto,
   ): Promise<Payment> {
-    const payment = await this.findOne(id);
+    const existingPayment = await this.findOne(id);
 
-    // Actualizar solo los campos proporcionados
-    if (updatePaymentDto.paymentMethod) {
-      payment.paymentMethod = updatePaymentDto.paymentMethod;
-    }
 
-    if (updatePaymentDto.amount) {
-      payment.amount = updatePaymentDto.amount;
-    }
+    const updatedPayment = new Payment();
+    updatedPayment.id = id;
+    updatedPayment.orderId = existingPayment.orderId;
+    updatedPayment.paymentMethod =
+      updatePaymentDto.paymentMethod ?? existingPayment.paymentMethod;
+    updatedPayment.amount =
+      updatePaymentDto.amount ?? existingPayment.amount;
+    updatedPayment.paymentStatus =
+      updatePaymentDto.paymentStatus ?? existingPayment.paymentStatus;
 
-    if (updatePaymentDto.paymentStatus) {
-      payment.paymentStatus = updatePaymentDto.paymentStatus;
-    }
+    updatedPayment.createdAt = existingPayment.createdAt;
+    updatedPayment.order = existingPayment.order;
 
-    return this.paymentRepository.update(id, payment);
+
+    return this.paymentRepository.update(id, updatedPayment);
   }
 
   async remove(id: string): Promise<void> {
-    await this.findOne(id); // Verificar que existe
-    return this.paymentRepository.delete(id);
+
+    await this.findOne(id);
+    await this.paymentRepository.delete(id);
   }
 }

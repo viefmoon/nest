@@ -3,8 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
-  // ServiceUnavailableException, // Eliminado ya que no se usa directamente
-  Logger, // Asegurar que Logger esté importado
+  Logger,
 } from '@nestjs/common';
 import { ThermalPrinterRepository } from './infrastructure/persistence/thermal-printer.repository';
 import { CreateThermalPrinterDto } from './dto/create-thermal-printer.dto';
@@ -12,23 +11,24 @@ import { UpdateThermalPrinterDto } from './dto/update-thermal-printer.dto';
 import {
   ThermalPrinter,
   PrinterConnectionType,
-} from './domain/thermal-printer'; // Asegurar que PrinterConnectionType esté importado
+} from './domain/thermal-printer';
 import { FindAllThermalPrintersDto } from './dto/find-all-thermal-printers.dto';
 import { IPaginationOptions } from '../utils/types/pagination-options';
-import net from 'net'; // Asegurar que net esté importado
-import { QueryFailedError } from 'typeorm'; // Importar QueryFailedError
-import { ERROR_CODES } from '../common/constants/error-codes.constants'; // Importar códigos de error
+import net from 'net';
+import { QueryFailedError } from 'typeorm';
+import { ERROR_CODES } from '../common/constants/error-codes.constants';
+import { Inject } from '@nestjs/common';
+import { THERMAL_PRINTER_REPOSITORY } from '../common/tokens';
 
 @Injectable()
 export class ThermalPrintersService {
-  private readonly logger = new Logger(ThermalPrintersService.name); // Mover la declaración del logger aquí
-
+  private readonly logger = new Logger(ThermalPrintersService.name);
   constructor(
+    @Inject(THERMAL_PRINTER_REPOSITORY)
     private readonly thermalPrinterRepository: ThermalPrinterRepository,
   ) {}
 
   async create(createDto: CreateThermalPrinterDto): Promise<ThermalPrinter> {
-    // Check if a printer with the same name already exists
     const existingPrinterByName =
       await this.thermalPrinterRepository.findByName(createDto.name);
     if (existingPrinterByName) {
@@ -39,7 +39,6 @@ export class ThermalPrintersService {
       });
     }
 
-    // Check for IP address conflict only for NETWORK printers
     if (
       createDto.connectionType === PrinterConnectionType.NETWORK &&
       createDto.ipAddress
@@ -73,8 +72,6 @@ export class ThermalPrintersService {
         error instanceof QueryFailedError &&
         error.driverError?.code === '23505'
       ) {
-        // Asumiendo código '23505' para violación de unicidad en PostgreSQL
-        // Extraer el campo duplicado del mensaje de error si es posible (puede variar)
         const detail = error.driverError?.detail || '';
         let field = 'desconocido';
         if (detail.includes('ipAddress')) {
@@ -82,7 +79,6 @@ export class ThermalPrintersService {
         } else if (detail.includes('name')) {
           field = 'nombre';
         }
-        // ... añadir más campos únicos si existen
 
         throw new ConflictException({
           code: ERROR_CODES.THERMAL_PRINTER_DUPLICATE_FIELD,
@@ -90,8 +86,7 @@ export class ThermalPrintersService {
           details: { field: field },
         });
       }
-      // this.logger.error(`Error no manejado al crear impresora: ${error.message}`, error.stack, error); // Loguear el error completo
-      throw error; // Relanzar otros errores
+      throw error;
     }
   }
 
@@ -117,9 +112,8 @@ export class ThermalPrintersService {
     id: string,
     updateDto: UpdateThermalPrinterDto,
   ): Promise<ThermalPrinter> {
-    const existingPrinter = await this.findOne(id); // Ensures printer exists
+    const existingPrinter = await this.findOne(id);
 
-    // Check for name conflict if name is being updated
     if (updateDto.name && updateDto.name !== existingPrinter.name) {
       const conflictingPrinter = await this.thermalPrinterRepository.findByName(
         updateDto.name,
@@ -133,7 +127,6 @@ export class ThermalPrintersService {
       }
     }
 
-    // Check for IP address conflict if IP is being updated for a NETWORK printer
     if (
       (updateDto.connectionType === PrinterConnectionType.NETWORK ||
         (updateDto.connectionType === undefined &&
@@ -154,7 +147,6 @@ export class ThermalPrintersService {
       }
     }
 
-    // Create a partial update payload
     const updatePayload: Partial<ThermalPrinter> = {
       name: updateDto.name,
       connectionType: updateDto.connectionType,
@@ -165,7 +157,6 @@ export class ThermalPrintersService {
       macAddress: updateDto.macAddress,
     };
 
-    // Remove undefined fields to avoid overwriting with undefined
     Object.keys(updatePayload).forEach(
       (key) => updatePayload[key] === undefined && delete updatePayload[key],
     );
@@ -186,7 +177,6 @@ export class ThermalPrintersService {
       );
 
       if (!updatedPrinter) {
-        // Esto no debería ocurrir si findOne no lanzó error, pero por seguridad
         throw new NotFoundException(
           `Impresora con ID ${id} no encontrada después de intentar actualizar.`,
         );
@@ -205,7 +195,6 @@ export class ThermalPrintersService {
         } else if (detail.includes('name')) {
           field = 'nombre';
         }
-        // ... añadir más campos únicos si existen
 
         throw new ConflictException({
           code: ERROR_CODES.THERMAL_PRINTER_DUPLICATE_FIELD,
@@ -213,19 +202,18 @@ export class ThermalPrintersService {
           details: { field: field },
         });
       }
-      // this.logger.error(`Error no manejado al actualizar impresora ${id}: ${error.message}`, error.stack, error); // Loguear el error completo
-      throw error; // Relanzar otros errores
+      throw error;
     }
   }
 
   async remove(id: string): Promise<void> {
-    await this.findOne(id); // Ensures printer exists before attempting removal
+    await this.findOne(id);
     return this.thermalPrinterRepository.remove(id);
   }
 
   async pingPrinter(id: string): Promise<{ status: string }> {
     this.logger.log(`Intentando hacer ping a la impresora con ID: ${id}`);
-    const printer = await this.findOne(id); // Reutiliza findOne que ya lanza NotFoundException
+    const printer = await this.findOne(id);
 
     if (printer.connectionType !== PrinterConnectionType.NETWORK) {
       this.logger.warn(
@@ -247,7 +235,7 @@ export class ThermalPrintersService {
 
     const host = printer.ipAddress;
     const port = printer.port;
-    const timeout = 2000; // Timeout de 2 segundos
+    const timeout = 2000;
 
     return new Promise((resolve) => {
       const socket = new net.Socket();
@@ -265,9 +253,7 @@ export class ThermalPrintersService {
       socket.on('timeout', () => {
         this.logger.warn(`Timeout al intentar conectar a ${host}:${port}`);
         socket.destroy();
-        // Considerar lanzar ServiceUnavailableException si se prefiere un error HTTP
         resolve({ status: 'offline' });
-        // throw new ServiceUnavailableException(`Timeout al conectar con la impresora ${host}:${port}`);
       });
 
       socket.on('error', (err) => {
@@ -275,12 +261,9 @@ export class ThermalPrintersService {
           `Error de conexión a ${host}:${port}: ${err.message}`,
         );
         socket.destroy();
-        // Considerar lanzar ServiceUnavailableException si se prefiere un error HTTP
         resolve({ status: 'offline' });
-        // throw new ServiceUnavailableException(`Error al conectar con la impresora ${host}:${port}: ${err.message}`);
       });
 
-      // Asegurarse de resolver como offline si se cierra sin conectar
       socket.on('close', () => {
         if (!connected) {
           this.logger.log(`Socket cerrado sin conexión a ${host}:${port}`);

@@ -16,6 +16,8 @@ export class Product {
 
   subcategoryId: string;
 
+  preparationScreenId: string | null;
+
   photoId: string | null;
 
   estimatedPrepTime: number;
