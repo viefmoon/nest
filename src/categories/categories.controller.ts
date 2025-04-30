@@ -1,98 +1,41 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-  Query,
-  HttpStatus,
-  HttpCode,
-} from '@nestjs/common';
+import { Get, HttpCode, HttpStatus, Controller } from '@nestjs/common';
+import { ApiOperation } from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Roles } from '../roles/roles.decorator';
-import { RoleEnum } from '../roles/roles.enum';
-import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from '../roles/roles.guard';
 import { FindAllCategoriesDto } from './dto/find-all-categories.dto';
+import { Category } from './domain/category';
+import { CrudControllerFactory } from '../common/presentation/crud-controller.factory'; // Importar la factory
 
-@ApiTags('Categorías')
-@Controller({
+const BaseCategoriesController = CrudControllerFactory<
+  Category,
+  CreateCategoryDto,
+  UpdateCategoryDto,
+  FindAllCategoriesDto,
+  CategoriesService
+>({
   path: 'categories',
-  version: '1',
-})
-export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) {}
+  swaggerTag: 'Categorías',
+  // Puedes especificar roles aquí si difieren de los defaults de la factory
+  // createRoles: [RoleEnum.admin],
+  // updateRoles: [RoleEnum.admin],
+  // removeRoles: [RoleEnum.admin],
+});
 
-  @Post()
-  @ApiOperation({
-    summary: 'Crear una nueva categoría',
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin)
-  @HttpCode(HttpStatus.CREATED)
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoriesService.create(createCategoryDto);
-  }
+@Controller() 
+export class CategoriesController extends BaseCategoriesController {
+  protected readonly service: CategoriesService;
 
-  @Get()
-  @ApiOperation({
-    summary: 'Obtener todas las categorías',
-  })
-  @HttpCode(HttpStatus.OK)
-  findAll(@Query() findAllCategoriesDto: FindAllCategoriesDto) {
-    return this.categoriesService.findAll(findAllCategoriesDto);
-  }
-
-  @Get('full-menu')
+  @Get('full-menu') 
   @ApiOperation({
     summary:
       'Obtener el menú completo (categorías, subcategorías, productos, modificadores)',
   })
-  @HttpCode(HttpStatus.OK)
-  getFullMenu() {
-    return this.categoriesService.getFullMenu();
+  @HttpCode(HttpStatus.OK) 
+  getFullMenu(): Promise<Category[]> { 
+    return this.service.getFullMenu();
   }
 
-  @Get(':id')
-  @ApiOperation({
-    summary: 'Obtener una categoría por ID',
-  })
-  @HttpCode(HttpStatus.OK)
-  findOne(@Param('id') id: string) {
-    return this.categoriesService.findOne(id);
-  }
-
-  @Patch(':id')
-  @ApiOperation({
-    summary: 'Actualizar una categoría',
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin)
-  @HttpCode(HttpStatus.OK)
-  update(
-    @Param('id') id: string,
-    @Body() updateCategoryDto: UpdateCategoryDto,
-  ) {
-    return this.categoriesService.update(id, updateCategoryDto);
-  }
-
-  @Delete(':id')
-  @ApiOperation({
-    summary: 'Eliminar una categoría',
-  })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(RoleEnum.admin)
-  @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string) {
-    return this.categoriesService.remove(id);
-  }
+  // Los endpoints CRUD (POST /, GET /, GET /:id, PATCH /:id, DELETE /:id)
+  // son heredados de BaseCategoriesController y ya están decorados.
 }

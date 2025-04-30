@@ -1,113 +1,48 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike, FindOptionsWhere } from 'typeorm';
 import { CategoryEntity } from '../entities/category.entity';
-import { CategoryRepository } from '../../category.repository';
 import { Category } from '../../../../domain/category';
 import { CategoryMapper } from '../mappers/category.mapper';
-import { Paginated } from '../../../../../common/types/paginated.type';
+import { BaseRelationalRepository } from '../../../../../common/infrastructure/persistence/relational/base-relational.repository';
+import { FindAllCategoriesDto } from '../../../../dto/find-all-categories.dto'; // Asegúrate que este DTO ya no tenga page/limit
 
 @Injectable()
-export class CategoriesRelationalRepository implements CategoryRepository {
+export class CategoriesRelationalRepository extends BaseRelationalRepository<
+  CategoryEntity,
+  Category,
+  FindAllCategoriesDto
+> {
   constructor(
     @InjectRepository(CategoryEntity)
-    private readonly categoryRepository: Repository<CategoryEntity>,
-    private readonly categoryMapper: CategoryMapper,
-  ) {}
-
-  async create(data: Category): Promise<Category> {
-    const entity = this.categoryMapper.toEntity(data);
-    if (!entity) {
-      throw new InternalServerErrorException('Error creating category entity');
-    }
-    const savedEntity = await this.categoryRepository.save(entity);
-    const domainResult = this.categoryMapper.toDomain(savedEntity);
-    if (!domainResult) {
-      throw new InternalServerErrorException('Error mapping saved category entity to domain');
-    }
-    return domainResult;
+    ormRepo: Repository<CategoryEntity>,
+    mapper: CategoryMapper, 
+  ) {
+    super(ormRepo, mapper); 
   }
 
-  async findOne(id: string): Promise<Category> {
-    const entity = await this.categoryRepository.findOne({
-      where: { id },
-      relations: ['photo', 'subcategories'],
-    });
+  // Sobrescribe buildWhere para manejar filtros específicos de categorías
+  protected override buildWhere(
+    filter?: FindAllCategoriesDto,
+  ): FindOptionsWhere<CategoryEntity> | undefined {
+    if (!filter) return undefined;
 
-    const domainResult = entity ? this.categoryMapper.toDomain(entity) : null;
-    if (!domainResult) {
-      throw new NotFoundException(`Categoría con ID ${id} no encontrada`);
+    const where: FindOptionsWhere<CategoryEntity> = {};
+
+    if (filter.name) {
+      where.name = ILike(`%${filter.name}%`);
     }
-    return domainResult;
+    if (filter.isActive !== undefined) {
+      where.isActive = filter.isActive;
+    }
+
+    // Devuelve undefined si no hay filtros para evitar un objeto `where` vacío
+    return Object.keys(where).length > 0 ? where : undefined;
   }
 
-  async findAll(options?: {
-    page?: number;
-    limit?: number;
-    isActive?: boolean;
-  }): Promise<Paginated<Category>> {
-    const page = options?.page || 1;
-    const limit = options?.limit || 10;
-    const skip = (page - 1) * limit;
-
-    const queryBuilder = this.categoryRepository
-      .createQueryBuilder('category')
-      .leftJoinAndSelect('category.photo', 'photo')
-      .leftJoinAndSelect('category.subcategories', 'subcategories')
-      .skip(skip)
-      .take(limit);
-
-    if (options?.isActive !== undefined) {
-      queryBuilder.andWhere('category.isActive = :isActive', {
-        isActive: options.isActive,
-      });
-    }
-
-    const [entities, count] = await queryBuilder.getManyAndCount();
-
-    const domainResults = entities
-      .map((entity) => this.categoryMapper.toDomain(entity))
-      .filter((item): item is Category => item !== null);
-
-    return new Paginated(domainResults, count, page, limit);
-  }
-
-  async update(id: string, data: Category): Promise<Category> {
-    const entity = this.categoryMapper.toEntity(data);
-    if (!entity) {
-      throw new InternalServerErrorException(
-        'Error creating category entity for update',
-      );
-    }
-
-    await this.categoryRepository.update(id, entity);
-
-    const updatedEntity = await this.categoryRepository.findOne({
-      where: { id },
-      relations: ['photo', 'subcategories'],
-    });
-
-    if (!updatedEntity) {
-      throw new NotFoundException(`Categoría con ID ${id} no encontrada`);
-    }
-
-    const domainResult = this.categoryMapper.toDomain(updatedEntity);
-    if (!domainResult) {
-      throw new InternalServerErrorException('Error mapping updated category entity to domain');
-    }
-
-    return domainResult;
-  }
-
-  async softDelete(id: string): Promise<void> {
-    const result = await this.categoryRepository.softDelete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Categoría con ID ${id} no encontrada`);
-    }
-  }
-
+  // -------- Métodos adicionales específicos de este repositorio ----------
   async findFullMenu(): Promise<Category[]> {
-    const queryBuilder = this.categoryRepository
+    const queryBuilder = this.ormRepo
       .createQueryBuilder('category')
       .leftJoinAndSelect(
         'category.subcategories',
@@ -152,7 +87,7 @@ export class CategoriesRelationalRepository implements CategoryRepository {
     const entities = await queryBuilder.getMany();
 
     const domainResults = entities
-      .map((entity) => this.categoryMapper.toDomain(entity))
+      .map((entity) => this.mapper.toDomain(entity))
       .filter((item): item is Category => item !== null);
 
     return domainResults;

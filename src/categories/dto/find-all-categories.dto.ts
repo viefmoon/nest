@@ -1,29 +1,14 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNumber, IsOptional } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { ApiPropertyOptional } from '@nestjs/swagger'; 
+import { IsBoolean, IsOptional, IsString } from 'class-validator'; 
+import { Transform } from 'class-transformer'; 
 
 export class FindAllCategoriesDto {
-  @ApiProperty({
-    type: Number,
-    example: 1,
-    required: false,
-  })
-  @IsNumber()
+  @ApiPropertyOptional({ example: 'Bebidas' }) 
   @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10))
-  page?: number = 1;
+  @IsString() 
+  name?: string; 
 
-  @ApiProperty({
-    type: Number,
-    example: 10,
-    required: false,
-  })
-  @IsNumber()
-  @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10))
-  limit?: number = 10;
-
-  @ApiProperty({
+  @ApiPropertyOptional({ 
     type: Boolean,
     example: true,
     required: false,

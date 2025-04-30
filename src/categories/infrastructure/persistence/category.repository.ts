@@ -1,15 +1,15 @@
-import { Paginated } from '../../../common/types/paginated.type';
 import { Category } from '../../domain/category';
+import { IBaseRepository } from '../../../common/domain/repositories/base.repository'; 
+import { FindAllCategoriesDto } from '../../dto/find-all-categories.dto';
+import { CreateCategoryDto } from '../../dto/create-category.dto'; 
+import { UpdateCategoryDto } from '../../dto/update-category.dto'; 
 
-export interface CategoryRepository {
-  create(data: Category): Promise<Category>;
-  findOne(id: string): Promise<Category>;
-  findAll(options?: {
-    page?: number;
-    limit?: number;
-    isActive?: boolean;
-  }): Promise<Paginated<Category>>;
-  update(id: string, data: Category): Promise<Category>;
-  softDelete(id: string): Promise<void>;
+export interface CategoryRepository
+  extends IBaseRepository<
+    Category,
+    FindAllCategoriesDto,
+    CreateCategoryDto, 
+    UpdateCategoryDto 
+  > {
   findFullMenu(): Promise<Category[]>;
 }

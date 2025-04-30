@@ -5,80 +5,25 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Category } from './domain/category';
 import { FindAllCategoriesDto } from './dto/find-all-categories.dto';
-import { Paginated } from '../common/types/paginated.type';
+import { BaseCrudService } from '../common/application/base-crud.service';
 
 @Injectable()
-export class CategoriesService {
+export class CategoriesService extends BaseCrudService< 
+  Category,
+  CreateCategoryDto,
+  UpdateCategoryDto,
+  FindAllCategoriesDto
+> {
   constructor(
-    @Inject(CATEGORY_REPOSITORY)
-    private readonly categoryRepository: CategoryRepository,
-  ) {}
-
-  async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
-    const category = new Category();
-    category.name = createCategoryDto.name;
-    category.description = createCategoryDto.description || null;
-    category.isActive = createCategoryDto.isActive ?? true;
-
-    if (createCategoryDto.photoId) {
-      category.photo = {
-        id: createCategoryDto.photoId,
-        path: '',
-      };
-    }
-
-    return this.categoryRepository.create(category);
+    @Inject(CATEGORY_REPOSITORY) repo: CategoryRepository,
+  ) {
+    super(repo);
   }
 
-  async findAll(
-    findAllCategoriesDto: FindAllCategoriesDto,
-  ): Promise<Paginated<Category>> {
-    return this.categoryRepository.findAll({
-      page: findAllCategoriesDto.page,
-      limit: findAllCategoriesDto.limit,
-      isActive: findAllCategoriesDto.isActive,
-    });
-  }
+  // Los métodos CRUD (create, findAll, findOne, update, remove) son heredados de BaseCrudService
 
-  async findOne(id: string): Promise<Category> {
-    return this.categoryRepository.findOne(id);
-  }
-
-  async update(
-    id: string,
-    updateCategoryDto: UpdateCategoryDto,
-  ): Promise<Category> {
-    const existingCategory = await this.categoryRepository.findOne(id);
-
-    const category = new Category();
-    category.id = id;
-    category.name = updateCategoryDto.name ?? existingCategory.name;
-    category.description =
-      updateCategoryDto.description ?? existingCategory.description;
-    category.isActive = updateCategoryDto.isActive ?? existingCategory.isActive;
-
-    if (updateCategoryDto.photoId !== undefined) {
-      category.photo = updateCategoryDto.photoId
-        ? {
-            id: updateCategoryDto.photoId,
-            path: '',
-          }
-        : null;
-    } else if (existingCategory.photo) {
-      category.photo = {
-        id: existingCategory.photo.id,
-        path: '',
-      };
-    }
-
-    return this.categoryRepository.update(id, category);
-  }
-
-  async remove(id: string): Promise<void> {
-    return this.categoryRepository.softDelete(id);
-  }
-
+  /**  --- lógica extra propia del dominio --- */
   async getFullMenu(): Promise<Category[]> {
-    return this.categoryRepository.findFullMenu();
+return (this.repo as CategoryRepository).findFullMenu();
   }
 }
