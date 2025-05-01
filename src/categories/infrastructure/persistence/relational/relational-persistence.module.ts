@@ -10,7 +10,7 @@ import { RelationalFilePersistenceModule } from '../../../../files/infrastructur
 @Module({
   imports: [
     TypeOrmModule.forFeature([CategoryEntity]),
-    forwardRef(() => RelationalSubcategoryPersistenceModule), // Usar forwardRef aquí
+    forwardRef(() => RelationalSubcategoryPersistenceModule),
     RelationalFilePersistenceModule,
   ],
   providers: [

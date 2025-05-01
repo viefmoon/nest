@@ -14,7 +14,6 @@ export class UpdateCategoryDto {
   @ApiProperty({
     type: String,
     example: 'Productos electrónicos y gadgets',
-    nullable: true,
     required: false,
   })
   @IsString()

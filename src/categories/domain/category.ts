@@ -4,11 +4,11 @@ import { Subcategory } from '../../subcategories/domain/Subcategory';
 export class Category {
   id: string;
   name: string;
-  description: string | null;
+  description?: string;
   isActive: boolean;
   photoId: string | null;
   photo: FileType | null;
-  subcategories: Subcategory[] | null;
+  subcategories: Subcategory[];
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

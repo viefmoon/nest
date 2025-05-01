@@ -24,6 +24,6 @@ export class CategoriesService extends BaseCrudService<
 
   /**  --- lógica extra propia del dominio --- */
   async getFullMenu(): Promise<Category[]> {
-return (this.repo as CategoryRepository).findFullMenu();
+    return (this.repo as CategoryRepository).findFullMenu();
   }
 }

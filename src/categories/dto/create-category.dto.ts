@@ -11,7 +11,7 @@ import { TransformDefault } from '../../utils/transformers/transform-default.dec
 export class CreateCategoryDto {
   @ApiProperty({
     type: String,
-    example: 'Electrónicos',
+    example: 'Bebidas',
   })
   @IsString()
   @IsNotEmpty()
@@ -19,8 +19,8 @@ export class CreateCategoryDto {
 
   @ApiProperty({
     type: String,
-    example: 'Productos electrónicos y gadgets',
-    nullable: true,
+    example: 'Bebidas sin alcohol',
+    required: false,
   })
   @IsString()
   @IsOptional()
@@ -29,9 +29,9 @@ export class CreateCategoryDto {
   @ApiProperty({
     type: Boolean,
     example: true,
-    default: true, // Keep for Swagger documentation clarity
+    default: true,
   })
-  @TransformDefault(true) // Apply default value if undefined
+  @TransformDefault(true)
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
