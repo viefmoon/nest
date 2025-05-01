@@ -3,7 +3,7 @@ export class Area {
 
   name: string;
 
-  description: string | null;
+  description?: string;
 
   isActive: boolean;
 

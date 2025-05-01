@@ -20,8 +20,8 @@ export class AreaEntity extends EntityRelationalHelper {
   @Column({ unique: true })
   name: string;
 
-  @Column({ type: 'varchar', nullable: true })
-  description: string | null;
+  @Column({ type: 'varchar', default: '' })
+  description?: string;
 
   @Column({ default: true })
   isActive: boolean;
