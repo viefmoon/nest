@@ -14,7 +14,7 @@ import { EntityRelationalHelper } from '../../../../../utils/relational-entity-h
 import { CustomerEntity } from './customer.entity';
 
 @Entity({
-  name: 'address', // Nombre de la tabla
+  name: 'address', 
 })
 export class AddressEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
@@ -34,29 +34,29 @@ export class AddressEntity extends EntityRelationalHelper {
   street: string;
 
   @Column({ type: 'varchar', length: 50, nullable: true })
-  number: string | null;
+  number: string | null; // Nullable (corresponde a string | null en dominio)
 
   @Column({ type: 'varchar', length: 50, nullable: true })
-  interiorNumber: string | null;
+  interiorNumber: string | null; // Nullable (corresponde a interiorNumber?: string)
 
-  @Column({ type: 'varchar', length: 150 })
-  neighborhood: string;
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  neighborhood: string | null; // Nullable (corresponde a neighborhood?: string)
 
-  @Column({ type: 'varchar', length: 100 })
-  city: string;
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  city: string | null; // Nullable (corresponde a city?: string)
 
-  @Column({ type: 'varchar', length: 100 })
-  state: string;
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  state: string | null; // Nullable (corresponde a state?: string)
 
-  @Index() // Indexar código postal puede ser útil
-  @Column({ type: 'varchar', length: 10 })
-  zipCode: string;
+  @Index()
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  zipCode: string | null; // Nullable (corresponde a zipCode?: string)
 
-  @Column({ type: 'varchar', length: 100 })
-  country: string;
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  country: string | null; // Nullable (corresponde a country?: string)
 
   @Column({ type: 'text', nullable: true })
-  references: string | null;
+  references: string | null; // Nullable (corresponde a references?: string)
 
   @Column({ type: 'boolean', default: false })
   isDefault: boolean;

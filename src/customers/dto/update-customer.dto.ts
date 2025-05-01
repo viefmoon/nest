@@ -51,14 +51,6 @@ export class UpdateCustomerDto {
   @MaxLength(255)
   email?: string | null; // Permitir null para borrar
 
-  @ApiPropertyOptional({
-    type: () => [UpdateAddressDto],
-    description:
-      'Lista completa de direcciones deseadas. Las direcciones existentes no incluidas aquí serán eliminadas. Incluir "id" para actualizar una existente, omitirlo para crear una nueva.',
-  })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => UpdateAddressDto)
-  addresses?: UpdateAddressDto[];
+  // El campo 'addresses' se elimina de aquí. La sincronización se manejará
+  // a través de endpoints específicos en AddressesController o un servicio dedicado.
 }

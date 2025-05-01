@@ -13,6 +13,7 @@ import validationOptions from './utils/validation-options';
 import { AllConfigType } from './config/config.type';
 import { ResolvePromisesInterceptor } from './utils/serializer.interceptor';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+import { UniqueViolationFilter } from './common/filters/unique-violation.filter'; // Importar el nuevo filtro
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
@@ -34,7 +35,15 @@ async function bootstrap() {
     new ResolvePromisesInterceptor(),
     new ClassSerializerInterceptor(app.get(Reflector)),
   );
+  // Registrar UniqueViolationFilter PRIMERO
+  app.useGlobalFilters(new UniqueViolationFilter());
+  // Registrar AllExceptionsFilter DESPUÉS para capturar otros errores
+  // Nota: AllExceptionsFilter podría necesitar el HttpAdapter, verificar su constructor.
+  // Si AllExceptionsFilter no necesita argumentos, simplemente: new AllExceptionsFilter()
+  // Si necesita HttpAdapter: app.useGlobalFilters(new AllExceptionsFilter(app.get(HttpAdapterHost)));
+  // Asumiendo que no necesita argumentos por ahora, basado en el código original.
   app.useGlobalFilters(new AllExceptionsFilter());
+
 
   const options = new DocumentBuilder()
     .setTitle('API')

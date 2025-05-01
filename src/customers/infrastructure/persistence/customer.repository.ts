@@ -1,40 +1,37 @@
-import { DeepPartial } from '../../../utils/types/deep-partial.type';
 import { NullableType } from '../../../utils/types/nullable.type';
 import { IPaginationOptions } from '../../../utils/types/pagination-options';
 import { Customer } from '../../domain/customer';
 import { FindAllCustomersDto } from '../../dto/find-all-customers.dto';
+import { IBaseRepository } from '../../../common/domain/repositories/base.repository'; // Importar IBaseRepository
+import { CreateCustomerDto } from '../../dto/create-customer.dto'; // Importar DTOs
+import { UpdateCustomerDto } from '../../dto/update-customer.dto';
+import { DeepPartial } from 'typeorm'; // Usar DeepPartial de typeorm si es necesario para save
 
-export abstract class CustomerRepository {
-  abstract create(
-    data: Omit<
-      Customer,
-      'id' | 'createdAt' | 'deletedAt' | 'updatedAt' | 'addresses'
-    >,
-  ): Promise<Customer>;
+// Extender IBaseRepository con los tipos específicos
+export abstract class CustomerRepository
+  implements IBaseRepository< // Cambiado 'extends' por 'implements'
+    Customer,
+    FindAllCustomersDto,
+    CreateCustomerDto,
+    UpdateCustomerDto
+  >
+{
+  // Los métodos create, findById, findAll (sin paginación), update, remove son heredados.
 
-  abstract findManyWithPagination({
-    filterOptions, // Añadir filterOptions
-    paginationOptions,
-  }: {
-    filterOptions?: FindAllCustomersDto | null; // Usar el DTO importado
-    paginationOptions: IPaginationOptions;
-  }): Promise<[Customer[], number]>; // Devolver también el conteo total
+  // Mantener métodos específicos que no están en IBaseRepository
+  // Se elimina findManyWithPagination
 
-  abstract findById(id: Customer['id']): Promise<NullableType<Customer>>;
   abstract findByEmail(
     email: Customer['email'],
   ): Promise<NullableType<Customer>>;
+
   abstract findByPhone(
     phone: Customer['phoneNumber'],
-  ): Promise<NullableType<Customer>>; // Añadir búsqueda por teléfono
+  ): Promise<NullableType<Customer>>;
 
-  abstract update(
-    id: Customer['id'],
-    payload: DeepPartial<Customer>,
-  ): Promise<Customer | null>;
-
-  // Método save para manejar actualizaciones que incluyen relaciones (direcciones)
+  // Mantener 'save' si se necesita específicamente para manejar relaciones complejas
+  // que 'update' de IBaseRepository no cubre adecuadamente.
   abstract save(customer: Customer): Promise<Customer>;
 
-  abstract remove(id: Customer['id']): Promise<void>;
+  // findAll(filter?: FindAllCustomersDto): Promise<Customer[]>; // Ya heredado
 }

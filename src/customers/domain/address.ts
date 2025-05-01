@@ -7,21 +7,21 @@ export class Address {
 
   street: string;
 
-  number: string | null;
+  number: string | null; // Mantener null por DTOs/lógica
 
-  interiorNumber: string | null;
+  interiorNumber?: string; // Opcional
 
-  neighborhood: string;
+  neighborhood?: string; // Opcional
 
-  city: string;
+  city?: string; // Opcional
 
-  state: string;
+  state?: string; // Opcional
 
-  zipCode: string;
+  zipCode?: string; // Opcional
 
-  country: string;
+  country?: string; // Opcional
 
-  references: string | null;
+  references?: string; // Opcional
 
   isDefault: boolean;
 

@@ -38,115 +38,58 @@ import {
   InfinityPaginationResponseDto,
 } from '../utils/dto/infinity-pagination-response.dto';
 import { infinityPagination } from '../utils/infinity-pagination';
+import { CrudControllerFactory } from '../common/presentation/crud-controller.factory'; // Importar Factory
+import { AddressesService } from './addresses.service'; // Importar AddressesService
 
-@ApiTags('Customers')
-@Controller({
-  path: 'customers',
-  version: '1',
-})
-export class CustomersController {
-  constructor(private readonly customersService: CustomersService) {}
+// Crear el controlador base usando la factory
+const BaseCustomersController = CrudControllerFactory<
+  Customer,
+  CreateCustomerDto,
+  UpdateCustomerDto,
+  FindAllCustomersDto, // Usar FindAllCustomersDto como DTO de filtro base
+  CustomersService
+>({
+  path: 'customers', // Ruta base (la factory añade /:id etc.)
+  swaggerTag: 'Customers', // Etiqueta para Swagger
+  // Roles por defecto de la factory (Admin para CUD) son adecuados aquí
+});
 
-  @Post()
-  @ApiBearerAuth()
-  @Roles(RoleEnum.admin) // Asumiendo que solo admin puede crear clientes directamente
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Crear un nuevo cliente' })
-  @ApiResponse({ status: 201, description: 'Cliente creado.', type: Customer })
-  create(@Body() createCustomerDto: CreateCustomerDto): Promise<Customer> {
-    return this.customersService.create(createCustomerDto);
+
+@ApiTags('Customers') // Mantener ApiTags aquí o mover a la factory si se prefiere
+@Controller() // El path ya está definido en la factory
+export class CustomersController extends BaseCustomersController { // Extender el controlador base
+  // Inyectar ambos servicios
+  constructor(
+      protected service: CustomersService, // El servicio principal (requerido por la factory)
+      private addressesService: AddressesService // El servicio de direcciones
+  ) {
+    super(service); // Llamar al constructor base con el servicio principal
   }
 
-  @Get()
-  @ApiBearerAuth()
-  @Roles(RoleEnum.admin) // Asumiendo que solo admin puede listar todos los clientes
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Obtener lista paginada de clientes' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de clientes.',
-    type: InfinityPaginationResponse(Customer),
-  })
-  async findAll(
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-    @Query() filterDto: FindAllCustomersDto,
-  ): Promise<InfinityPaginationResponseDto<Customer>> {
-    limit = limit > 50 ? 50 : limit;
-    const [data] = await this.customersService.findAll(
-      { page, limit },
-      filterDto,
-    );
-    return infinityPagination(data, { page, limit });
-  }
+  // Los métodos create, findOne, update, remove son heredados de BaseCustomersController
 
-  @Get(':id')
-  @ApiBearerAuth()
-  @Roles(RoleEnum.admin) // Asumiendo que solo admin puede ver cualquier cliente por ID
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Obtener un cliente por ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Cliente encontrado.',
-    type: Customer,
-  })
-  @ApiResponse({ status: 404, description: 'Cliente no encontrado.' })
-  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Customer> {
-    return this.customersService.findOne(id);
-  }
+  // Se elimina el endpoint GET /customers con paginación infinita.
+  // El endpoint GET / heredado de BaseCustomersController (sin paginación) tomará efecto si se necesita.
 
-  @Patch(':id')
-  @ApiBearerAuth()
-  @Roles(RoleEnum.admin) // Asumiendo que solo admin puede actualizar
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Actualizar un cliente por ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Cliente actualizado.',
-    type: Customer,
-  })
-  @ApiResponse({ status: 404, description: 'Cliente no encontrado.' })
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateCustomerDto: UpdateCustomerDto,
-  ): Promise<Customer> {
-    return this.customersService.update(id, updateCustomerDto);
-  }
 
-  @Delete(':id')
-  @ApiBearerAuth()
-  @Roles(RoleEnum.admin) // Asumiendo que solo admin puede eliminar
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Eliminar un cliente por ID' })
-  @ApiResponse({ status: 204, description: 'Cliente eliminado.' })
-  @ApiResponse({ status: 404, description: 'Cliente no encontrado.' })
-  remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    return this.customersService.remove(id);
-  }
+  // --- Endpoints específicos para Direcciones ---
+  // Mantener estos endpoints ya que no son parte del CRUD básico de Customer
 
   @Post(':customerId/addresses')
   @ApiBearerAuth()
-  @Roles(RoleEnum.admin) // O ajustar si los usuarios pueden añadir sus propias direcciones
+  @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Añadir una dirección a un cliente' })
   @ApiParam({ name: 'customerId', description: 'ID del cliente', type: String })
-  @ApiResponse({
-    status: 201,
-    description: 'Dirección añadida.',
-    type: Address,
-  })
+  @ApiResponse({ status: 201, description: 'Dirección añadida.', type: Address })
   @ApiResponse({ status: 404, description: 'Cliente no encontrado.' })
   addAddress(
     @Param('customerId', ParseUUIDPipe) customerId: string,
     @Body() createAddressDto: CreateAddressDto,
   ): Promise<Address> {
-    return this.customersService.addAddressToCustomer(
+    // Usar this.service (CustomersService) que tiene la lógica para añadir direcciones
+    return this.service.addAddressToCustomer(
       customerId,
       createAddressDto,
     );
@@ -154,33 +97,21 @@ export class CustomersController {
 
   @Patch(':customerId/addresses/:addressId')
   @ApiBearerAuth()
-  @Roles(RoleEnum.admin) // O ajustar
+  @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Actualizar una dirección específica de un cliente',
-  })
+  @ApiOperation({ summary: 'Actualizar una dirección específica de un cliente' })
   @ApiParam({ name: 'customerId', description: 'ID del cliente', type: String })
-  @ApiParam({
-    name: 'addressId',
-    description: 'ID de la dirección',
-    type: String,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Dirección actualizada.',
-    type: Address,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Cliente o dirección no encontrada.',
-  })
+  @ApiParam({ name: 'addressId', description: 'ID de la dirección', type: String })
+  @ApiResponse({ status: 200, description: 'Dirección actualizada.', type: Address })
+  @ApiResponse({ status: 404, description: 'Cliente o dirección no encontrada.' })
   updateAddress(
     @Param('customerId', ParseUUIDPipe) customerId: string,
     @Param('addressId', ParseUUIDPipe) addressId: string,
     @Body() updateAddressDto: UpdateAddressDto,
   ): Promise<Address> {
-    return this.customersService.updateCustomerAddress(
+    // Usar this.service (CustomersService)
+    return this.service.updateCustomerAddress(
       customerId,
       addressId,
       updateAddressDto,
@@ -189,52 +120,37 @@ export class CustomersController {
 
   @Delete(':customerId/addresses/:addressId')
   @ApiBearerAuth()
-  @Roles(RoleEnum.admin) // O ajustar
+  @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Eliminar una dirección específica de un cliente' })
   @ApiParam({ name: 'customerId', description: 'ID del cliente', type: String })
-  @ApiParam({
-    name: 'addressId',
-    description: 'ID de la dirección',
-    type: String,
-  })
+  @ApiParam({ name: 'addressId', description: 'ID de la dirección', type: String })
   @ApiResponse({ status: 204, description: 'Dirección eliminada.' })
-  @ApiResponse({
-    status: 404,
-    description: 'Cliente o dirección no encontrada.',
-  })
+  @ApiResponse({ status: 404, description: 'Cliente o dirección no encontrada.' })
   removeAddress(
     @Param('customerId', ParseUUIDPipe) customerId: string,
     @Param('addressId', ParseUUIDPipe) addressId: string,
   ): Promise<void> {
-    return this.customersService.removeCustomerAddress(customerId, addressId);
+    // Usar this.service (CustomersService)
+    return this.service.removeCustomerAddress(customerId, addressId);
   }
 
   @Patch(':customerId/addresses/:addressId/set-default')
   @ApiBearerAuth()
-  @Roles(RoleEnum.admin) // O ajustar
+  @Roles(RoleEnum.admin)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Establecer una dirección como predeterminada' })
   @ApiParam({ name: 'customerId', description: 'ID del cliente', type: String })
-  @ApiParam({
-    name: 'addressId',
-    description: 'ID de la dirección',
-    type: String,
-  })
-  @ApiResponse({
-    status: 204,
-    description: 'Dirección establecida como predeterminada.',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Cliente o dirección no encontrada.',
-  })
+  @ApiParam({ name: 'addressId', description: 'ID de la dirección', type: String })
+  @ApiResponse({ status: 204, description: 'Dirección establecida como predeterminada.' })
+  @ApiResponse({ status: 404, description: 'Cliente o dirección no encontrada.' })
   setDefaultAddress(
     @Param('customerId', ParseUUIDPipe) customerId: string,
     @Param('addressId', ParseUUIDPipe) addressId: string,
   ): Promise<void> {
-    return this.customersService.setDefaultAddress(customerId, addressId);
+    // Usar this.addressesService ya que la lógica se movió allí
+    return this.addressesService.setDefaultAddress(customerId, addressId);
   }
 }
